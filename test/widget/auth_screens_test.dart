@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:indoor_navigation_system/core/errors/failure.dart';
+import 'package:indoor_navigation_system/core/usecase/usecase.dart';
+import 'package:indoor_navigation_system/features/admin_map/domain/entities/organization.dart';
+import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
+import 'package:indoor_navigation_system/features/admin_map/domain/entities/campus_entities.dart';
+import 'package:indoor_navigation_system/features/admin_map/domain/usecases/get_organizations_usecase.dart';
+import 'package:indoor_navigation_system/features/auth/presentation/pages/admin_login_screen.dart';
+import 'package:indoor_navigation_system/features/auth/presentation/pages/login_screen.dart';
+import 'package:indoor_navigation_system/features/auth/presentation/pages/signup_screen.dart';
+import 'package:indoor_navigation_system/features/admin_map/presentation/providers/admin_map_providers.dart';
+import 'package:indoor_navigation_system/features/admin_map/domain/repositories/admin_map_repository.dart';
+
+class _FakeGetOrganizationsUseCase extends GetOrganizationsUseCase {
+  _FakeGetOrganizationsUseCase() : super(_NoopRepo());
+
+  @override
+  Future<Either<Failure, List<Organization>>> call(NoParams params) async {
+    return const Right([]);
+  }
+}
+
+class _NoopRepo implements AdminMapRepository {
+  @override
+  Future<Either<Failure, void>> addOrganization(String name, String description) async => const Right(null);
+  @override
+  Future<Either<Failure, List<Organization>>> getOrganizations() async => const Right([]);
+  @override
+  Future<Either<Failure, void>> deleteOrganization(String organizationId) async => const Right(null);
+  @override
+  Future<Either<Failure, void>> updateOrganization(String organizationId, String name, String description) async => const Right(null);
+  @override
+  Future<Either<Failure, void>> addBuilding(String name, String description, String? organizationId) async => const Right(null);
+  @override
+  Future<Either<Failure, List<Building>>> getBuildings({String? organizationId}) async => const Right([]);
+  @override
+  Future<Either<Failure, void>> deleteBuilding(String buildingId) async => const Right(null);
+  @override
+  Future<Either<Failure, void>> updateBuilding(String buildingId, String name, String description) async => const Right(null);
+  @override
+  Future<Either<Failure, void>> addFloor(String buildingId, int floorNumber, String name) async => const Right(null);
+  @override
+  Future<Either<Failure, List<Floor>>> getFloors(String buildingId) async => const Right([]);
+  @override
+  Future<Either<Failure, void>> deleteFloor(String buildingId, String floorId) async => const Right(null);
+  @override
+  Future<Either<Failure, void>> updateFloor(String buildingId, String floorId, int floorNumber, String name) async => const Right(null);
+  @override
+  Future<Either<Failure, void>> addRoom(String buildingId, String floorId, String name, double x, double y, {RoomType type = RoomType.room, String? connectorId}) async => const Right(null);
+  @override
+  Future<Either<Failure, List<Room>>> getRooms(String buildingId, String floorId) async => const Right([]);
+  @override
+  Future<Either<Failure, void>> deleteRoom(String buildingId, String floorId, String roomId) async => const Right(null);
+  @override
+  Future<Either<Failure, void>> updateRoom(String buildingId, String floorId, String roomId, {double? x, double? y, String? name, RoomType? type, String? connectorId}) async => const Right(null);
+  @override
+  Future<Either<Failure, void>> addCorridor(String buildingId, String floorId, String startRoomId, String endRoomId, double distance) async => const Right(null);
+  @override
+  Future<Either<Failure, List<Corridor>>> getCorridors(String buildingId, String floorId) async => const Right([]);
+  @override
+  Future<Either<Failure, void>> addCampusConnection(String fromBuildingId, String toBuildingId, double distance) async => const Right(null);
+  @override
+  Future<Either<Failure, List<CampusConnection>>> getCampusConnections() async => const Right([]);
+  @override
+  Future<Either<Failure, void>> deleteCampusConnection(String connectionId) async => const Right(null);
+}
+
+void main() {
+  testWidgets('LoginScreen renders login header', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(home: LoginScreen()),
+      ),
+    );
+
+    expect(find.text('SYSTEM LOGIN'), findsOneWidget);
+  });
+
+  testWidgets('SignUpScreen renders registration header', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          getOrganizationsUseCaseProvider.overrideWithValue(_FakeGetOrganizationsUseCase()),
+        ],
+        child: const MaterialApp(home: SignUpScreen()),
+      ),
+    );
+
+    await tester.pump();
+    expect(find.text('SYSTEM REGISTRATION'), findsOneWidget);
+  });
+
+  testWidgets('AdminLoginScreen renders form', (tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(home: AdminLoginScreen()),
+      ),
+    );
+
+    expect(find.text('Admin Login'), findsOneWidget);
+    expect(find.byType(FilledButton), findsOneWidget);
+  });
+}
