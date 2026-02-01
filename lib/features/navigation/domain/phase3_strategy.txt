@@ -1,0 +1,12 @@
+// Strategy:
+// 1. Create `features/user_map` or reuse `features/navigation`.
+// 2. Since `navigation` feature folder exists, let's use that.
+// 3. We need state to hold "Current Location" (Building, Floor, Room/XY) and "Destination".
+// 4. We can reuse `GetBuildings`, `GetFloors`, `GetRooms` use cases from Admin, or create wrappers.
+//    - Clean Architecture says UseCases can be shared or duplicated if logic differs. 
+//    - Reading map data is identical. We can reuse `admin_map` domain/data or move common parts to `core/map`.
+//    - For Sprint 1 speed, reusing from `admin_map` providers is acceptable, or better, alias them in specific providers file.
+
+// Implementation Plan:
+// 1. Logic via `LocationController` (Notifier).
+// 2. UI: `UserHomeScreen` with Dropdowns/Search for Building/Floor.
