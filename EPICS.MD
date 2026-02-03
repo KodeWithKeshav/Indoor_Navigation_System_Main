@@ -84,9 +84,9 @@ As a user, I want to select my destination building and room to plan routes.
 ## User Story 2.3
 As a user, I want a search bar to find specific locations by name quickly.
 
-- [ ] 2.3.1 Implement a real-time search algorithm for rooms and points of interest.
-- [ ] 2.3.2 Filter and display matching results as the user types.
-- [ ] 2.3.3 Allow direct selection from the search results to populate the destination field.
+- [x] 2.3.1 Implement a real-time search algorithm for rooms and points of interest.
+- [x] 2.3.2 Filter and display matching results as the user types.
+- [x] 2.3.3 Allow direct selection from the search results to populate the destination field.
 
 ## User Story 2.4
 As a user, I want locations grouped by floor to browse the campus hierarchy easily.
@@ -98,23 +98,23 @@ As a user, I want locations grouped by floor to browse the campus hierarchy easi
 ## User Story 2.5
 As a user, I want to view recent locations to repeat frequent navigation paths faster.
 
-- [ ] 2.5.1 Cache the user's most recently selected starting points and destinations.
-- [ ] 2.5.2 Display a "Recent" or "Favorites" shortcut list on the main input screen.
-- [ ] 2.5.3 Manage the history limit to ensure only relevant, recent data is shown.
+- [x] 2.5.1 Cache the user's most recently selected starting points and destinations.
+- [x] 2.5.2 Display a "Recent" or "Favorites" shortcut list on the main input screen.
+- [x] 2.5.3 Manage the history limit to ensure only relevant, recent data is shown.
 
 ## User Story 2.6
 As a user, I want to swap my start and end points for return trips.
 
-- [ ] 2.6.1 Create a "Swap" toggle button between the start and end input fields.
-- [ ] 2.6.2 Update the navigation logic to re-calculate the path in reverse.
-- [ ] 2.6.3 Re-validate the new path for one-way constraints or accessibility.
+- [x] 2.6.1 Create a "Swap" toggle button between the start and end input fields.
+- [x] 2.6.2 Update the navigation logic to re-calculate the path in reverse.
+- [x] 2.6.3 Re-validate the new path for one-way constraints or accessibility.
 
 ## User Story 2.7
 As a user, I want the system to block invalid selections to avoid routing errors.
 
-- [ ] 2.7.1 Implement real-time validation to block "Start" and "End" being the same location.
+- [x] 2.7.1 Implement real-time validation to block "Start" and "End" being the same location.
 - [ ] 2.7.2 Flag and hide rooms currently marked as "Out of Service" or "Closed."
-- [ ] 2.7.3 Display clear error messages when an invalid location combination is attempted.
+- [x] 2.7.3 Display clear error messages when an invalid location combination is attempted.
 
 ## User Story 2.8
 As a user, I want to edit my selected locations to correct any input mistakes.
@@ -126,9 +126,9 @@ As a user, I want to edit my selected locations to correct any input mistakes.
 ## User Story 2.9
 As a user, I want a trip summary before generating the final navigation path.
 
-- [ ] 2.9.1 Display a summary card showing the selected Start, End, and total floor distance.
-- [ ] 2.9.2 Provide a final "Get Directions" trigger to initiate the routing engine.
-- [ ] 2.9.3 Capture user confirmation to begin the turn-by-turn navigation process.
+- [x] 2.9.1 Display a summary card showing the selected Start, End, and total floor distance.
+- [x] 2.9.2 Provide a final "Get Directions" trigger to initiate the routing engine.
+- [x] 2.9.3 Capture user confirmation to begin the turn-by-turn navigation process.
 
 ---
 

@@ -25,14 +25,7 @@ const Color electricGrid = Color(0xFF38BDF8);
 const Color darkCardColor = Color(0xFF1E293B);
 const Color paperWhite = Color(0xFFE2E8F0);
 
-final floorsOfBuildingProvider = FutureProvider.family<List<Floor>, String>((ref, buildingId) async {
-  final getFloorsUseCase = ref.read(getFloorsUseCaseProvider);
-  final result = await getFloorsUseCase(buildingId);
-  return result.fold(
-    (failure) => throw failure.message,
-    (floors) => floors,
-  );
-});
+
 
 class UserHomeScreen extends ConsumerStatefulWidget {
   const UserHomeScreen({super.key});
