@@ -139,5 +139,14 @@ lib/
 
 ---
 
-**Developed by:** Keshav S
+### 👨‍💻 Developed by (Team)
+
+| Name | Roll Number |
+| :--- | :--- |
+| **Keshav S** | CB.SC.U4CSE23222 |
+| **Abinaya S** | CB.SC.U4CSE23237 |
+| **Suhitha S** | CB.SC.U4CSE23244 |
+| **Jayaram S** | CB.SC.U4CSE23255 |
+| **Prithiv** | CB.SC.U4CSE23260 |
+
 **Sprint 1 Review Date:** Feb 9th, 2026
