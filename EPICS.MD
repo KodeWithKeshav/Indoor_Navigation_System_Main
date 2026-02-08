@@ -306,8 +306,8 @@ As a campus user, I want adjustable font sizes for comfortable reading.
 ## User Story 5.6
 As a campus user, I want voice-based navigation guidance for hands-free use.
 
-- [x] 5.6.1 Convert navigation instructions into speech output.
-- [x] 5.6.2 Synchronize voice guidance with route progress.
+- [ ] 5.6.1 Convert navigation instructions into speech output.
+- [ ] 5.6.2 Synchronize voice guidance with route progress.
 - [x] 5.6.3 Provide a toggle to enable or disable voice guidance.
 
 ## User Story 5.7
