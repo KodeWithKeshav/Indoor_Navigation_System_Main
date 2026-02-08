@@ -69,26 +69,7 @@ flutter test
 
 ---
 
-## 📐 Design & Architecture (UML)
 
-This project follows **Clean Architecture** principles to separate business logic from UI.
-
-### 1. Class Diagram (Simplified)
-*   **Entities:** `Building`, `Floor`, `Room`, `Corridor`
-*   **Services:** `GraphService`, `PathfindingService`
-*   **Repositories:** `AdminMapRepository` (Interface) -> `AdminMapRepositoryImpl` (Data)
-
-
-### 2. Use Case Diagram
-*   **Admin:** Login -> Manage Map -> Add Building -> Add Floor -> Link Rooms
-*   **User:** Login -> Search Room -> Plan Trip -> View Path
-
-
-### 3. Sequence Diagram (Pathfinding)
-`User UI` -> `TripPlanner` -> `NavigationNotifier` -> `GraphService` -> `PathfindingService` -> Return `List<Node>`
-
-### 4. Activity Diagram
-Focuses on the user flow for requesting navigation and handling errors (e.g., "No path found").
 
 ---
 
