@@ -1,6 +1,6 @@
-# Indoor Navigation System - Sprint 1
+# Indoor Navigation System
 
-> **Sprint 1 Status:** ✅ Ready for Review (Feb 9th, 2026)
+> **Project Status:** ✅ Active Development
 > **Modules Completed:** Admin Map Management, Pathfinding Engine, Basic User Navigation via Trip Planner.
 > **Connectivity:** Firebase via `cloud_firestore` (Admin Module).
 
@@ -18,7 +18,7 @@ Inspired by *Don Norman’s "The Design of Everyday Things"*, the UI focuses on:
 
 ---
 
-## 🚀 Sprint 1 Deliverables (Progress Report)
+## 🚀 Project Status
 
 | Module | Status | Connectivity | Description |
 | :--- | :--- | :--- | :--- |
@@ -28,7 +28,7 @@ Inspired by *Don Norman’s "The Design of Everyday Things"*, the UI focuses on:
 | **Navigation UI** | 🟡 70% | Local/State | Step-by-step instructions (Voice pending). |
 | **Authentication** | ✅ 100% | **Firebase Auth** | Role-based login (Admin/Student/Guest). |
 
-**Overall Completion:** ~50% of Total Scope (Matches Sprint 1 Target).
+**Current Phase:** Core Infrastructure & Basic Navigation.
 
 ---
 
@@ -78,13 +78,11 @@ This project follows **Clean Architecture** principles to separate business logi
 *   **Services:** `GraphService`, `PathfindingService`
 *   **Repositories:** `AdminMapRepository` (Interface) -> `AdminMapRepositoryImpl` (Data)
 
-*(Refer to `docs/diagrams/ClassDiagram.png` for visual representation)*
 
 ### 2. Use Case Diagram
 *   **Admin:** Login -> Manage Map -> Add Building -> Add Floor -> Link Rooms
 *   **User:** Login -> Search Room -> Plan Trip -> View Path
 
-*(Refer to `docs/diagrams/UseCaseDiagram.png` for visual representation)*
 
 ### 3. Sequence Diagram (Pathfinding)
 `User UI` -> `TripPlanner` -> `NavigationNotifier` -> `GraphService` -> `PathfindingService` -> Return `List<Node>`
@@ -149,4 +147,3 @@ lib/
 | **Jayaram S** | CB.SC.U4CSE23255 |
 | **Prithiv** | CB.SC.U4CSE23260 |
 
-**Sprint 1 Review Date:** Feb 9th, 2026
