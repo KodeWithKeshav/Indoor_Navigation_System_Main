@@ -5,6 +5,11 @@ import '../../features/admin_map/domain/entities/map_entities.dart';
 
 class PathfindingService {
   // A* Algorithm
+  /// Finds the shortest path between two rooms using the A* search algorithm.
+  /// 
+  /// Takes [startId] and [endId] as strings, along with lists of [rooms] and [corridors].
+  /// [isAccessible] flag filters out stairs and non-accessible routes if set to true.
+  /// Returns a list of Room IDs representing the path from start to end.
   static List<String> findPath(
       String startId, 
       String endId, 

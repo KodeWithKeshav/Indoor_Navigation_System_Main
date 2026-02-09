@@ -63,7 +63,7 @@ class NavigationNotifier extends Notifier<NavigationState> {
     return NavigationState();
   }
 
-  void setStart(Room room, {String? organizationId}) {
+  Future<void> setStart(Room room, {String? organizationId}) async {
     print('NavigationNotifier: setStart(${room.name}) - Current End: ${state.endRoom?.name}, Org: $organizationId');
     state = state.copyWith(
        startRoom: room, 
@@ -72,21 +72,22 @@ class NavigationNotifier extends Notifier<NavigationState> {
        instructions: [], 
        organizationId: organizationId
     );
-    _computePath();
+    await _computePath();
   }
 
-  void setEnd(Room room) {
+  Future<void> setEnd(Room room) async {
     print('NavigationNotifier: setEnd(${room.name}) - Current Start: ${state.startRoom?.name}');
     state = state.copyWith(endRoom: room);
-    _computePath();
+    await _computePath();
   }
 
-  void toggleAccessibility(bool value) {
+  Future<void> toggleAccessibility(bool value) async {
     state = state.copyWith(isAccessible: value);
     if (state.startRoom != null && state.endRoom != null) {
-      _computePath();
+      await _computePath();
     }
   }
+
   
   void clear() {
     state = NavigationState();

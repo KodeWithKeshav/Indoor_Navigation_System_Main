@@ -25,9 +25,8 @@ class AdminDrawer extends ConsumerWidget {
         children: [
           // 1. TECH HEADER
           Container(
-            height: 180,
             width: double.infinity,
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(24, 48, 24, 24), // Extra top padding
             decoration: const BoxDecoration(
               color: darkCardColor,
               border: Border(bottom: BorderSide(color: electricGrid, width: 2)),

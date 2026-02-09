@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indoor Navigation System - Database Schema</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .diagram-container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 1600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #E64A19;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+
+        .schema-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .collection {
+            border: 3px solid #E64A19;
+            border-radius: 12px;
+            background: #FFF3E0;
+            overflow: hidden;
+        }
+
+        .collection-header {
+            background: #E64A19;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collection-icon {
+            font-size: 24px;
+        }
+
+        .collection-body {
+            padding: 20px;
+        }
+
+        .field-group {
+            margin-bottom: 15px;
+        }
+
+        .field-group-title {
+            font-weight: 600;
+            color: #E64A19;
+            margin-bottom: 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            border-left: 3px solid #FF9800;
+        }
+
+        .field.primary-key {
+            border-left-color: #4CAF50;
+            background: #E8F5E9;
+        }
+
+        .field.foreign-key {
+            border-left-color: #2196F3;
+            background: #E3F2FD;
+        }
+
+        .field-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .field-type {
+            color: #666;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .relationships {
+            margin-top: 40px;
+            padding: 30px;
+            background: #F3E5F5;
+            border: 3px solid #7B1FA2;
+            border-radius: 12px;
+        }
+
+        .relationships-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #7B1FA2;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .relationship-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .relationship {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #7B1FA2;
+        }
+
+        .relationship-type {
+            font-weight: 600;
+            color: #7B1FA2;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .relationship-desc {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.pk {
+            background: #4CAF50;
+        }
+
+        .legend-color.fk {
+            background: #2196F3;
+        }
+
+        .legend-color.field {
+            background: #FF9800;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .note {
+            background: #FFF9C4;
+            border-left: 4px solid #FBC02D;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+
+        .note-title {
+            font-weight: 600;
+            color: #F57C00;
+            margin-bottom: 8px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .diagram-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="diagram-container">
+        <h1>Indoor Navigation System</h1>
+        <div class="subtitle">Firebase Firestore Database Schema</div>
+
+        <div class="schema-grid">
+            <!-- Organizations Collection -->
+            <div class="collection">
+                <div class="collection-header">
+                    <span class="collection-icon">🏢</span>
+                    <span>organizations</span>
+                </div>
+                <div class="collection-body">
+                    <div class="field-group">
+                        <div class="field-group-title">Primary Key</div>
+                        <div class="field primary-key">
+                            <span class="field-name">id</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Fields</div>
+                        <div class="field">
+                            <span class="field-name">name</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">description</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">createdAt</span>
+                            <span class="field-type">Timestamp</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">updatedAt</span>
+                            <span class="field-type">Timestamp</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buildings Collection -->
+            <div class="collection">
+                <div class="collection-header">
+                    <span class="collection-icon">🏛️</span>
+                    <span>buildings</span>
+                </div>
+                <div class="collection-body">
+                    <div class="field-group">
+                        <div class="field-group-title">Primary Key</div>
+                        <div class="field primary-key">
+                            <span class="field-name">id</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Foreign Keys</div>
+                        <div class="field foreign-key">
+                            <span class="field-name">organizationId</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Fields</div>
+                        <div class="field">
+                            <span class="field-name">name</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">code</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">latitude</span>
+                            <span class="field-type">double</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">longitude</span>
+                            <span class="field-type">double</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">address</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">createdAt</span>
+                            <span class="field-type">Timestamp</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floors Collection -->
+            <div class="collection">
+                <div class="collection-header">
+                    <span class="collection-icon">📐</span>
+                    <span>floors</span>
+                </div>
+                <div class="collection-body">
+                    <div class="field-group">
+                        <div class="field-group-title">Primary Key</div>
+                        <div class="field primary-key">
+                            <span class="field-name">id</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Foreign Keys</div>
+                        <div class="field foreign-key">
+                            <span class="field-name">buildingId</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Fields</div>
+                        <div class="field">
+                            <span class="field-name">name</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">floorNumber</span>
+                            <span class="field-type">int</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">mapImageUrl</span>
+                            <span class="field-type">String?</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">createdAt</span>
+                            <span class="field-type">Timestamp</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rooms Collection -->
+            <div class="collection">
+                <div class="collection-header">
+                    <span class="collection-icon">🚪</span>
+                    <span>rooms</span>
+                </div>
+                <div class="collection-body">
+                    <div class="field-group">
+                        <div class="field-group-title">Primary Key</div>
+                        <div class="field primary-key">
+                            <span class="field-name">id</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Foreign Keys</div>
+                        <div class="field foreign-key">
+                            <span class="field-name">floorId</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Fields</div>
+                        <div class="field">
+                            <span class="field-name">name</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">roomNumber</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">type</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">x</span>
+                            <span class="field-type">double</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">y</span>
+                            <span class="field-type">double</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">isAccessible</span>
+                            <span class="field-type">bool</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Corridors Collection -->
+            <div class="collection">
+                <div class="collection-header">
+                    <span class="collection-icon">↔️</span>
+                    <span>corridors</span>
+                </div>
+                <div class="collection-body">
+                    <div class="field-group">
+                        <div class="field-group-title">Primary Key</div>
+                        <div class="field primary-key">
+                            <span class="field-name">id</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Foreign Keys</div>
+                        <div class="field foreign-key">
+                            <span class="field-name">floorId</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field foreign-key">
+                            <span class="field-name">startRoomId</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field foreign-key">
+                            <span class="field-name">endRoomId</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Fields</div>
+                        <div class="field">
+                            <span class="field-name">distance</span>
+                            <span class="field-type">double</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">isAccessible</span>
+                            <span class="field-type">bool</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">type</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Collection -->
+            <div class="collection">
+                <div class="collection-header">
+                    <span class="collection-icon">👤</span>
+                    <span>users</span>
+                </div>
+                <div class="collection-body">
+                    <div class="field-group">
+                        <div class="field-group-title">Primary Key</div>
+                        <div class="field primary-key">
+                            <span class="field-name">uid</span>
+                            <span class="field-type">String</span>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <div class="field-group-title">Fields</div>
+                        <div class="field">
+                            <span class="field-name">email</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">displayName</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">role</span>
+                            <span class="field-type">String</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">createdAt</span>
+                            <span class="field-type">Timestamp</span>
+                        </div>
+                        <div class="field">
+                            <span class="field-name">lastLogin</span>
+                            <span class="field-type">Timestamp</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relationships -->
+        <div class="relationships">
+            <div class="relationships-title">🔗 Collection Relationships</div>
+            <div class="relationship-grid">
+                <div class="relationship">
+                    <div class="relationship-type">organizations → buildings</div>
+                    <div class="relationship-desc">
+                        <strong>One-to-Many:</strong> One organization can have multiple buildings.<br>
+                        <code>buildings.organizationId → organizations.id</code>
+                    </div>
+                </div>
+
+                <div class="relationship">
+                    <div class="relationship-type">buildings → floors</div>
+                    <div class="relationship-desc">
+                        <strong>One-to-Many:</strong> One building can have multiple floors.<br>
+                        <code>floors.buildingId → buildings.id</code>
+                    </div>
+                </div>
+
+                <div class="relationship">
+                    <div class="relationship-type">floors → rooms</div>
+                    <div class="relationship-desc">
+                        <strong>One-to-Many:</strong> One floor can have multiple rooms.<br>
+                        <code>rooms.floorId → floors.id</code>
+                    </div>
+                </div>
+
+                <div class="relationship">
+                    <div class="relationship-type">floors → corridors</div>
+                    <div class="relationship-desc">
+                        <strong>One-to-Many:</strong> One floor can have multiple corridors.<br>
+                        <code>corridors.floorId → floors.id</code>
+                    </div>
+                </div>
+
+                <div class="relationship">
+                    <div class="relationship-type">rooms ↔ corridors</div>
+                    <div class="relationship-desc">
+                        <strong>Many-to-Many:</strong> Corridors connect rooms together.<br>
+                        <code>corridors.startRoomId → rooms.id</code><br>
+                        <code>corridors.endRoomId → rooms.id</code>
+                    </div>
+                </div>
+
+                <div class="relationship">
+                    <div class="relationship-type">users (standalone)</div>
+                    <div class="relationship-desc">
+                        <strong>Independent:</strong> User authentication and role management.<br>
+                        Managed by Firebase Auth with additional metadata.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color pk"></div>
+                <span>Primary Key</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color fk"></div>
+                <span>Foreign Key</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color field"></div>
+                <span>Regular Field</span>
+            </div>
+        </div>
+
+        <!-- Note -->
+        <div class="note">
+            <div class="note-title">📝 Implementation Notes:</div>
+            <ul style="margin-left: 20px; line-height: 1.8; color: #555;">
+                <li><strong>Firestore Structure:</strong> All collections are top-level (not nested) for better query
+                    performance</li>
+                <li><strong>Graph Construction:</strong> Rooms and corridors form a navigation graph for A* pathfinding
+                </li>
+                <li><strong>Accessibility:</strong> <code>isAccessible</code> flags enable wheelchair-friendly routing
+                </li>
+                <li><strong>Coordinates:</strong> <code>x, y</code> positions are relative to floor map images</li>
+                <li><strong>Timestamps:</strong> All entities track creation/update times for audit trails</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <strong>Created for Sprint 1 Documentation</strong><br>
+            Team: Keshav S, Abinaya S, Suhitha S, Jayaram S, Prithiv<br>
+            Database: Firebase Cloud Firestore
+        </div>
+    </div>
+</body>
+
+</html>

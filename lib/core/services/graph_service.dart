@@ -21,6 +21,11 @@ class GraphService {
   String? _currentOrgId;
   
   // Load all data and build the graph
+  /// Builds the navigation graph by fetching buildings, floors, rooms, and corridors.
+  /// 
+  /// Also handles vertical connections (stairs/elevators) and campus-wide inter-building links.
+  /// [organizationId] optionally filters the data for a specific organization.
+  /// Returns [Either] with a error message or null on success.
   Future<Either<String, void>> buildGraph({String? organizationId}) async {
     try {
       // Check context switch

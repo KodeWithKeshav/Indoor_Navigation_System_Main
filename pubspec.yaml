@@ -61,6 +61,12 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.7.1
   riverpod_generator: ^4.0.0+1
+  mockito: ^5.4.4
+  mocktail: ^1.0.4
+  fake_cloud_firestore: any
+  firebase_auth_mocks: any
+
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
