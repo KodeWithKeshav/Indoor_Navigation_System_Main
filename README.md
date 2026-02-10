@@ -532,12 +532,33 @@ lib/
 
 For detailed architecture documentation, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+### System Architecture
+
+![System Architecture](docs/diagrams/architecture.png)
+
+The architecture diagram illustrates the high-level interaction between the Presentation, Domain, and Data layers, as well as the integration with Firebase and external services.
+
+### Database Schema
+
+![Database Schema](docs/diagrams/schema.jpg)
+
+The schema represents the NoSQL structure used in Firestore, highlighting the relationships between Organizations, Buildings, Floors, Rooms, and Users.
+
 ### UML Diagrams
 
-- [Activity Diagram](docs/diagrams/activity_diagram_reference.png)
-- [Class Diagram](docs/diagrams/class_diagram_reference.png)
-- [Sequence Diagram](docs/diagrams/sequence_diagram_reference.png)
-- [Use Case Diagram](docs/diagrams/usecase_diagram_reference.png)
+#### Use Case Diagram
+![Use Case Diagram](docs/diagrams/usecase.jpg)
+
+#### Sequence Diagrams
+
+**Login Flow**
+![Login Sequence Diagram](docs/diagrams/Login_Seq.png)
+
+**User Navigation Flow**
+![User Sequence Diagram](docs/diagrams/User_Seq.png)
+
+**Admin Map Management Flow**
+![Admin Sequence Diagram](docs/diagrams/Admin_Seq.png)
 
 ---
 
