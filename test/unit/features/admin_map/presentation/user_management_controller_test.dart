@@ -4,7 +4,7 @@ import 'package:indoor_navigation_system/features/admin_map/presentation/provide
 import 'package:indoor_navigation_system/features/auth/domain/entities/user_entity.dart';
 import 'package:indoor_navigation_system/features/auth/domain/usecases/manage_users_usecase.dart';
 import 'package:indoor_navigation_system/features/auth/presentation/providers/auth_providers.dart';
-import '../../../../../../test/test_utils/fakes.dart';
+import '../../../../test_utils/fakes.dart';
 
 void main() {
   test('UserManagementController updates role', () async {

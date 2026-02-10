@@ -7,7 +7,7 @@ import 'package:indoor_navigation_system/features/admin_map/domain/entities/orga
 import 'package:indoor_navigation_system/features/admin_map/domain/usecases/get_organizations_usecase.dart';
 import 'package:indoor_navigation_system/features/auth/presentation/providers/signup_provider.dart';
 import 'package:indoor_navigation_system/features/admin_map/presentation/providers/admin_map_providers.dart';
-import '../../../../../../test/test_utils/fakes.dart';
+import '../../../../test_utils/fakes.dart';
 
 class _FakeGetOrganizationsUseCase extends GetOrganizationsUseCase {
   _FakeGetOrganizationsUseCase() : super(FakeAdminMapRepository());

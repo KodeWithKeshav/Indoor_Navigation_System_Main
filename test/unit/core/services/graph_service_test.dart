@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:indoor_navigation_system/core/services/graph_service.dart';
 import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
 import 'package:indoor_navigation_system/features/admin_map/domain/entities/campus_entities.dart';
-import '../../../../../test/test_utils/fakes.dart';
+import '../../../test_utils/fakes.dart';
 
 void main() {
   test('GraphService builds graph and maps floors to buildings', () async {
@@ -20,8 +20,8 @@ void main() {
     final repo = FakeAdminMapRepository(
       buildings: [building],
       floorsByBuilding: {'b1': [floor]},
-      roomsByFloor: {'f1': rooms},
-      corridorsByFloor: {'f1': corridors},
+      roomsByFloor: {'b1-f1': rooms}, // Key needs to be buildingId-floorId as per implementation
+      corridorsByFloor: {'b1-f1': corridors}, // Key needs to be buildingId-floorId
       campusConnections: const <CampusConnection>[],
     );
 

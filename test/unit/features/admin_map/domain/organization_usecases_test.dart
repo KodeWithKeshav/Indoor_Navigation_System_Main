@@ -5,7 +5,7 @@ import 'package:indoor_navigation_system/features/admin_map/domain/usecases/dele
 import 'package:indoor_navigation_system/features/admin_map/domain/usecases/update_organization_usecase.dart';
 import 'package:indoor_navigation_system/features/admin_map/domain/usecases/get_organizations_usecase.dart';
 import 'package:indoor_navigation_system/core/usecase/usecase.dart';
-import '../../../../../../test/test_utils/fakes.dart';
+import '../../../../test_utils/fakes.dart';
 
 void main() {
   late FakeAdminMapRepository repository;
