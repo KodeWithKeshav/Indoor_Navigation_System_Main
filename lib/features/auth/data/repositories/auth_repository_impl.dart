@@ -86,4 +86,13 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+  @override
+  Future<Either<Failure, void>> updateUserOrganization({required String uid, required String organizationId}) async {
+    try {
+      await remoteDataSource.updateUserOrganization(uid: uid, organizationId: organizationId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

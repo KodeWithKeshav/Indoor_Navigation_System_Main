@@ -53,6 +53,12 @@ class _FakeAuthRepository implements AuthRepository {
     required String uid,
     required String role,
   }) async => const Right(null);
+
+  @override
+  Future<Either<Failure, void>> updateUserOrganization({
+    required String uid,
+    required String organizationId,
+  }) async => const Right(null);
 }
 
 class _FakeLoginUseCase extends LoginUseCase {

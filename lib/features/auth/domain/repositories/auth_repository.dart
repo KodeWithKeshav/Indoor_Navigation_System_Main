@@ -24,4 +24,9 @@ abstract interface class AuthRepository {
     required String uid,
     required String role,
   });
+
+  Future<Either<Failure, void>> updateUserOrganization({
+    required String uid,
+    required String organizationId,
+  });
 }

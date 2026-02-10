@@ -88,6 +88,16 @@ final campusConnectionsProvider = FutureProvider<List<CampusConnection>>((ref) a
   );
 });
 
+// 3. Organizations
+final organizationsProvider = FutureProvider<List<Organization>>((ref) async {
+  final useCase = ref.read(getOrganizationsUseCaseProvider);
+  final result = await useCase(NoParams());
+  return result.fold(
+    (failure) => throw failure.message,
+    (organizations) => organizations,
+  );
+});
+
 // 3. Floors of Building
 final floorsOfBuildingProvider = FutureProvider.family<List<Floor>, String>((ref, buildingId) async {
   final getFloorsUseCase = ref.read(getFloorsUseCaseProvider);

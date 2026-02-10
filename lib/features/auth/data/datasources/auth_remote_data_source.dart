@@ -25,6 +25,11 @@ abstract interface class AuthRemoteDataSource {
     required String uid,
     required String role,
   });
+
+  Future<void> updateUserOrganization({
+    required String uid,
+    required String organizationId,
+  });
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -125,5 +130,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> updateUserRole({required String uid, required String role}) async {
     await firestore.collection('users').doc(uid).update({'role': role});
+  }
+
+  @override
+  Future<void> updateUserOrganization({required String uid, required String organizationId}) async {
+    await firestore.collection('users').doc(uid).update({'organizationId': organizationId});
   }
 }

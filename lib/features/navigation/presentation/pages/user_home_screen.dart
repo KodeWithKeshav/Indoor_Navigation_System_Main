@@ -11,6 +11,7 @@ import '../providers/navigation_provider.dart';
 import '../widgets/path_arrow_painter.dart';
 import '../../../../core/providers/settings_provider.dart';
 import '../widgets/trip_planner_widget.dart';
+import '../widgets/room_icon_helper.dart';
 import '../../../../core/services/compass_service.dart';
 
 import 'package:indoor_navigation_system/features/auth/presentation/providers/auth_providers.dart';
@@ -536,6 +537,7 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
   String? _selectedBuildingId;
   String? _selectedFloorId;
   bool _initialized = false;
+  bool _showLegend = false;
 
   @override
   Widget build(BuildContext context) {
@@ -603,110 +605,260 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
               // Selectors
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    // Building Selector
-                    Expanded(
-                      flex: 3,
-                        child: buildingsAsync.when(
-                          data: (buildings) {
-                             final validBuildings = buildings.where((b) => !b.id.startsWith('campus_')).toList();
-                             final campusBuilding = buildings.where((b) => b.id.startsWith('campus_')).firstOrNull;
-                             
-                             if (validBuildings.isEmpty && campusBuilding == null) return const Text("No buildings", style: TextStyle(color: Colors.white54));
-                             
-                             return Row(
+                child: buildingsAsync.when(
+                  data: (buildings) {
+                     final validBuildings = buildings.where((b) => !b.id.startsWith('campus_')).toList();
+                     final campusBuilding = buildings.where((b) => b.id.startsWith('campus_')).firstOrNull;
+                     final isCampusView = _selectedBuildingId?.startsWith('campus_') == true;
+                     
+                     if (validBuildings.isEmpty && campusBuilding == null) return const Text("No buildings", style: TextStyle(color: Colors.white54));
+                     
+                     return Column(
+                       children: [
+                         // Indoor / Campus Toggle
+                         if (campusBuilding != null)
+                           Container(
+                             margin: const EdgeInsets.only(bottom: 10),
+                             decoration: BoxDecoration(
+                               color: darkCardColor,
+                               borderRadius: BorderRadius.circular(12),
+                               border: Border.all(color: electricGrid.withOpacity(0.3)),
+                             ),
+                             child: Row(
                                children: [
                                  Expanded(
-                                   child: DropdownButtonFormField<String>(
-                                     value: _selectedBuildingId != null && !_selectedBuildingId!.startsWith('campus_') ? _selectedBuildingId : null,
-                                     decoration: InputDecoration(
-                                       labelText: 'Building',
-                                       labelStyle: const TextStyle(color: electricGrid),
-                                       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: electricGrid.withOpacity(0.3))),
-                                       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: electricGrid)),
-                                       filled: true,
-                                       fillColor: darkCardColor,
-                                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
-                                     ),
-                                     dropdownColor: darkCardColor,
-                                     style: const TextStyle(color: paperWhite),
-                                     items: validBuildings.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name, overflow: TextOverflow.ellipsis))).toList(),
-                                     onChanged: (val) {
-                                       if (val != null) _updateBuilding(val);
-                                     }
-                                   ),
-                                 ),
-                                 if (campusBuilding != null)
-                                   Padding(
-                                     padding: const EdgeInsets.only(left: 8.0),
-                                     child: IconButton(
-                                       onPressed: () => _updateBuilding(campusBuilding.id),
-                                       tooltip: 'View Campus Map', 
-                                       icon: Icon(Icons.public, color: _selectedBuildingId?.startsWith('campus_') == true ? Colors.greenAccent : electricGrid),
-                                       style: IconButton.styleFrom(
-                                          backgroundColor: _selectedBuildingId?.startsWith('campus_') == true ? Colors.greenAccent.withOpacity(0.1) : electricGrid.withOpacity(0.1),
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+                                   child: GestureDetector(
+                                     onTap: () {
+                                       if (isCampusView && validBuildings.isNotEmpty) {
+                                         _updateBuilding(validBuildings.first.id);
+                                       }
+                                     },
+                                     child: Container(
+                                       padding: const EdgeInsets.symmetric(vertical: 10),
+                                       decoration: BoxDecoration(
+                                         color: !isCampusView ? electricGrid.withOpacity(0.2) : Colors.transparent,
+                                         borderRadius: BorderRadius.circular(11),
+                                         border: !isCampusView ? Border.all(color: electricGrid, width: 1) : null,
+                                       ),
+                                       child: Row(
+                                         mainAxisAlignment: MainAxisAlignment.center,
+                                         children: [
+                                           Icon(Icons.apartment, size: 16, color: !isCampusView ? electricGrid : Colors.white38),
+                                           const SizedBox(width: 6),
+                                           Text('Indoor', style: TextStyle(
+                                             color: !isCampusView ? electricGrid : Colors.white38,
+                                             fontWeight: FontWeight.bold,
+                                             fontSize: 13,
+                                           )),
+                                         ],
                                        ),
                                      ),
-                                   )
-                               ],
-                             );
-                          },
-                          loading: () => const LinearProgressIndicator(),
-                          error: (_,__) => const SizedBox(),
-                        ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Floor Selector
-                    Expanded(
-                      flex: 2,
-                      child: _selectedBuildingId == null 
-                        ? const SizedBox() 
-                        : Consumer(builder: (context, ref, _) {
-                            final floorsAsync = ref.watch(floorsOfBuildingProvider(_selectedBuildingId!));
-                            return floorsAsync.when(
-                               data: (floors) {
-                                  if (floors.isEmpty) return const Text("No floors", style: TextStyle(color: Colors.white54));
-                                  return DropdownButtonFormField<String>(
-                                     value: _selectedFloorId,
-                                      decoration: InputDecoration(
-                                       labelText: 'Floor',
-                                       labelStyle: const TextStyle(color: electricGrid),
-                                       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: electricGrid.withOpacity(0.3))),
-                                       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: electricGrid)),
-                                       filled: true,
-                                       fillColor: darkCardColor,
-                                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                                   ),
+                                 ),
+                                 Expanded(
+                                   child: GestureDetector(
+                                     onTap: () => _updateBuilding(campusBuilding.id),
+                                     child: Container(
+                                       padding: const EdgeInsets.symmetric(vertical: 10),
+                                       decoration: BoxDecoration(
+                                         color: isCampusView ? Colors.greenAccent.withOpacity(0.15) : Colors.transparent,
+                                         borderRadius: BorderRadius.circular(11),
+                                         border: isCampusView ? Border.all(color: Colors.greenAccent, width: 1) : null,
+                                       ),
+                                       child: Row(
+                                         mainAxisAlignment: MainAxisAlignment.center,
+                                         children: [
+                                           Icon(Icons.public, size: 16, color: isCampusView ? Colors.greenAccent : Colors.white38),
+                                           const SizedBox(width: 6),
+                                           Text('Campus Map', style: TextStyle(
+                                             color: isCampusView ? Colors.greenAccent : Colors.white38,
+                                             fontWeight: FontWeight.bold,
+                                             fontSize: 13,
+                                           )),
+                                         ],
+                                       ),
                                      ),
-                                     dropdownColor: darkCardColor,
-                                     style: const TextStyle(color: paperWhite),
-                                     items: floors.map((f) => DropdownMenuItem(value: f.id, child: Text(f.name, overflow: TextOverflow.ellipsis))).toList(),
-                                     onChanged: (val) {
-                                        if (val != null) setState(() => _selectedFloorId = val);
-                                     }
-                                  );
-                               },
-                               loading: () => const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: electricGrid))),
-                               error: (_,__) => const Icon(Icons.error, color: Colors.orange, size: 20),
-                            );
-                        }),
-                    ),
-                  ],
+                                   ),
+                                 ),
+                               ],
+                             ),
+                           ),
+                         // Building + Floor Row (Indoor) or Info Hint (Campus)
+                         if (isCampusView)
+                           Container(
+                             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                             decoration: BoxDecoration(
+                               color: Colors.greenAccent.withOpacity(0.05),
+                               borderRadius: BorderRadius.circular(8),
+                               border: Border.all(color: Colors.greenAccent.withOpacity(0.2)),
+                             ),
+                             child: Row(
+                               children: const [
+                                 Icon(Icons.info_outline, color: Colors.greenAccent, size: 16),
+                                 SizedBox(width: 8),
+                                 Expanded(child: Text(
+                                   'Tap a building to enter it, or set routes between buildings',
+                                   style: TextStyle(color: Colors.greenAccent, fontSize: 11),
+                                 )),
+                               ],
+                             ),
+                           ),
+                         if (!isCampusView)
+                           Row(
+                             children: [
+                               Expanded(
+                                 flex: 3,
+                                 child: DropdownButtonFormField<String>(
+                                   value: _selectedBuildingId != null && !_selectedBuildingId!.startsWith('campus_') ? _selectedBuildingId : null,
+                                   decoration: InputDecoration(
+                                     labelText: 'Building',
+                                     labelStyle: const TextStyle(color: electricGrid),
+                                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: electricGrid.withOpacity(0.3))),
+                                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: electricGrid)),
+                                     filled: true,
+                                     fillColor: darkCardColor,
+                                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                                   ),
+                                   dropdownColor: darkCardColor,
+                                   style: const TextStyle(color: paperWhite),
+                                   items: validBuildings.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name, overflow: TextOverflow.ellipsis))).toList(),
+                                   onChanged: (val) {
+                                     if (val != null) _updateBuilding(val);
+                                   }
+                                 ),
+                               ),
+                               const SizedBox(width: 12),
+                               // Floor Selector
+                               Expanded(
+                                 flex: 2,
+                                 child: _selectedBuildingId == null 
+                                   ? const SizedBox() 
+                                   : Consumer(builder: (context, ref, _) {
+                                       final floorsAsync = ref.watch(floorsOfBuildingProvider(_selectedBuildingId!));
+                                       return floorsAsync.when(
+                                          data: (floors) {
+                                             if (floors.isEmpty) return const Text("No floors", style: TextStyle(color: Colors.white54));
+                                             return DropdownButtonFormField<String>(
+                                                value: _selectedFloorId,
+                                                 decoration: InputDecoration(
+                                                  labelText: 'Floor',
+                                                  labelStyle: const TextStyle(color: electricGrid),
+                                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: electricGrid.withOpacity(0.3))),
+                                                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: electricGrid)),
+                                                  filled: true,
+                                                  fillColor: darkCardColor,
+                                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)
+                                                ),
+                                                dropdownColor: darkCardColor,
+                                                style: const TextStyle(color: paperWhite),
+                                                items: floors.map((f) => DropdownMenuItem(value: f.id, child: Text(f.name, overflow: TextOverflow.ellipsis))).toList(),
+                                                onChanged: (val) {
+                                                   if (val != null) setState(() => _selectedFloorId = val);
+                                                }
+                                             );
+                                          },
+                                          loading: () => const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: electricGrid))),
+                                          error: (_,__) => const Icon(Icons.error, color: Colors.orange, size: 20),
+                                       );
+                                   }),
+                               ),
+                             ],
+                           ),
+                       ],
+                     );
+                  },
+                  loading: () => const LinearProgressIndicator(),
+                  error: (_,__) => const SizedBox(),
                 ),
               ),
 
-              // Map Content
+              // Map Content with Legend Overlay
               Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(bottom: Radius.circular(23)), 
-                  child: (_selectedBuildingId != null && _selectedFloorId != null) 
-                     ? _MapViewer(
-                         buildingId: _selectedBuildingId!, 
-                         floorId: _selectedFloorId!,
-                         onEnterBuilding: (targetBid) => _updateBuilding(targetBid),
-                       )
-                     : const Center(child: Text("Select a Building and Floor", style: TextStyle(color: Colors.white54))),
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(23)), 
+                      child: (_selectedBuildingId != null && _selectedFloorId != null) 
+                         ? _MapViewer(
+                             buildingId: _selectedBuildingId!, 
+                             floorId: _selectedFloorId!,
+                             onEnterBuilding: (targetBid) => _updateBuilding(targetBid),
+                             onSwitchFloor: (targetBid, targetFid) {
+                               if (targetBid != _selectedBuildingId) {
+                                 _updateBuilding(targetBid, initialFloorId: targetFid);
+                               } else {
+                                 setState(() => _selectedFloorId = targetFid);
+                               }
+                             },
+                           )
+                         : const Center(child: Text("Select a Building and Floor", style: TextStyle(color: Colors.white54))),
+                    ),
+                    // Map Legend (collapsible)
+                    Positioned(
+                      right: 8,
+                      bottom: 8,
+                      child: StatefulBuilder(
+                        builder: (ctx, setLegendState) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_showLegend)
+                                Container(
+                                  width: 140,
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: darkCardColor.withOpacity(0.92),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: electricGrid.withOpacity(0.2)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Legend', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      ...RoomType.values.where((t) => t != RoomType.hallway).map((type) {
+                                        final v = getRoomVisuals(type);
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 2),
+                                          child: Row(
+                                            children: [
+                                              Icon(v.icon, color: v.color, size: 14),
+                                              const SizedBox(width: 6),
+                                              Expanded(child: Text(
+                                                getRoomTypeLabel(type),
+                                                style: const TextStyle(color: Colors.white70, fontSize: 10),
+                                              )),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(height: 4),
+                              GestureDetector(
+                                onTap: () => setState(() => _showLegend = !_showLegend),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: darkCardColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: electricGrid.withOpacity(0.3)),
+                                  ),
+                                  child: Icon(
+                                    _showLegend ? Icons.close : Icons.info_outline,
+                                    color: electricGrid,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -762,15 +914,18 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
 }
 
 /// Widget that renders the map content (rooms, corridors, grid) for a specific floor.
+/// Shows path continuation banners when the navigation path crosses floors or buildings.
 class _MapViewer extends ConsumerWidget {
   final String buildingId;
   final String floorId;
   final Function(String buildingId)? onEnterBuilding;
+  final Function(String buildingId, String floorId)? onSwitchFloor;
 
   const _MapViewer({
     required this.buildingId, 
     required this.floorId,
     this.onEnterBuilding,
+    this.onSwitchFloor,
   });
 
   @override
@@ -828,17 +983,22 @@ class _MapViewer extends ConsumerWidget {
                     final isEnd = navState.endRoom?.id == room.id;
                     final isInPath = navState.pathIds.contains(room.id);
                     
-                    Color color = Colors.blue.withValues(alpha: 0.5);
+                    // Get type-specific visuals
+                    final visuals = getRoomVisuals(room.type);
+                    Color color = visuals.color.withOpacity(0.8);
                     if (isStart) color = Colors.green;
                     else if (isEnd) color = Colors.red;
                     else if (isInPath) color = Colors.amber;
             
-                    // Hide Hallway Nodes unless debug/path?
-                    // Only hide if NOT in path and type is hallway
+                    // Hide hallway nodes unless they are part of the path
                     if (room.type == RoomType.hallway && !isInPath) {
                        return const SizedBox(); 
                     }
             
+                    final nodeSize = isInPath && room.type == RoomType.hallway 
+                        ? 20.0 
+                        : visuals.size.toDouble();
+
                     return Positioned(
                       left: room.x,
                       top: room.y,
@@ -876,32 +1036,150 @@ class _MapViewer extends ConsumerWidget {
                             )
                           );
                         },
-                        child: Container(
-                          width: room.type == RoomType.hallway ? 20 : 40,
-                          height: room.type == RoomType.hallway ? 20 : 40,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 2)],
-                          ),
-                          alignment: Alignment.center,
-                          child: room.type == RoomType.hallway 
-                            ? null 
-                              : Transform.rotate(
-                                  angle: (heading * 3.14159 / 180), // Counter-rotate icons so they stay upright?
-                                  child: Icon(
-                                    isStart || isEnd ? Icons.star : 
-                                    (room.type == RoomType.elevator ? Icons.elevator : 
-                                     (room.type == RoomType.stairs ? Icons.stairs : Icons.room)), 
-                                    size: 20, 
-                                    color: Colors.white
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: nodeSize,
+                              height: nodeSize,
+                              decoration: BoxDecoration(
+                                color: color,
+                                borderRadius: BorderRadius.circular(
+                                  room.type == RoomType.hallway ? nodeSize / 2 : 8,
+                                ),
+                                border: Border.all(color: Colors.white, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withOpacity(0.4),
+                                    blurRadius: 6,
+                                    spreadRadius: 1,
                                   ),
+                                ],
                               ),
+                              alignment: Alignment.center,
+                              child: room.type == RoomType.hallway 
+                                ? null 
+                                : Transform.rotate(
+                                    angle: (heading * 3.14159 / 180),
+                                    child: Icon(
+                                      isStart ? Icons.trip_origin : 
+                                      isEnd ? Icons.flag :
+                                      visuals.icon, 
+                                      size: nodeSize * 0.5, 
+                                      color: Colors.white,
+                                    ),
+                                ),
+                            ),
+                            // Name label for non-hallway nodes
+                            if (room.type != RoomType.hallway)
+                              Container(
+                                margin: const EdgeInsets.only(top: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  room.name,
+                                  style: const TextStyle(color: Colors.white, fontSize: 9),
+                                  textAlign: TextAlign.center,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     );
                   }),
+                  // Path Continuation Banner
+                  // Detects if the navigation path continues on a different floor or building.
+                  if (navState.isNavigating && navState.pathRooms.isNotEmpty)
+                    Builder(builder: (ctx) {
+                      final graphService = ref.read(graphServiceProvider);
+                      // Find path rooms NOT on the current floor
+                      final otherFloorRooms = navState.pathRooms.where((r) => r.floorId != floorId).toList();
+                      if (otherFloorRooms.isEmpty) return const SizedBox();
+
+                      // Group by floor to find distinct "next" destinations
+                      final nextFloors = <String, String>{}; // floorId -> buildingId
+                      for (final r in otherFloorRooms) {
+                        if (!nextFloors.containsKey(r.floorId)) {
+                          final bId = graphService.getBuildingIdForFloor(r.floorId) ?? buildingId;
+                          nextFloors[r.floorId] = bId;
+                        }
+                      }
+
+                      // Find the "exit" room: the last room on the current floor in the path sequence
+                      Room? exitRoom;
+                      for (int i = 0; i < navState.pathRooms.length - 1; i++) {
+                        if (navState.pathRooms[i].floorId == floorId && navState.pathRooms[i + 1].floorId != floorId) {
+                          exitRoom = navState.pathRooms[i];
+                          break;
+                        }
+                      }
+
+                      // Position the banner near the exit room, or at the top of the map
+                      final bannerLeft = exitRoom != null ? exitRoom.x : 50.0;
+                      final bannerTop = exitRoom != null ? exitRoom.y - 60 : 20.0;
+
+                      return Positioned(
+                        left: bannerLeft.clamp(10.0, 14900.0),
+                        top: bannerTop.clamp(10.0, 14900.0),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 280),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.indigo.withOpacity(0.9), Colors.deepPurple.withOpacity(0.9)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white24),
+                              boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 8)],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: nextFloors.entries.map((entry) {
+                                final isSameBuilding = entry.value == buildingId;
+                                final label = isSameBuilding
+                                    ? 'Path continues → Another Floor'
+                                    : 'Path continues → Another Building';
+                                final icon = isSameBuilding ? Icons.layers : Icons.public;
+
+                                return InkWell(
+                                  onTap: () {
+                                    if (onSwitchFloor != null) {
+                                      onSwitchFloor!(entry.value, entry.key);
+                                    } else if (!isSameBuilding && onEnterBuilding != null) {
+                                      onEnterBuilding!(entry.value);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(icon, color: Colors.white, size: 18),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            label,
+                                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 12),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),

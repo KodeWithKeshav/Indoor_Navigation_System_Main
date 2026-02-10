@@ -286,4 +286,15 @@ class FakeAuthRepository implements AuthRepository {
      }
      return const Right(null);
   }
+
+  @override
+  Future<Either<Failure, void>> updateUserOrganization({required String uid, required String organizationId}) async {
+    if (shouldFail) return Left(ServerFailure(failureMessage));
+    final index = users.indexWhere((u) => u.id == uid);
+    if (index != -1) {
+      final old = users[index];
+      users[index] = UserEntity(id: uid, email: old.email, role: old.role, organizationId: organizationId);
+    }
+    return const Right(null);
+  }
 }
