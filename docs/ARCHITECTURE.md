@@ -15,7 +15,7 @@ graph TD
 This is the innermost layer and contains the business logic of the application. It is completely independent of Flutter, Firebase, or any other external framework.
 
 - **Entities**: Plain Dart objects representing core data (e.g., `Building`, `Room`, `Route`).
-- **Use Cases**: Encapsulate specific business rules (e.g., `FindShortestPath`, `AddBuilding`).
+- **Use Cases**: Encapsulate specific business rules (e.g., `FindShortestPath`, `AddBuilding`, `GetAccessibleRoute`).
 - **Repositories (Interfaces)**: Abstract definitions of how data should be accessed.
 
 ### 2. Data Layer (Data Management)
@@ -51,6 +51,13 @@ Handles the creation and maintenance of the digital map.
 - **Hierarchy**: Organization -> Building -> Floor -> Room.
 - **Connectivity**: Automatically updates the navigation graph when map data is modified.
 
+### Accessibility Service
+Ensures the application is usable by everyone, managing inclusive routing and UI adaptations.
+
+- **Routing**: Filters graph for wheelchair-accessible paths (avoiding stairs).
+- **Metadata**: Manages accessibility tags for rooms and elevators.
+- **UI Adaptation**: Provides high-contrast and screen-reader friendly elements.
+
 ## Data Flow
 
 1. **User Action**: User searches for a room.
@@ -73,7 +80,7 @@ lib/
 ├── core/                   # Shared kernel
 │   ├── errors/            # Failure classes
 │   ├── usecases/          # Base use case
-│   └── services/          # Core services (Pathfinding)
+│   └── services/          # Core services (Pathfinding, Accessibility)
 ├── features/
 │   ├── admin_map/         # Feature module
 │   │   ├── data/
