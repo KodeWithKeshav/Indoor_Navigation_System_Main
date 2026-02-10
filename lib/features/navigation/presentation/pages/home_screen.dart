@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../auth/presentation/providers/auth_providers.dart';
 
+/// The main landing page for the navigation context.
+///
+/// Currently serves as a basic entry point with access to the Admin Dashboard
+/// and logout functionality.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 

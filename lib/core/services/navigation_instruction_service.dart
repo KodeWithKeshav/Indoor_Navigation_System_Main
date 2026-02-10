@@ -1,9 +1,15 @@
 import 'dart:math';
 import '../../features/admin_map/domain/entities/map_entities.dart';
 
+/// Represents a single navigation step/instruction for the user.
 class NavigationInstruction {
+  /// The human-readable instruction text (e.g., "Turn left").
   final String message;
+  
+  /// The distance to travel for this instruction in meters.
   final double distance;
+  
+  /// The icon representing the action (e.g., 'straight', 'left', 'stairs_up').
   final String icon; // 'straight', 'left', 'right', 'stairs_up', 'stairs_down', 'elevator_up', 'elevator_down', 'finish'
 
   NavigationInstruction({
@@ -13,8 +19,16 @@ class NavigationInstruction {
   });
 }
 
+/// Service that generates user-friendly navigation instructions from a list of rooms (path).
 class NavigationInstructionService {
   
+  /// Generates a list of [NavigationInstruction] objects from a path.
+  ///
+  /// [path] is the list of [Room] objects representing the route.
+  /// [corridors] is optional, used to get simplified distances.
+  /// [floorLevels] map of floor IDs to their integer levels, used for up/down determination.
+  /// [currentHeading] optional user compass heading to provide relative initial direction.
+  /// [mapNorthOffset] optional offset if the map isn't aligned to true north.
   List<NavigationInstruction> generateInstructions(
     List<Room> path, {
     List<Corridor>? corridors,
@@ -163,6 +177,7 @@ class NavigationInstructionService {
     return "";
   }
 
+  /// Checks if the transition between [a] and [b] is a vertical one (stairs/elevator).
   bool _isVerticalTransition(Room a, Room b) {
       if (a.connectorId != null && a.connectorId == b.connectorId && a.id != b.id) {
           return true;
@@ -170,12 +185,14 @@ class NavigationInstructionService {
       return false;
   }
   
+  /// Determines if moving from [a] to [b] is going up in floor level.
   bool _isFloorUp(Room a, Room b, Map<String, int> levels) {
       final levelA = levels[a.floorId] ?? 0;
       final levelB = levels[b.floorId] ?? 0;
       return levelB > levelA; 
   }
 
+  /// Calculates the distance between two rooms, preferring corridor data if available.
   double _calculateDistance(Room a, Room b, List<Corridor>? corridors) {
     if (corridors != null) {
       try {
@@ -189,6 +206,7 @@ class NavigationInstructionService {
     return sqrt(pow(b.x - a.x, 2) + pow(b.y - a.y, 2));
   }
   
+  /// Determines the turn direction ('left', 'right', 'straight', 'uturn') based on 3 points.
   String _getTurnDirection(Room p, Room c, Room n) {
       double dx1 = c.x - p.x;
       double dy1 = c.y - p.y;
@@ -209,6 +227,7 @@ class NavigationInstructionService {
       return 'uturn';
   }
   
+  /// Formats the turn message, optionally including a landmark.
   String _formatTurnMessage(String turnType, String landmark) {
       final suffix = landmark.isNotEmpty ? " towards $landmark" : "";
       switch (turnType) {

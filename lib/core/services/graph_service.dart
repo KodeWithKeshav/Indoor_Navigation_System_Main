@@ -4,16 +4,26 @@ import '../../features/admin_map/domain/entities/campus_entities.dart';
 import '../../features/admin_map/domain/repositories/admin_map_repository.dart';
 import 'pathfinding_service.dart';
 
+/// Service responsible for building and managing the navigation graph.
+///
+/// It fetches data (buildings, floors, rooms, corridors) from the repository,
+/// constructs the graph nodes and edges, and handles connections between
+/// different levels (vertical) and buildings (campus).
 class GraphService {
   final AdminMapRepository repository;
   
-  // Cache
+  // Cache of all rooms (nodes) in the graph
   List<Room> allRooms = [];
+  
+  // Cache of all corridors (edges) in the graph
   List<Corridor> allCorridors = [];
+  
+  // Flag to indicate if the graph needs rebuilding
   bool _isDirty = true;
   
   GraphService(this.repository);
 
+  /// Marks the graph as dirty, forcing a rebuild on the next request.
   void markDirty() {
     _isDirty = true;
   }
@@ -93,6 +103,9 @@ class GraphService {
     }
   }
   
+  /// Loads the campus-level map data (outdoor nodes and paths).
+  ///
+  /// [orgId] is used to construct the campus ID.
   Future<void> _loadCampusMap(String? orgId) async {
     final campusId = orgId != null ? 'campus_$orgId' : 'campus_global';
     final roomsResult = await repository.getRooms(campusId, 'ground');
@@ -109,6 +122,9 @@ class GraphService {
     _floorToBuilding['ground'] = campusId;
   }
 
+  /// Creates vertical connections (edges) between rooms with the same connector ID.
+  ///
+  /// This links floors together via stairs or elevators.
   void _addVerticalConnections() {
     // Group rooms by ConnectorID
     final Map<String, List<Room>> connectorGroups = {};
@@ -151,6 +167,9 @@ class GraphService {
     }
   }
 
+  /// Adds connections between different buildings based on campus data.
+  ///
+  /// [connections] list contains the metadata for linking buildings.
   void _addCampusConnections(List<CampusConnection> connections) {
     // We need to know which rooms are Entrance nodes for a specific Building.
     // Using the _floorToBuilding map populated in buildGraph.
@@ -213,6 +232,9 @@ class GraphService {
   
   final Map<String, String> _floorToBuilding = {};
 
+  /// Finds a path between [startId] and [endId].
+  ///
+  /// [isAccessible] if true, avoids stairs and prefers elevators/ramps.
   List<String> findPath(String startId, String endId, {bool isAccessible = false}) {
     return PathfindingService.findPath(startId, endId, allRooms, allCorridors, isAccessible: isAccessible);
   }

@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:math';
 import '../../features/admin_map/domain/entities/map_entities.dart';
 
+/// Service that implements the A* pathfinding algorithm for indoor navigation.
 class PathfindingService {
   // A* Algorithm
   /// Finds the shortest path between two rooms using the A* search algorithm.
@@ -86,6 +87,10 @@ class PathfindingService {
     return []; // No path found
   }
   
+  
+  /// Heuristic function for A* (Euclidean distance).
+  ///
+  /// Returns 0 for multi-floor transitions to ensure admissibility (like Dijkstra).
   static double _heuristic(Room a, Room b) {
     // If on different floors/buildings, we can't use 2D Euclidean distance safely 
     // because coordinate systems might differ or overlap physically.
@@ -98,6 +103,10 @@ class PathfindingService {
     return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
   }
   
+  
+  /// Reconstructs the path from the [cameFrom] map.
+  ///
+  /// Backtracks from [current] (end node) to the start node.
   static List<String> _reconstructPath(Map<String, String> cameFrom, String current) {
     final path = <String>[current];
     while (cameFrom.containsKey(current)) {

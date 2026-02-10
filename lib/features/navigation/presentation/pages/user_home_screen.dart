@@ -27,6 +27,11 @@ const Color paperWhite = Color(0xFFE2E8F0);
 
 
 
+
+/// The main user interface for the navigation feature.
+///
+/// Handles graph building, displaying the map, navigation controls, and
+/// access to settings and profile.
 class UserHomeScreen extends ConsumerStatefulWidget {
   const UserHomeScreen({super.key});
 
@@ -41,6 +46,7 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Build the graph once the widget is ready, using the user's organization ID.
     WidgetsBinding.instance.addPostFrameCallback((_) {
        final user = ref.read(currentUserProvider);
        if (user != null && user.organizationId.isNotEmpty) {
@@ -49,6 +55,7 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
     });
   }
 
+  /// Displays the accessibility settings dialog.
   void _showSettingsDialog(BuildContext context, WidgetRef ref) {
       showDialog(
         context: context, 
@@ -94,6 +101,7 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
 
 
 
+  /// Shows a dialog to select a building and floor for viewing the map.
   void _showMapDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -516,6 +524,7 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
   }
 }
 
+/// Dialog for selecting a building and floor to view.
 class _MapSelectionDialog extends ConsumerStatefulWidget {
   const _MapSelectionDialog();
 
@@ -752,6 +761,7 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
   }
 }
 
+/// Widget that renders the map content (rooms, corridors, grid) for a specific floor.
 class _MapViewer extends ConsumerWidget {
   final String buildingId;
   final String floorId;

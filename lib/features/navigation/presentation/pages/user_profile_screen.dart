@@ -7,6 +7,9 @@ const Color electricGrid = Color(0xFF38BDF8);
 const Color paperWhite = Color(0xFFE2E8F0);
 const Color darkCardColor = Color(0xFF1E293B);
 
+/// Displays the user's profile information and account settings.
+///
+/// Allows the user to view their email, organization ID, and update their password.
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key});
 
@@ -153,6 +156,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     );
   }
   
+  /// Helper widget to build a read-only text field with a label.
   Widget _buildReadOnlyField(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
