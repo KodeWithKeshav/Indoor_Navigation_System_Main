@@ -561,6 +561,20 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
        });
     }
 
+    // Watch navigation state for cross-building route detection
+    final navState = ref.watch(navigationProvider);
+    final graphService = ref.watch(graphServiceProvider);
+    bool isCrossBuildingRoute = false;
+    if (navState.isNavigating && navState.pathRooms.length > 1) {
+      final floorIds = navState.pathRooms.map((r) => r.floorId).toSet();
+      final buildingIds = <String>{};
+      for (final fid in floorIds) {
+        final bid = graphService.getBuildingIdForFloor(fid);
+        if (bid != null) buildingIds.add(bid);
+      }
+      isCrossBuildingRoute = buildingIds.length > 1;
+    }
+
     return Dialog(
         backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.all(16),
@@ -608,15 +622,19 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
                 child: buildingsAsync.when(
                   data: (buildings) {
                      final validBuildings = buildings.where((b) => !b.id.startsWith('campus_')).toList();
-                     final campusBuilding = buildings.where((b) => b.id.startsWith('campus_')).firstOrNull;
+                     // Campus building is never stored as a Firestore doc — the admin navigates
+                     // to it via hardcoded URL. So we always synthesize it from the org ID.
+                     final campusBuildingId = user?.organizationId != null 
+                         ? 'campus_${user!.organizationId}' 
+                         : null;
                      final isCampusView = _selectedBuildingId?.startsWith('campus_') == true;
                      
-                     if (validBuildings.isEmpty && campusBuilding == null) return const Text("No buildings", style: TextStyle(color: Colors.white54));
+                     if (validBuildings.isEmpty && campusBuildingId == null) return const Text("No buildings", style: TextStyle(color: Colors.white54));
                      
                      return Column(
                        children: [
                          // Indoor / Campus Toggle
-                         if (campusBuilding != null)
+                         if (campusBuildingId != null)
                            Container(
                              margin: const EdgeInsets.only(bottom: 10),
                              decoration: BoxDecoration(
@@ -657,7 +675,7 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
                                  ),
                                  Expanded(
                                    child: GestureDetector(
-                                     onTap: () => _updateBuilding(campusBuilding.id),
+                                     onTap: () => _updateBuilding(campusBuildingId!),
                                      child: Container(
                                        padding: const EdgeInsets.symmetric(vertical: 10),
                                        decoration: BoxDecoration(
@@ -793,6 +811,44 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
                            )
                          : const Center(child: Text("Select a Building and Floor", style: TextStyle(color: Colors.white54))),
                     ),
+                    // Cross-Building Route Banner
+                    if (isCrossBuildingRoute && !(_selectedBuildingId?.startsWith('campus_') ?? false))
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        right: 8,
+                        child: GestureDetector(
+                          onTap: () {
+                            final buildings = buildingsAsync.value ?? [];
+                            final campus = buildings.where((b) => b.id.startsWith('campus_')).firstOrNull;
+                            if (campus != null) _updateBuilding(campus.id);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [Color(0xFF7C3AED), Color(0xFF4F46E5)]),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 8)],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.public, color: Colors.white, size: 20),
+                                const SizedBox(width: 10),
+                                const Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Cross-Building Route', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                                      Text('Tap to view full route on Campus Map', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 14),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     // Map Legend (collapsible)
                     Positioned(
                       right: 8,
@@ -899,6 +955,13 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
        _selectedFloorId = null; // Clear floor until fetched
      });
      
+     // Campus buildings don't have Floor documents in Firestore —
+     // the admin editor uses floorId='ground' directly via URL params.
+     if (buildingId.startsWith('campus_')) {
+       setState(() => _selectedFloorId = initialFloorId ?? 'ground');
+       return;
+     }
+     
      // Fetch floors to auto-select first one
      ref.read(floorsOfBuildingProvider(buildingId).future).then((floors) {
         if (mounted && _selectedBuildingId == buildingId) {
@@ -963,18 +1026,21 @@ class _MapViewer extends ConsumerWidget {
                   // Edges and Path
                   Positioned.fill(
                      child: CustomPaint(
-                       painter: buildingId.startsWith('campus_') 
-                         ? CampusEdgePainter(
-                             rooms: rooms,
-                             connections: campusConnectionsAsync.asData?.value ?? [],
-                             pathIds: navState.pathIds,
-                           )
-                         : EdgePainter(
+                       // Always render standard edges/corridors (covers manually drawn campus paths too)
+                       painter: EdgePainter(
                              rooms: rooms,
                              corridors: corridors,
                              positions: {}, // Static view
                              pathIds: navState.pathIds, // Pass global path
                            ),
+                       // Overlay automatic campus connections if applicable
+                       foregroundPainter: buildingId.startsWith('campus_') 
+                         ? CampusEdgePainter(
+                             rooms: rooms,
+                             connections: campusConnectionsAsync.asData?.value ?? [],
+                             pathIds: navState.pathIds,
+                           )
+                         : null,
                      )
                   ),
                   // Draw Rooms
