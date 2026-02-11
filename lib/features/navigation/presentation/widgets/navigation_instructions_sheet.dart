@@ -73,6 +73,8 @@ class NavigationInstructionsSheet extends ConsumerWidget {
                   case 'finish': icon = Icons.flag; break;
                   case 'uturn': icon = Icons.u_turn_left; break;
                   case 'start': icon = Icons.trip_origin; break;
+                  case 'enter': icon = Icons.door_front_door; break;
+                  case 'exit': icon = Icons.door_back_door; break;
                   default: icon = Icons.circle;
                 }
                 return Row(
