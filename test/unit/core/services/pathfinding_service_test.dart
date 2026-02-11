@@ -80,13 +80,10 @@ void main() {
         expect(path, isEmpty);
       });
 
-      test('should throw error when end room does not exist (known issue)', () {
-        // NOTE: This test documents current behavior. Ideally should return empty list.
-        // The implementation has a null-check issue when end room is not in the room map.
-        expect(
-          () => PathfindingService.findPath('A', 'INVALID', rooms, corridors),
-          throwsA(isA<TypeError>()),
-        );
+      test('should return empty list when end room does not exist', () {
+        final path = PathfindingService.findPath('A', 'INVALID', rooms, corridors);
+        
+        expect(path, isEmpty);
       });
     });
 
