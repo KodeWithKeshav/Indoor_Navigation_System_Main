@@ -13,6 +13,8 @@ import '../../../../core/providers/settings_provider.dart';
 import '../widgets/trip_planner_widget.dart';
 import '../widgets/room_icon_helper.dart';
 import '../../../../core/services/compass_service.dart';
+import '../widgets/user_edge_painter.dart';
+import '../widgets/navigation_instructions_sheet.dart';
 
 import 'package:indoor_navigation_system/features/auth/presentation/providers/auth_providers.dart';
 import 'user_profile_screen.dart';
@@ -223,92 +225,12 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
 
               // 2. Navigation Instructions (Bottom Overlay)
               if (navState.isNavigating)
-                Positioned(
+                const Positioned(
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  height: MediaQuery.of(context).size.height * 0.45, // Increased height since map is gone
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: darkCardColor.withOpacity(0.95),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                      border: const Border(top: BorderSide(color: electricGrid, width: 2)),
-                      boxShadow: [
-                        BoxShadow(color: electricGrid.withOpacity(0.2), blurRadius: 20, spreadRadius: 5),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                           children: [
-                             Text(
-                               'NEXT STEPS', 
-                               style: const TextStyle(
-                                 color: paperWhite, 
-                                 fontWeight: FontWeight.bold, 
-                                 fontFamily: 'Courier',
-                                 fontSize: 14,
-                                 letterSpacing: 1.5
-                               )
-                             ),
-                             Text(
-                               '${navState.instructions.length} STEPS',
-                               style: const TextStyle(color: electricGrid, fontSize: 10, fontWeight: FontWeight.bold),
-                             )
-                           ],
-                        ),
-                        Divider(color: electricGrid.withOpacity(0.3)),
-                        Expanded(
-                          child: ListView.separated(
-                            padding: const EdgeInsets.only(top: 8),
-                            separatorBuilder: (_, __) => Divider(color: Colors.white10, height: 16),
-                            itemCount: navState.instructions.length,
-                            itemBuilder: (context, index) {
-                              final step = navState.instructions[index];
-                              IconData icon;
-                              switch(step.icon) {
-                                case 'left': icon = Icons.turn_left; break;
-                                case 'right': icon = Icons.turn_right; break;
-                                case 'straight': icon = Icons.arrow_upward; break;
-                                case 'stairs_up': icon = Icons.stairs; break;
-                                case 'stairs_down': icon = Icons.stairs_outlined; break;
-                                case 'elevator_up': icon = Icons.elevator; break;
-                                case 'elevator_down': icon = Icons.elevator_outlined; break;
-                                case 'finish': icon = Icons.flag; break;
-                                default: icon = Icons.circle;
-                              }
-                              return Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: electricGrid.withOpacity(0.1),
-                                    radius: 18, // Slightly bigger
-                                    child: Icon(icon, color: electricGrid, size: 20),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(step.message, style: const TextStyle(color: paperWhite, fontWeight: FontWeight.w600, fontSize: 14)),
-                                         if (step.distance > 0)
-                                            Text(
-                                              'Walk ${step.distance.toStringAsFixed(0)}m', 
-                                              style: TextStyle(color: electricGrid.withOpacity(0.8), fontSize: 12, fontFamily: 'Courier', fontWeight: FontWeight.bold)
-                                            ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  height: 350,
+                  child: NavigationInstructionsSheet(),
                 ),
 
               // 3. Compass Widget (Restored)
@@ -811,6 +733,7 @@ class _MapSelectionDialogState extends ConsumerState<_MapSelectionDialog> {
                            )
                          : const Center(child: Text("Select a Building and Floor", style: TextStyle(color: Colors.white54))),
                     ),
+                    
                     // Cross-Building Route Banner
                     if (isCrossBuildingRoute && !(_selectedBuildingId?.startsWith('campus_') ?? false))
                       Positioned(
@@ -1027,10 +950,9 @@ class _MapViewer extends ConsumerWidget {
                   Positioned.fill(
                      child: CustomPaint(
                        // Always render standard edges/corridors (covers manually drawn campus paths too)
-                       painter: EdgePainter(
+                       painter: UserEdgePainter(
                              rooms: rooms,
                              corridors: corridors,
-                             positions: {}, // Static view
                              pathIds: navState.pathIds, // Pass global path
                            ),
                        // Overlay automatic campus connections if applicable
@@ -1094,7 +1016,12 @@ class _MapViewer extends ConsumerWidget {
                                 SimpleDialogOption(
                                   onPressed: () {
                                      ref.read(navigationProvider.notifier).setEnd(room);
-                                     Navigator.pop(ctx);
+                                     Navigator.pop(ctx); // Close the popup
+                                     
+                                     // If we have a start point, close the map dialog too so user sees instructions
+                                     if (ref.read(navigationProvider).startRoom != null) {
+                                         if (context.mounted) Navigator.pop(context);
+                                     }
                                   },
                                   child: const Text('Set as Destination', style: TextStyle(color: electricGrid)),
                                 ),

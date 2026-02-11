@@ -233,6 +233,10 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                   style: const TextStyle(color: paperWhite),
                   onChanged: (val) {
                     if (val != null) setState(() => selectedType = val);
+                    // Auto-fill connectorId if Entrance and not campus (link to self)
+                    if (val == RoomType.entrance && !isCampusMap) {
+                      connectorIdController.text = widget.buildingId;
+                    }
                   },
                   items: availableTypes.map((type) => DropdownMenuItem(
                     value: type,
@@ -261,11 +265,14 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                      builder: (context, snapshot) {
                        if (!snapshot.hasData) return const LinearProgressIndicator();
                        final buildings = snapshot.data!;
-                       // Exclude 'campus_' maps from the list if they accidentally exist
+                       // Exclude 'campus_' maps from the list
                        final validBuildings = buildings.where((b) => !b.id.startsWith('campus_')).toList();
                        
                        return DropdownButtonFormField<String>(
-                         decoration: const InputDecoration(labelText: 'Target Building'),
+                         decoration: const InputDecoration(labelText: 'Link to Building ID (Usually this building)', labelStyle: TextStyle(color: Colors.white70)),
+                         dropdownColor: darkCardColor,
+                         style: const TextStyle(color: paperWhite),
+                         value: connectorIdController.text.isNotEmpty && validBuildings.any((b) => b.id == connectorIdController.text) ? connectorIdController.text : null,
                          items: validBuildings.map((b) => DropdownMenuItem(
                            value: b.id,
                            child: Text(b.name),
@@ -276,7 +283,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                        );
                      }
                    ),
-                   const Text('Select the building this entrance leads to.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                   const Text('Matches the Building ID for campus navigation.', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 ]
               ],
             ),

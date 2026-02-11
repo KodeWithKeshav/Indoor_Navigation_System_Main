@@ -42,7 +42,7 @@ void main() {
         expect(instructions.last.message, contains('End Room'));
       });
 
-      test('should include distance in instructions', () {
+      test('should preserve admin-defined corridor distance exactly', () {
         final path = [
           const Room(id: 'A', floorId: 'floor1', name: 'A', x: 0, y: 0, type: RoomType.room),
           const Room(id: 'B', floorId: 'floor1', name: 'B', x: 10, y: 0, type: RoomType.room),
@@ -60,6 +60,31 @@ void main() {
         );
         
         expect(walkInstruction.distance, 25.5);
+      });
+
+      test('should never combine turn and walk into one instruction', () {
+        // Path: East → North (left turn)
+        final path = [
+          const Room(id: 'A', floorId: 'f1', name: 'A', x: 0, y: 0, type: RoomType.hallway),
+          const Room(id: 'B', floorId: 'f1', name: 'B', x: 10, y: 0, type: RoomType.hallway),
+          const Room(id: 'C', floorId: 'f1', name: 'Target', x: 10, y: -10, type: RoomType.room),
+        ];
+        final corridors = [
+          const Corridor(id: 'c1', floorId: 'f1', startRoomId: 'A', endRoomId: 'B', distance: 15.0),
+          const Corridor(id: 'c2', floorId: 'f1', startRoomId: 'B', endRoomId: 'C', distance: 20.0),
+        ];
+        
+        final instructions = service.generateInstructions(path, corridors: corridors);
+        
+        // Verify no instruction has both a turn icon AND a non-zero distance
+        for (final step in instructions) {
+          if (step.icon == 'left' || step.icon == 'right' || 
+              step.icon == 'sharp_left' || step.icon == 'sharp_right' ||
+              step.icon == 'uturn') {
+            expect(step.distance, equals(0),
+              reason: 'Turn instruction "${step.message}" should have distance 0, got ${step.distance}');
+          }
+        }
       });
     });
 
@@ -107,7 +132,7 @@ void main() {
 
     group('Turn Detection', () {
       test('should detect left turn', () {
-        // Path goes: East -> North (left turn)
+        // Path goes: East → North (left turn)
         final path = [
           const Room(id: 'A', floorId: 'f1', name: 'A', x: 0, y: 0, type: RoomType.hallway),
           const Room(id: 'B', floorId: 'f1', name: 'B', x: 10, y: 0, type: RoomType.hallway),
@@ -121,7 +146,7 @@ void main() {
       });
 
       test('should detect right turn', () {
-        // Path goes: East -> South (right turn)
+        // Path goes: East → South (right turn)
         final path = [
           const Room(id: 'A', floorId: 'f1', name: 'A', x: 0, y: 0, type: RoomType.hallway),
           const Room(id: 'B', floorId: 'f1', name: 'B', x: 10, y: 0, type: RoomType.hallway),
@@ -135,7 +160,7 @@ void main() {
       });
 
       test('should detect straight path', () {
-        // Path goes straight: East -> East
+        // Path goes straight: East → East
         final path = [
           const Room(id: 'A', floorId: 'f1', name: 'A', x: 0, y: 0, type: RoomType.hallway),
           const Room(id: 'B', floorId: 'f1', name: 'B', x: 10, y: 0, type: RoomType.hallway),
@@ -148,6 +173,23 @@ void main() {
           i.icon == 'straight' || i.message.toLowerCase().contains('straight')
         );
         expect(hasStraight, isTrue);
+      });
+
+      test('should emit turn as separate step with zero distance', () {
+        // Path: East → North (left turn)
+        final path = [
+          const Room(id: 'A', floorId: 'f1', name: 'A', x: 0, y: 0, type: RoomType.hallway),
+          const Room(id: 'B', floorId: 'f1', name: 'B', x: 10, y: 0, type: RoomType.hallway),
+          const Room(id: 'C', floorId: 'f1', name: 'Target', x: 10, y: -10, type: RoomType.room),
+        ];
+        
+        final instructions = service.generateInstructions(path);
+        
+        final turnStep = instructions.firstWhere(
+          (i) => i.icon == 'left',
+          orElse: () => NavigationInstruction(message: '', distance: -1, icon: ''),
+        );
+        expect(turnStep.distance, 0, reason: 'Turn steps must have zero distance');
       });
     });
 
@@ -163,6 +205,40 @@ void main() {
         
         final hasLibraryMention = instructions.any((i) => i.message.contains('Library'));
         expect(hasLibraryMention, isTrue);
+      });
+    });
+
+    group('Building Transitions', () {
+      test('should generate enter building step for entrance node', () {
+        // Outdoor campus → Entrance → Indoor hallway
+        final path = [
+          const Room(id: 'A', floorId: 'campus', name: 'Quad', x: 0, y: 0, type: RoomType.ground),
+          Room(id: 'B', floorId: 'floor1', name: 'Main Door', x: 10, y: 0, type: RoomType.entrance, connectorId: 'entrance1'),
+          const Room(id: 'C', floorId: 'floor1', name: 'Lobby', x: 20, y: 0, type: RoomType.hallway),
+        ];
+        
+        final instructions = service.generateInstructions(path);
+        
+        final enterStep = instructions.any(
+          (i) => i.message.toLowerCase().contains('enter'),
+        );
+        expect(enterStep, isTrue, reason: 'Should generate an "Enter building" step');
+      });
+
+      test('should generate exit building step for entrance node', () {
+        // Indoor hallway → Entrance → Outdoor campus
+        final path = [
+          const Room(id: 'A', floorId: 'floor1', name: 'Lobby', x: 0, y: 0, type: RoomType.hallway),
+          Room(id: 'B', floorId: 'campus', name: 'Main Door', x: 10, y: 0, type: RoomType.entrance, connectorId: 'entrance1'),
+          const Room(id: 'C', floorId: 'campus', name: 'Quad', x: 20, y: 0, type: RoomType.ground),
+        ];
+        
+        final instructions = service.generateInstructions(path);
+        
+        final exitStep = instructions.any(
+          (i) => i.message.toLowerCase().contains('exit'),
+        );
+        expect(exitStep, isTrue, reason: 'Should generate an "Exit building" step');
       });
     });
 
@@ -206,6 +282,28 @@ void main() {
         );
         
         expect(walkInstruction.distance, closeTo(5.0, 0.01));
+      });
+
+      test('should merge consecutive straight walks through hallway nodes', () {
+        // Three hallway nodes in a line: A → B → C → D
+        final path = [
+          const Room(id: 'A', floorId: 'f1', name: 'A', x: 0, y: 0, type: RoomType.hallway),
+          const Room(id: 'B', floorId: 'f1', name: 'B', x: 10, y: 0, type: RoomType.hallway),
+          const Room(id: 'C', floorId: 'f1', name: 'C', x: 20, y: 0, type: RoomType.hallway),
+          const Room(id: 'D', floorId: 'f1', name: 'Target', x: 30, y: 0, type: RoomType.room),
+        ];
+        final corridors = [
+          const Corridor(id: 'c1', floorId: 'f1', startRoomId: 'A', endRoomId: 'B', distance: 10),
+          const Corridor(id: 'c2', floorId: 'f1', startRoomId: 'B', endRoomId: 'C', distance: 10),
+          const Corridor(id: 'c3', floorId: 'f1', startRoomId: 'C', endRoomId: 'D', distance: 10),
+        ];
+
+        final instructions = service.generateInstructions(path, corridors: corridors);
+
+        // Should have: Start, Walk straight (30m total), Arrive
+        final walkSteps = instructions.where((i) => i.icon == 'straight').toList();
+        expect(walkSteps.length, 1, reason: 'Consecutive straight walks should merge into one');
+        expect(walkSteps.first.distance, 30.0, reason: 'Total distance should be sum of segments');
       });
     });
   });

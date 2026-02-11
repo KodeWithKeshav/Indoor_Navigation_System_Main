@@ -47,6 +47,11 @@ class PathfindingService {
     final fScore = <String, double>{};
     if (roomMap.containsKey(startId) && roomMap.containsKey(endId)) {
        fScore[startId] = _heuristic(roomMap[startId]!, roomMap[endId]!);
+    } else {
+       print('PathfindingService: Start ($startId) or End ($endId) not in graph!');
+       if (!roomMap.containsKey(startId)) print(' - Missing Start');
+       if (!roomMap.containsKey(endId)) print(' - Missing End');
+       return [];
     }
     
     while (openSet.isNotEmpty) {

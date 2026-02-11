@@ -171,6 +171,8 @@ class GraphService {
   ///
   /// [connections] list contains the metadata for linking buildings.
   void _addCampusConnections(List<CampusConnection> connections) {
+    print('GraphService: Processing ${connections.length} campus connections');
+    
     // We need to know which rooms are Entrance nodes for a specific Building.
     // Using the _floorToBuilding map populated in buildGraph.
     
@@ -178,13 +180,35 @@ class GraphService {
       final fromBldg = conn.fromBuildingId;
       final toBldg = conn.toBuildingId;
       
-      // 1. Try to find "Outdoor Nodes" (Visual representation on Campus Map)
-      // These are on 'ground' floor and their connectorId matches the building ID.
-      final fromNodes = allRooms.where((r) => r.floorId == 'ground' && r.connectorId == fromBldg).toList();
-      final toNodes = allRooms.where((r) => r.floorId == 'ground' && r.connectorId == toBldg).toList();
+      // Robust finding of nodes (Case-insensitive)
+      final fromNodes = allRooms.where((r) {
+           final floorMatch = r.floorId.toLowerCase() == 'ground';
+           final connectorMatch = r.connectorId?.trim().toLowerCase() == fromBldg.trim().toLowerCase();
+           return floorMatch && connectorMatch;
+      }).toList();
+      
+      final toNodes = allRooms.where((r) {
+           final floorMatch = r.floorId.toLowerCase() == 'ground';
+           final connectorMatch = r.connectorId?.trim().toLowerCase() == toBldg.trim().toLowerCase();
+           return floorMatch && connectorMatch;
+      }).toList();
+      
+      if (fromNodes.isEmpty) {
+          print('GraphService: No entrance nodes found for Building $fromBldg');
+          // Debug why (find any node with this connectorId?)
+          final anyConnector = allRooms.where((r) => r.connectorId?.toLowerCase() == fromBldg.toLowerCase()).length;
+          print(' - Nodes with connectorId "$fromBldg" (any floor): $anyConnector');
+      }
+      
+      if (toNodes.isEmpty) {
+          print('GraphService: No entrance nodes found for Building $toBldg');
+          final anyConnector = allRooms.where((r) => r.connectorId?.toLowerCase() == toBldg.toLowerCase()).length;
+          print(' - Nodes with connectorId "$toBldg" (any floor): $anyConnector');
+      }
 
       if (fromNodes.isNotEmpty && toNodes.isNotEmpty) {
-          // Link Visual Nodes
+           print('GraphService: Linking $fromBldg -> $toBldg');
+           // Link Visual Nodes
           for (final start in fromNodes) {
             for (final end in toNodes) {
                if (conn.distance > 0) {

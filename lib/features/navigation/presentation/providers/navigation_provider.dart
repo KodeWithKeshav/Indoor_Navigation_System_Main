@@ -111,6 +111,7 @@ class NavigationNotifier extends Notifier<NavigationState> {
     );
     
     if (pathIds.isNotEmpty) {
+      print('NavigationNotifier: Path Found (${pathIds.length} nodes)');
       final pathRooms = <Room>[];
       for (final id in pathIds) {
         try {
@@ -137,6 +138,7 @@ class NavigationNotifier extends Notifier<NavigationState> {
       );
     } else {
        // No path
+       print('NavigationNotifier: No Path Found');
        state = state.copyWith(
          isNavigating: false, 
          pathIds: [],
