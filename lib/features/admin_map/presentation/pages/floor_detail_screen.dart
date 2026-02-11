@@ -354,6 +354,8 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
     }
   }
 
+
+
   void _editSelectedRoom() async {
      if (_selectedRoomId == null) return;
      
@@ -417,13 +419,15 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                       roomId: room.id,
                       name: nameController.text,
                       type: selectedType,
-                      connectorId: connectorController.text.isNotEmpty ? connectorController.text : null,
+                      connectorId: (isConnector && connectorController.text.isNotEmpty) ? connectorController.text : null,
                     ));
                     
                     if (mounted) {
                       Navigator.pop(ctx);
                       ref.read(graphServiceProvider).markDirty();
                       ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
+                      // Refresh navigation path to reflect changes
+                      ref.read(navigationProvider.notifier).refreshPath();
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Node Updated')));
                     }
                  },
@@ -435,6 +439,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
        )
      );
   }
+
 
   void _showHelpDialog() {
     showDialog(

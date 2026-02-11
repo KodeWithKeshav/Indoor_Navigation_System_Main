@@ -67,10 +67,17 @@ class PathfindingService {
       for (var corridor in neighborCorridors) {
         final neighborId = (corridor.startRoomId == current) ? corridor.endRoomId : corridor.startRoomId;
         final neighborRoom = roomMap[neighborId];
+        final currentRoom = roomMap[current];
 
-        // Accessibility Check: Skip Stairs if isAccessible is true
-        if (isAccessible && neighborRoom != null && neighborRoom.type == RoomType.stairs) {
-           continue; 
+        if (neighborRoom == null || currentRoom == null) continue;
+
+        // Accessibility Check: Only skip Stairs if it's a VERTICAL transition
+        // This allows users to walk "past" or "through" a stair node on the same floor without climbing.
+        if (isAccessible) {
+           final isVertical = currentRoom.floorId != neighborRoom.floorId;
+           if (isVertical && (currentRoom.type == RoomType.stairs || neighborRoom.type == RoomType.stairs)) {
+             continue;
+           }
         }
         
         // Use defined corridor distance

@@ -88,6 +88,14 @@ class NavigationNotifier extends Notifier<NavigationState> {
     }
   }
 
+  /// Refreshes the path computation, useful when graph data changes (e.g. node edits).
+  Future<void> refreshPath() async {
+     if (state.isNavigating) {
+       await _computePath();
+     }
+  }
+  
+
   
   void clear() {
     state = NavigationState();
