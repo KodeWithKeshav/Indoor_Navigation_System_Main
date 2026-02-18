@@ -78,10 +78,15 @@ class NavigationInstructionsSheet extends ConsumerWidget {
                   default: icon = Icons.circle;
                 }
                 return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      backgroundColor: electricGrid.withOpacity(0.1),
-                      radius: 18, 
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: electricGrid.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: electricGrid.withOpacity(0.5)),
+                      ),
                       child: Icon(icon, color: electricGrid, size: 20),
                     ),
                     const SizedBox(width: 16),
@@ -93,29 +98,22 @@ class NavigationInstructionsSheet extends ConsumerWidget {
                             step.message,
                             style: const TextStyle(color: paperWhite, fontWeight: FontWeight.w600, fontSize: 14)
                           ),
+                          if (step.distance > 0)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '${step.distance.toStringAsFixed(1)} m',
+                                style: TextStyle(
+                                  color: electricGrid.withOpacity(0.8),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Courier',
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
-                    if (step.distance > 0) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: electricGrid.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: electricGrid.withOpacity(0.3)) 
-                        ),
-                        child: Text(
-                          "${step.distance.toStringAsFixed(0)} m",
-                          style: const TextStyle(
-                            color: electricGrid, 
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            fontFamily: 'Courier'
-                          ),
-                        ),
-                      ),
-                    ],
                   ],
                 );
               },

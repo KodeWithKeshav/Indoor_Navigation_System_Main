@@ -209,11 +209,11 @@ class GraphService {
       if (fromNodes.isNotEmpty && toNodes.isNotEmpty) {
            print('GraphService: Linking $fromBldg -> $toBldg');
            // Link Visual Nodes
-          for (final start in fromNodes) {
-            for (final end in toNodes) {
+           for (final start in fromNodes) {
+             for (final end in toNodes) {
                if (conn.distance > 0) {
                  allCorridors.add(Corridor(
-                  id: 'campus_${start.id}_${end.id}',
+                  id: 'virtual_campus_${start.id}_${end.id}',
                   floorId: 'campus',
                   startRoomId: start.id,
                   endRoomId: end.id,
@@ -221,7 +221,7 @@ class GraphService {
                 ));
                }
             }
-          }
+           }
       } else {
           // Fallback: Link Entrances Directly (Invisible path, but functional)
           
@@ -241,7 +241,7 @@ class GraphService {
             for (final end in toEntrances) {
                if (conn.distance > 0) { // check if distance valid
                  allCorridors.add(Corridor(
-                  id: 'campus_${start.id}_${end.id}',
+                  id: 'virtual_campus_${start.id}_${end.id}',
                   floorId: 'campus',
                   startRoomId: start.id,
                   endRoomId: end.id,

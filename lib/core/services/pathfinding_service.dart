@@ -35,9 +35,9 @@ class PathfindingService {
       }
     }
     
-    // 2. Setup Priority Queue and Tracking
-    // Using a simple List and sorting for Priority Queue behavior (efficient enough for small graphs < 1000 nodes)
+    // 2. Setup Priority Queue, Closed Set, and Tracking
     final openSet = <String>[startId];
+    final closedSet = <String>{};  // Nodes already fully expanded
     final cameFrom = <String, String>{};
     
     // gScore: cost from start to node
@@ -60,12 +60,21 @@ class PathfindingService {
       final current = openSet.removeAt(0);
       
       if (current == endId) {
-        return _reconstructPath(cameFrom, current);
+        final path = _reconstructPath(cameFrom, current);
+        final pathNames = path.map((id) => roomMap[id]?.name ?? id).toList();
+        final totalCost = gScore[endId] ?? -1;
+        print('PathfindingService: ${roomMap[startId]?.name} → ${roomMap[endId]?.name} | Cost: $totalCost | Path: ${pathNames.join(" → ")}');
+        return path;
       }
       
+      // Mark as fully expanded — never revisit
+      closedSet.add(current);
+      
       final neighborCorridors = adj[current] ?? [];
+      
       for (var corridor in neighborCorridors) {
         final neighborId = (corridor.startRoomId == current) ? corridor.endRoomId : corridor.startRoomId;
+        
         final neighborRoom = roomMap[neighborId];
         final currentRoom = roomMap[current];
 
@@ -81,10 +90,26 @@ class PathfindingService {
         }
         
         // Use defined corridor distance
-        final dist = corridor.distance;
+        double dist = corridor.distance;
+        
+        // Penalize virtual edges (campus connections) heavily to prefer detailed paths
+        if (corridor.id.startsWith('virtual_')) {
+             dist *= 3.0;
+        }
+
         final tentativeGScore = (gScore[current] ?? double.infinity) + dist;
         
+        // Skip closed nodes ONLY if we can't improve their g-score.
+        // The heuristic is inconsistent across floors (h=0 for cross-floor, h=Euclidean for same-floor),
+        // so closed nodes must be re-opened when a cheaper path is discovered.
+        if (closedSet.contains(neighborId) && tentativeGScore >= (gScore[neighborId] ?? double.infinity)) {
+          continue;
+        }
+        
         if (tentativeGScore < (gScore[neighborId] ?? double.infinity)) {
+          // Re-open if previously closed with a worse cost
+          closedSet.remove(neighborId);
+          
           cameFrom[neighborId] = current;
           gScore[neighborId] = tentativeGScore;
           fScore[neighborId] = tentativeGScore + _heuristic(roomMap[neighborId]!, roomMap[endId]!);
@@ -112,7 +137,10 @@ class PathfindingService {
     }
     
     // Same floor: Euclidean distance
-    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+    // SCALE FACTOR: 0.05 (Assuming ~20 pixels = 1 meter)
+    // Heuristic must be admissible (h <= true cost). Without scaling, pixel distance (700) 
+    // vastly exceeds meter cost (50), causing A* to overestimate and degrade to greedy search.
+    return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2)) * 0.05;
   }
   
   

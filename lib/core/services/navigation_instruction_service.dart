@@ -3,14 +3,14 @@ import '../../features/admin_map/domain/entities/map_entities.dart';
 
 /// Represents a single navigation step/instruction for the user.
 class NavigationInstruction {
-  /// The human-readable instruction text (e.g., "Turn left").
+  /// The human-readable instruction text (e.g., "1. Turn left towards Library").
   final String message;
   
   /// The distance to travel for this instruction in meters.
   final double distance;
   
   /// The icon representing the action (e.g., 'straight', 'left', 'stairs_up').
-  final String icon; // 'straight', 'left', 'right', 'stairs_up', 'stairs_down', 'elevator_up', 'elevator_down', 'finish', 'start', 'enter', 'exit'
+  final String icon; // 'straight', 'left', 'right', 'stairs_up', 'stairs_down', 'elevator_up', 'elevator_down', 'finish', 'start', 'enter', 'exit', 'uturn', 'sharp_left', 'sharp_right'
 
   NavigationInstruction({
     required this.message,
@@ -26,6 +26,8 @@ class NavigationInstruction {
 /// - Each walk is its own step (with the admin-defined corridor distance).
 /// - Enter/Exit building are dedicated steps.
 /// - Distances come from corridor data (admin-defined), never combined across turns.
+/// - Every instruction is numbered for clarity.
+/// - Duplicate instructions are prevented after vertical/building transitions.
 class NavigationInstructionService {
   
   /// Generates a list of [NavigationInstruction] objects from a path.
@@ -49,6 +51,10 @@ class NavigationInstructionService {
 
     final instructions = <NavigationInstruction>[];
     
+    // Track whether the last emitted step was a transition (vertical/building)
+    // to prevent duplicate turn instructions right after a transition.
+    bool lastWasTransition = false;
+    
     // 1. Start instruction
     instructions.add(NavigationInstruction(
       message: "Start at ${path.first.name}", 
@@ -70,16 +76,12 @@ class NavigationInstructionService {
                distance: 0,
                icon: isElevator ? (isUp ? 'elevator_up' : 'elevator_down') : (isUp ? 'stairs_up' : 'stairs_down')
              ));
+             lastWasTransition = true;
              continue; 
         }
 
         // --- Detect Enter/Exit Building ---
         if (_isBuildingTransition(current, next)) {
-             // Determine direction: entering or exiting
-             final isExiting = current.type == RoomType.entrance && _isOutdoorNode(next);
-             final isEntering = current.type == RoomType.entrance && !_isOutdoorNode(next) && _isOutdoorNode(current) == false;
-             
-             // More robust: check if we're going from indoor to outdoor or vice versa
              final currentOutdoor = _isOutdoorNode(current);
              final nextOutdoor = _isOutdoorNode(next);
              
@@ -106,15 +108,10 @@ class NavigationInstructionService {
                  ));
              }
              
-             // Add walk distance if significant
-             double segmentDist = _calculateDistance(current, next, corridors);
-             if (segmentDist > 2) {
-                 instructions.add(NavigationInstruction(
-                   message: "Walk straight",
-                   distance: segmentDist,
-                   icon: 'straight'
-                 ));
-             }
+             // Don't emit walk distance for the entrance corridor — it's a
+             // logical doorway, not a physical walk. The real walk after the
+             // entrance is captured by the lastWasTransition handler.
+             lastWasTransition = true;
              continue;
         }
 
@@ -128,17 +125,31 @@ class NavigationInstructionService {
              currentHeading: currentHeading,
              mapNorthOffset: mapNorthOffset,
            );
+           lastWasTransition = false;
         } else {
            final previous = path[i - 1];
            
-           // After a vertical transition, just walk forward
-           if (_isVerticalTransition(previous, current, floorLevels)) {
+           // After a vertical transition, just walk forward — don't emit a redundant turn
+           if (lastWasTransition) {
               final isElevator = previous.type == RoomType.elevator;
-              instructions.add(NavigationInstruction(
-                 message: "Exit ${isElevator ? 'elevator' : 'stairs'} and walk forward",
-                 distance: segmentDist,
-                 icon: 'straight'
-              ));
+              final wasVertical = _isVerticalTransition(previous, current, floorLevels);
+              if (wasVertical) {
+                instructions.add(NavigationInstruction(
+                   message: "Exit ${isElevator ? 'elevator' : 'stairs'} and walk forward",
+                   distance: segmentDist,
+                   icon: 'straight'
+                ));
+              } else {
+                // After a building transition — just walk
+                if (segmentDist > 2) {
+                  instructions.add(NavigationInstruction(
+                    message: "Walk straight",
+                    distance: segmentDist,
+                    icon: 'straight'
+                  ));
+                }
+              }
+              lastWasTransition = false;
            } else {
               // Calculate turn direction from previous→current→next
               final turn = _getTurnDirection(previous, current, next);
@@ -173,7 +184,8 @@ class NavigationInstructionService {
       icon: 'finish'
     ));
     
-    return _simplifyInstructions(instructions);
+    final simplified = _simplifyInstructions(instructions);
+    return _addStepNumbers(simplified);
   }
 
   /// Handles the first segment of the path, which may use compass orientation.
@@ -187,6 +199,8 @@ class NavigationInstructionService {
   }) {
     final current = path[i];
     final next = path[i + 1];
+    final landmark = _getNextLandmarkName(path, i + 1);
+    final destinationName = landmark.isNotEmpty ? landmark : next.name;
 
     if (currentHeading != null) {
         // Calculate path vector in map coordinates
@@ -204,15 +218,12 @@ class NavigationInstructionService {
         // Normalize to -180 to 180
         while (turnAngle > 180) { turnAngle -= 360; }
         while (turnAngle <= -180) { turnAngle += 360; }
-        
-        final landmark = _getNextLandmarkName(path, i + 1);
-        final destinationName = landmark.isNotEmpty ? landmark : next.name;
 
         if (turnAngle.abs() > 45) {
             if (turnAngle.abs() > 135) {
                 // Turn around
                 instructions.add(NavigationInstruction(
-                    message: "Turn around",
+                    message: "Turn around towards $destinationName",
                     distance: 0,
                     icon: "uturn"
                 ));
@@ -229,7 +240,23 @@ class NavigationInstructionService {
                     icon: "left"
                 ));
             }
+        } else {
+            // Roughly facing the right direction — just confirm
+            instructions.add(NavigationInstruction(
+                message: "Head towards $destinationName",
+                distance: 0,
+                icon: "straight"
+            ));
         }
+    } else {
+      // No compass heading — provide a general direction hint
+      if (destinationName.isNotEmpty) {
+        instructions.add(NavigationInstruction(
+            message: "Head towards $destinationName",
+            distance: 0,
+            icon: "straight"
+        ));
+      }
     }
     
     // Always add the walk step with actual distance
@@ -245,6 +272,7 @@ class NavigationInstructionService {
   /// Minimal simplification: only merge consecutive straight-walk steps 
   /// (user walking in a straight line through waypoints).
   /// Does NOT merge turns with walks. Does NOT combine distances across turns.
+  /// Only merges walks that have actual non-zero distance (avoids merging direction hints).
   List<NavigationInstruction> _simplifyInstructions(List<NavigationInstruction> raw) {
       if (raw.isEmpty) return [];
       
@@ -256,6 +284,7 @@ class NavigationInstructionService {
           
           // Only merge: consecutive straight walks (same icon = 'straight', both have distance > 0)
           // This collapses hallway waypoints into a single "Walk straight — 50m"
+          // A zero-distance "straight" is a direction hint — never merge it with a walk.
           final isBothStraightWalk = current.icon == 'straight' && next.icon == 'straight'
               && current.distance > 0 && next.distance > 0;
           
@@ -276,8 +305,23 @@ class NavigationInstructionService {
       return simplified;
   }
 
+  /// Adds step numbers to all instructions for clarity.
+  /// e.g. "Start at Room A" → "1. Start at Room A"
+  List<NavigationInstruction> _addStepNumbers(List<NavigationInstruction> instructions) {
+    return instructions.asMap().entries.map((entry) {
+      final idx = entry.key + 1;
+      final inst = entry.value;
+      return NavigationInstruction(
+        message: "$idx. ${inst.message}",
+        distance: inst.distance,
+        icon: inst.icon,
+      );
+    }).toList();
+  }
+
   /// Determines the turn direction based on 3 consecutive points.
-  /// Uses a 60° threshold to filter slight corridor bends.
+  /// Uses a 30° threshold to filter only very slight corridor bends.
+  /// This is tighter than the previous 60° threshold to avoid missing real turns.
   String _getTurnDirection(Room p, Room c, Room n) {
       double dx1 = c.x - p.x;
       double dy1 = c.y - p.y;
@@ -292,12 +336,18 @@ class NavigationInstructionService {
       while (angleDiff <= -pi) { angleDiff += 2 * pi; }
       double degrees = angleDiff * 180 / pi;
       
-      // 60° threshold — filters subtle bends in corridors
-      if (degrees > -60 && degrees < 60) return 'straight';
-      if (degrees >= 60 && degrees < 150) return 'right';
-      if (degrees <= -60 && degrees > -150) return 'left';
-      if (degrees >= 150) return 'sharp_right';
-      if (degrees <= -150) return 'sharp_left';
+      // 30° threshold — catches real turns while filtering only tiny bends
+      if (degrees > -30 && degrees < 30) return 'straight';
+      
+      // Slight turns (30° – 60°): still turns, but gentle
+      // Standard turns (60° – 150°)
+      if (degrees >= 30 && degrees < 150) return 'right';
+      if (degrees <= -30 && degrees > -150) return 'left';
+      
+      // U-turn range (150°+)
+      if (degrees >= 150) return 'uturn';
+      if (degrees <= -150) return 'uturn';
+      
       return 'straight'; // Fallback
   }
 
@@ -369,7 +419,7 @@ class NavigationInstructionService {
           case 'right': return "Turn Right$suffix";
           case 'sharp_left': return "Sharp Left Turn$suffix";
           case 'sharp_right': return "Sharp Right Turn$suffix";
-          case 'uturn': return "Turn Around$suffix";
+          case 'uturn': return "Turn around$suffix";
           default: return "Continue straight$suffix";
       }
   }
