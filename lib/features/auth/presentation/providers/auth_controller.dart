@@ -4,6 +4,8 @@ import '../../domain/usecases/login_usecase.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../data/datasources/auth_remote_data_source.dart';
 import 'auth_providers.dart';
+import '../../../navigation/presentation/providers/navigation_provider.dart';
+import '../../../admin_map/presentation/providers/admin_map_providers.dart';
 
 final authControllerProvider = NotifierProvider<AuthController, bool>(AuthController.new);
 
@@ -77,6 +79,11 @@ class AuthController extends Notifier<bool> {
 
   Future<void> logout(BuildContext context) async {
     state = true;
+    
+    // Clear navigation state before logout to prevent it from leaking between sessions
+    ref.read(navigationProvider.notifier).clear();
+    ref.read(graphServiceProvider).markDirty();
+    
     await ref.read(authRemoteDataSourceProvider).logout();
     ref.read(currentUserProvider.notifier).setUser(null);
     state = false;

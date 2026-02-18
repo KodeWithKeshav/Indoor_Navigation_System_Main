@@ -193,5 +193,60 @@ void main() {
         expect(path, isEmpty);
       });
     });
+
+    group('Virtual Edge Penalty', () {
+      test('should prefer longer detailed path over shorter virtual edge', () {
+        final penaltyRooms = [
+          const Room(id: 'Start', floorId: 'campus', name: 'Start', x: 0, y: 0, type: RoomType.entrance),
+          const Room(id: 'Mid1', floorId: 'campus', name: 'Mid1', x: 0, y: 5, type: RoomType.hallway),
+          const Room(id: 'Mid2', floorId: 'campus', name: 'Mid2', x: 0, y: 10, type: RoomType.hallway),
+          const Room(id: 'End', floorId: 'campus', name: 'End', x: 0, y: 15, type: RoomType.entrance),
+        ];
+
+        // 1. Virtual Edge (Direct): 
+        // Distance 10. Cost = 10 * 3 = 30.
+        const virtualEdge = Corridor(
+          id: 'virtual_campus_Start_End', 
+          floorId: 'campus', 
+          startRoomId: 'Start', 
+          endRoomId: 'End', 
+          distance: 10
+        );
+        
+        // 2. Physical Path (Detailed):
+        // Start->Mid1 (5) + Mid1->Mid2 (5) + Mid2->End (5) = 15.
+        // Cost = 15.
+        // 15 < 30, so A* should choose physical path even though physical distance (15) > virtual distance (10).
+        final physicalEdges = [
+          const Corridor(id: 'c1', floorId: 'campus', startRoomId: 'Start', endRoomId: 'Mid1', distance: 5),
+          const Corridor(id: 'c2', floorId: 'campus', startRoomId: 'Mid1', endRoomId: 'Mid2', distance: 5),
+          const Corridor(id: 'c3', floorId: 'campus', startRoomId: 'Mid2', endRoomId: 'End', distance: 5),
+        ];
+        
+        final path = PathfindingService.findPath(
+          'Start', 'End', 
+          penaltyRooms, 
+          [virtualEdge, ...physicalEdges]
+        );
+        
+        // Should choose physical path (Start -> Mid1 -> Mid2 -> End)
+        expect(path, ['Start', 'Mid1', 'Mid2', 'End']);
+      });
+
+      test('should fallback to virtual edge if it is the only path', () {
+        final penaltyRooms = [
+          const Room(id: 'Start', floorId: 'campus', name: 'Start', x: 0, y: 0, type: RoomType.entrance),
+          const Room(id: 'End', floorId: 'campus', name: 'End', x: 100, y: 0, type: RoomType.entrance),
+        ];
+        
+        final penaltyCorridors = [
+          const Corridor(id: 'virtual_campus_Start_End', floorId: 'campus', startRoomId: 'Start', endRoomId: 'End', distance: 100),
+        ];
+
+        final path = PathfindingService.findPath('Start', 'End', penaltyRooms, penaltyCorridors);
+        
+        expect(path, ['Start', 'End']);
+      });
+    });
   });
 }
