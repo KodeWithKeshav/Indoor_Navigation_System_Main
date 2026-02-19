@@ -15,6 +15,8 @@ import 'package:indoor_navigation_system/core/services/compass_service.dart';
 import 'package:indoor_navigation_system/core/services/pathfinding_service.dart';
 import '../../../navigation/presentation/providers/navigation_provider.dart';
 import '../../../../core/services/navigation_instruction_service.dart';
+import '../../../../core/widgets/custom_toast.dart';
+
 
 class FloorParams extends Equatable {
   final String buildingId;
@@ -62,6 +64,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
   String? _selectedRoomId;
   bool _isLinkMode = false;
   bool _isNavMode = false; // Add navigation mode
+  bool _isLoading = false; // Loading state (single declaration)
   List<String> _currentPath = []; // IDs in path
   // Live positions for real-time edge updates
   // Live positions for real-time edge updates
@@ -104,7 +107,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
     if (_isLinkMode) {
       if (_selectedRoomId == null) {
         setState(() => _selectedRoomId = room.id);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Selected ${room.name}. Tap another room to link.')));
+        _showToast('Selected ${room.name}. Tap another room to link.');
       } else if (_selectedRoomId != room.id) {
         _showLinkDialog(_selectedRoomId!, room.id);
         setState(() => _selectedRoomId = null);
@@ -119,10 +122,10 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
         // Path is already showing. Reset and treat this as a NEW Start.
         navNotifier.clear();
         navNotifier.setStart(room, organizationId: orgId);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('New Start: ${room.name}. Tap destination.')));
+        _showToast('New Start: ${room.name}. Tap destination.');
       } else if (navState.startRoom == null) {
         navNotifier.setStart(room, organizationId: orgId);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Start: ${room.name}. Tap destination (switch floors if needed).')));
+        _showToast('Start: ${room.name}. Tap destination (switch floors if needed).');
       } else {
         navNotifier.setEnd(room);
         _selectedRoomId = null;
@@ -158,21 +161,31 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
+              if (mounted) Navigator.pop(ctx);
+              setState(() => _isLoading = true);
+              
               final dist = double.tryParse(distanceController.text) ?? 1.0;
               final useCase = ref.read(addCorridorUseCaseProvider);
-              await useCase(AddCorridorParams(
+              final result = await useCase(AddCorridorParams(
                 widget.buildingId,
                 widget.floorId,
                 startId,
                 endId,
                 dist,
               ));
-                if (mounted) {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Corridor Created!')));
+
+              result.fold(
+                (failure) {
+                  if (mounted) _showToast('Failed to link: ${failure.message}', isError: true);
+                },
+                (_) {
                   ref.read(graphServiceProvider).markDirty();
                   ref.invalidate(corridorsProvider(FloorParams(widget.buildingId, widget.floorId)));
-                }
+                  if (mounted) _showToast('Corridor Created!');
+                },
+              );
+              
+              if (mounted) setState(() => _isLoading = false);
             },
             child: const Text('Link'),
           ),
@@ -291,8 +304,12 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
               TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
               TextButton(
                 onPressed: () async {
+                  if (mounted) Navigator.pop(ctx);
+                  
+                  setState(() => _isLoading = true);
+                  
                   final useCase = ref.read(addRoomUseCaseProvider);
-                  await useCase(AddRoomParams(
+                  final result = await useCase(AddRoomParams(
                     buildingId: widget.buildingId,
                     floorId: widget.floorId,
                     name: nameController.text.trim(),
@@ -301,9 +318,19 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                     type: selectedType,
                     connectorId: isConnector ? connectorIdController.text.trim() : null,
                   ));
-                  ref.read(graphServiceProvider).markDirty();
-                  ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
-                  if (mounted) Navigator.pop(ctx);
+
+                  result.fold(
+                    (failure) {
+                      if (mounted) _showToast('Failed to add node: ${failure.message}', isError: true);
+                    },
+                    (_) {
+                      ref.read(graphServiceProvider).markDirty();
+                      ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
+                      if (mounted) _showToast('Node Added Successfully');
+                    },
+                  );
+
+                  if (mounted) setState(() => _isLoading = false);
                 },
                 child: const Text('Add'),
               ),
@@ -334,23 +361,33 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
     );
 
     if (confirmed == true && mounted) {
+       setState(() => _isLoading = true);
        final useCase = ref.read(deleteRoomUseCaseProvider);
-       await useCase(DeleteRoomParams(
+       final result = await useCase(DeleteRoomParams(
          widget.buildingId, 
          widget.floorId, 
          _selectedRoomId!
        ));
        
-       setState(() {
-         _livePositions.remove(_selectedRoomId);
-         _selectedRoomId = null;
-       });
-       
-       ref.read(graphServiceProvider).markDirty();
-       ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
-       ref.invalidate(corridorsProvider(FloorParams(widget.buildingId, widget.floorId)));
-       
-       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Deleted')));
+       result.fold(
+         (failure) {
+           if (mounted) _showToast('Error deleting: ${failure.message}', isError: true);
+         },
+         (_) {
+           setState(() {
+             _livePositions.remove(_selectedRoomId);
+             _selectedRoomId = null;
+           });
+           
+           ref.read(graphServiceProvider).markDirty();
+           ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
+           ref.invalidate(corridorsProvider(FloorParams(widget.buildingId, widget.floorId)));
+           
+           if (mounted) _showToast('Deleted Node');
+         },
+       );
+
+       if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -411,9 +448,12 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
                TextButton(
                  onPressed: () async {
+                    if (mounted) Navigator.pop(ctx);
+                    setState(() => _isLoading = true);
+                    
                     // Update
                     final updateUseCase = ref.read(updateRoomUseCaseProvider);
-                    await updateUseCase(UpdateRoomUseParams(
+                    final result = await updateUseCase(UpdateRoomUseParams(
                       buildingId: widget.buildingId,
                       floorId: widget.floorId,
                       roomId: room.id,
@@ -421,15 +461,21 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                       type: selectedType,
                       connectorId: (isConnector && connectorController.text.isNotEmpty) ? connectorController.text : null,
                     ));
-                    
-                    if (mounted) {
-                      Navigator.pop(ctx);
-                      ref.read(graphServiceProvider).markDirty();
-                      ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
-                      // Refresh navigation path to reflect changes
-                      ref.read(navigationProvider.notifier).refreshPath();
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Node Updated')));
-                    }
+
+                    result.fold(
+                      (failure) {
+                        if (mounted) _showToast('Update failed: ${failure.message}', isError: true);
+                      },
+                      (_) {
+                        ref.read(graphServiceProvider).markDirty();
+                        ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
+                        // Refresh navigation path to reflect changes
+                        ref.read(navigationProvider.notifier).refreshPath();
+                        if (mounted) _showToast('Node Updated');
+                      },
+                    );
+
+                    if (mounted) setState(() => _isLoading = false);
                  },
                  child: const Text('Save'),
                )
@@ -597,42 +643,54 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
         );
   }
 
+  void _showToast(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ToastService.show(context, message, isError: isError);
+  }
+
   Future<void> _importBuildings() async {
-    final params = GoRouterState.of(context).pathParameters;
-    final orgId = params['orgId'];
-    
-    final buildings = await ref.read(buildingsProvider(orgId).future);
-    final currentRooms = await ref.read(roomsProvider(FloorParams(widget.buildingId, widget.floorId)).future);
-    
-    int importedCount = 0;
-    final addRoom = ref.read(addRoomUseCaseProvider);
-    
-    for (int i = 0; i < buildings.length; i++) {
-      final b = buildings[i];
-      // Check if a node with this connector ID (Building ID) already exists
-      final exists = currentRooms.any((r) => r.connectorId == b.id);
+    setState(() => _isLoading = true);
+    try {
+      final params = GoRouterState.of(context).pathParameters;
+      final orgId = params['orgId'];
       
-      // Exclude self and any other special maps starting with campus_
-      if (!exists && !b.id.startsWith('campus_')) {
-        // Create Entrance Node for this Building
-        await addRoom(AddRoomParams(
-          buildingId: widget.buildingId, 
-          floorId: widget.floorId, 
-          name: b.name, 
-          x: 100.0 + (importedCount * 60), 
-          y: 200.0, 
-          type: RoomType.entrance,
-          connectorId: b.id,
-        ));
-        importedCount++;
+      final buildings = await ref.read(buildingsProvider(orgId).future);
+      final currentRooms = await ref.read(roomsProvider(FloorParams(widget.buildingId, widget.floorId)).future);
+      
+      int importedCount = 0;
+      final addRoom = ref.read(addRoomUseCaseProvider);
+      
+      for (int i = 0; i < buildings.length; i++) {
+        final b = buildings[i];
+        // Check if a node with this connector ID (Building ID) already exists
+        final exists = currentRooms.any((r) => r.connectorId == b.id);
+        
+        // Exclude self and any other special maps starting with campus_
+        if (!exists && !b.id.startsWith('campus_')) {
+          // Create Entrance Node for this Building
+          await addRoom(AddRoomParams(
+            buildingId: widget.buildingId, 
+            floorId: widget.floorId, 
+            name: b.name, 
+            x: 100.0 + (importedCount * 60), 
+            y: 200.0, 
+            type: RoomType.entrance,
+            connectorId: b.id,
+          ));
+          importedCount++;
+        }
       }
-    }
-    
-    if (importedCount > 0) {
-      ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Imported $importedCount buildings')));
-    } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All buildings already mapped')));
+      
+      if (importedCount > 0) {
+        ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
+        _showToast('Imported $importedCount buildings');
+      } else {
+        _showToast('All buildings already mapped');
+      }
+    } catch (e) {
+      _showToast('Import failed: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -703,14 +761,12 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
             icon: Icon(_isLinkMode ? Icons.link_off : Icons.link, color: _isLinkMode ? electricGrid : Colors.white54),
             tooltip: 'Toggle Link Mode',
             onPressed: () {
-              setState(() {
-                _isLinkMode = !_isLinkMode;
-                _isNavMode = false; // exclusive
-                _selectedRoomId = null;
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(_isLinkMode ? 'Link Mode: ON. Tap two rooms to connect.' : 'Link Mode: OFF'))
-              );
+               setState(() {
+                 _isLinkMode = !_isLinkMode;
+                 _isNavMode = false; // exclusive
+                 _selectedRoomId = null;
+               });
+               _showToast(_isLinkMode ? 'Link Mode: ON. Tap two rooms to connect.' : 'Link Mode: OFF');
             },
           ),
           IconButton(
@@ -724,9 +780,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                  _currentPath = [];
                  ref.read(navigationProvider.notifier).clear();
                });
-               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(_isNavMode ? 'Nav Mode: ON. Select Start then End.' : 'Nav Mode: OFF'))
-              );
+               _showToast(_isNavMode ? 'Nav Mode: ON. Select Start then End.' : 'Nav Mode: OFF');
             },
           ),
           
@@ -736,9 +790,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
               tooltip: navState.isAccessible ? 'Accessible Mode: ON' : 'Accessible Mode: OFF',
               onPressed: () {
                  ref.read(navigationProvider.notifier).toggleAccessibility(!navState.isAccessible);
-                 ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(navState.isAccessible ? 'Accessibility OFF' : 'Accessibility ON'))
-                 );
+                 _showToast(navState.isAccessible ? 'Accessibility OFF' : 'Accessibility ON');
               },
             ),
 
@@ -824,16 +876,24 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                                      
                                      debugPrint("Updating room ${room.id} to ${finalOffset.dx}, ${finalOffset.dy}");
                                      final useCase = ref.read(updateRoomUseCaseProvider);
-                                     await useCase(UpdateRoomUseParams(
+                                     final result = await useCase(UpdateRoomUseParams(
                                        buildingId: widget.buildingId,
                                        floorId: widget.floorId,
                                        roomId: room.id,
                                        x: finalOffset.dx,
                                        y: finalOffset.dy,
                                      ));
-                                     ref.read(graphServiceProvider).markDirty();
-                                     ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
-                                     ref.invalidate(corridorsProvider(FloorParams(widget.buildingId, widget.floorId)));
+                                     
+                                     result.fold(
+                                      (failure) {
+                                        if (mounted) _showToast('Failed to update position: ${failure.message}', isError: true);
+                                      },
+                                      (_) {
+                                        ref.read(graphServiceProvider).markDirty();
+                                        ref.invalidate(roomsProvider(FloorParams(widget.buildingId, widget.floorId)));
+                                        ref.invalidate(corridorsProvider(FloorParams(widget.buildingId, widget.floorId)));
+                                      }
+                                     );
                                   },
                                   onTap: () => _onRoomTap(room),
                                 ),
@@ -963,6 +1023,30 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                     );
                 }),
               ),
+
+              
+              if (_isLoading)
+                Container(
+                  color: Colors.black54,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const CircularProgressIndicator(color: electricGrid),
+                        const SizedBox(height: 16),
+                        Text(
+                          "PROCESSING...",
+                          style: const TextStyle(
+                            color: paperWhite,
+                            fontFamily: 'Courier',
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
         ],
       ),
       floatingActionButton: Column(
