@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../../../../core/widgets/custom_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -494,16 +495,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     );
   }
 
+
   void _showSnackBar(BuildContext context, String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold)),
-        backgroundColor: isError ? Colors.redAccent : electricGrid,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    ToastService.show(context, message, isError: isError);
   }
 }
+
 
 // --- PAINTER (Standard) ---
 class BlueprintGridPainter extends CustomPainter {

@@ -7,7 +7,9 @@ import '../../domain/entities/map_entities.dart';
 import '../../domain/usecases/manage_floors_usecase.dart';
 import '../providers/admin_map_providers.dart';
 // --- IMPORT AUTH CONTROLLER ---
+// --- IMPORT AUTH CONTROLLER ---
 import '../../../auth/presentation/providers/auth_controller.dart'; 
+import '../../../../core/widgets/custom_toast.dart'; 
 
 // Family provider
 final floorsProvider = FutureProvider.family<List<Floor>, String>((ref, buildingId) async {
@@ -500,13 +502,8 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
   }
 
   void _showSnackBar(BuildContext context, String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold)),
-        backgroundColor: isError ? Colors.redAccent : electricGrid,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (!mounted) return;
+    ToastService.show(context, message, isError: isError);
   }
 }
 
