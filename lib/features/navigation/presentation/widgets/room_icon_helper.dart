@@ -37,17 +37,29 @@ import '../../../admin_map/domain/entities/map_entities.dart';
 /// Returns a human-readable label for a [RoomType].
 String getRoomTypeLabel(RoomType type) {
   switch (type) {
-    case RoomType.room:      return 'Room';
-    case RoomType.hallway:   return 'Hallway';
-    case RoomType.stairs:    return 'Stairs';
-    case RoomType.elevator:  return 'Elevator';
-    case RoomType.entrance:  return 'Entrance';
-    case RoomType.restroom:  return 'Restroom';
-    case RoomType.cafeteria: return 'Cafeteria';
-    case RoomType.lab:       return 'Lab';
-    case RoomType.library:   return 'Library';
-    case RoomType.parking:   return 'Parking';
-    case RoomType.ground:    return 'Ground';
-    case RoomType.office:    return 'Office';
+    case RoomType.room:
+      return 'Room';
+    case RoomType.hallway:
+      return 'Hallway';
+    case RoomType.stairs:
+      return 'Stairs';
+    case RoomType.elevator:
+      return 'Elevator';
+    case RoomType.entrance:
+      return 'Entrance';
+    case RoomType.restroom:
+      return 'Restroom';
+    case RoomType.cafeteria:
+      return 'Cafeteria';
+    case RoomType.lab:
+      return 'Lab';
+    case RoomType.library:
+      return 'Library';
+    case RoomType.parking:
+      return 'Parking';
+    case RoomType.ground:
+      return 'Ground';
+    case RoomType.office:
+      return 'Office';
   }
 }

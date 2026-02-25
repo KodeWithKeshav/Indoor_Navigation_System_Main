@@ -31,32 +31,32 @@ class PathArrowPainter extends CustomPainter {
     final roomMap = {for (var r in rooms) r.id: r};
 
     for (int i = 0; i < pathIds.length - 1; i++) {
-        final currentId = pathIds[i];
-        final nextId = pathIds[i+1];
-        
-        final current = roomMap[currentId];
-        final next = roomMap[nextId];
+      final currentId = pathIds[i];
+      final nextId = pathIds[i + 1];
 
-        if (current == null || next == null) continue;
+      final current = roomMap[currentId];
+      final next = roomMap[nextId];
 
-        // Skip vertical connections (same x/y typically, or vastly different if building view, 
-        // but here we are usually on one floor. If cross-floor, one might be missing or at 0,0)
-        // Check if they are on same floor implicitly by existence in roomMap (which comes from provider for THAT floor)
-        // If next room is NOT in this floor's room list, we stop drawing line to it?
-        // Actually UserHomeScreen loads rooms for ONE floor. 
-        // If the path goes off-floor, those IDs won't be in `roomMap`? 
-        // Wait, `rooms` comes from `roomsProvider(params)` which is for ONE floor.
-        // So `pathIds` will contain IDs not in `rooms`.
-        // reliable check: Only draw if BOTH are in `roomMap`.
-        
-        final p1 = Offset(current.x, current.y);
-        final p2 = Offset(next.x, next.y);
+      if (current == null || next == null) continue;
 
-        // Draw Line (Thick)
-        canvas.drawLine(p1, p2, paint..strokeWidth = 4.0);
+      // Skip vertical connections (same x/y typically, or vastly different if building view,
+      // but here we are usually on one floor. If cross-floor, one might be missing or at 0,0)
+      // Check if they are on same floor implicitly by existence in roomMap (which comes from provider for THAT floor)
+      // If next room is NOT in this floor's room list, we stop drawing line to it?
+      // Actually UserHomeScreen loads rooms for ONE floor.
+      // If the path goes off-floor, those IDs won't be in `roomMap`?
+      // Wait, `rooms` comes from `roomsProvider(params)` which is for ONE floor.
+      // So `pathIds` will contain IDs not in `rooms`.
+      // reliable check: Only draw if BOTH are in `roomMap`.
 
-        // Draw Arrow in middle
-        _drawArrow(canvas, p1, p2, pathColor);
+      final p1 = Offset(current.x, current.y);
+      final p2 = Offset(next.x, next.y);
+
+      // Draw Line (Thick)
+      canvas.drawLine(p1, p2, paint..strokeWidth = 4.0);
+
+      // Draw Arrow in middle
+      _drawArrow(canvas, p1, p2, pathColor);
     }
   }
 
@@ -64,7 +64,7 @@ class PathArrowPainter extends CustomPainter {
     final dx = p2.dx - p1.dx;
     final dy = p2.dy - p1.dy;
     final distance = sqrt(dx * dx + dy * dy);
-    
+
     if (distance < 20) return; // Too short for arrow
 
     final angle = atan2(dy, dx);
@@ -75,7 +75,7 @@ class PathArrowPainter extends CustomPainter {
     canvas.save();
     canvas.translate(midX, midY);
     canvas.rotate(angle);
-    
+
     final path = Path();
     path.moveTo(-5, -5);
     path.lineTo(5, 0);
@@ -88,6 +88,6 @@ class PathArrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant PathArrowPainter oldDelegate) {
-     return oldDelegate.pathIds != pathIds || oldDelegate.rooms != rooms;
+    return oldDelegate.pathIds != pathIds || oldDelegate.rooms != rooms;
   }
 }

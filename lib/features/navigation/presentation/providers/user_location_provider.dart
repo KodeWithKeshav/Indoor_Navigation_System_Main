@@ -41,7 +41,11 @@ class UserLocationNotifier extends Notifier<UserLocationState> {
   }
 
   void selectFloor(Floor floor) {
-    state = state.copyWith(selectedFloor: floor, selectedStartRoom: null, selectedDestinationRoom: null);
+    state = state.copyWith(
+      selectedFloor: floor,
+      selectedStartRoom: null,
+      selectedDestinationRoom: null,
+    );
   }
 
   void selectStartRoom(Room room) {
@@ -53,4 +57,7 @@ class UserLocationNotifier extends Notifier<UserLocationState> {
   }
 }
 
-final userLocationProvider = NotifierProvider<UserLocationNotifier, UserLocationState>(UserLocationNotifier.new);
+final userLocationProvider =
+    NotifierProvider<UserLocationNotifier, UserLocationState>(
+      UserLocationNotifier.new,
+    );

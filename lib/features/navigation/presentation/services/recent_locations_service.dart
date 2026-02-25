@@ -1,101 +1,123 @@
-
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../admin_map/domain/entities/map_entities.dart';
-import '../../../admin_map/presentation/providers/admin_map_providers.dart';
 
-// Model for Recent Location
-class RecentLocation {
-  final String locationId; // Room ID or Building ID
-  final String name;
-  final String? type; // 'room' or 'building'
+// Model for Route History
+class RouteHistory {
+  final String startLocationId;
+  final String startLocationName;
+  final String startFloorId;
+  final String endLocationId;
+  final String endLocationName;
+  final String endFloorId;
   final DateTime timestamp;
 
-  RecentLocation({
-    required this.locationId, 
-    required this.name, 
-    this.type = 'room',
-    required this.timestamp
+  RouteHistory({
+    required this.startLocationId,
+    required this.startLocationName,
+    required this.startFloorId,
+    required this.endLocationId,
+    required this.endLocationName,
+    required this.endFloorId,
+    required this.timestamp,
   });
 
   Map<String, dynamic> toJson() => {
-    'locationId': locationId,
-    'name': name,
-    'type': type,
+    'startLocationId': startLocationId,
+    'startLocationName': startLocationName,
+    'startFloorId': startFloorId,
+    'endLocationId': endLocationId,
+    'endLocationName': endLocationName,
+    'endFloorId': endFloorId,
     'timestamp': timestamp.toIso8601String(),
   };
 
-  factory RecentLocation.fromJson(Map<String, dynamic> json) {
-    return RecentLocation(
-      locationId: json['locationId'],
-      name: json['name'],
-      type: json['type'],
+  factory RouteHistory.fromJson(Map<String, dynamic> json) {
+    return RouteHistory(
+      startLocationId: json['startLocationId'],
+      startLocationName: json['startLocationName'],
+      startFloorId: json['startFloorId'] ?? '',
+      endLocationId: json['endLocationId'],
+      endLocationName: json['endLocationName'],
+      endFloorId: json['endFloorId'] ?? '',
       timestamp: DateTime.parse(json['timestamp']),
     );
   }
 }
 
 // Provider
-final recentLocationsServiceProvider = Provider<RecentLocationsService>((ref) {
-  return RecentLocationsService(ref);
+final routeHistoryServiceProvider = Provider<RouteHistoryService>((ref) {
+  return RouteHistoryService(ref);
 });
 
-final recentLocationsProvider = FutureProvider<List<RecentLocation>>((ref) async {
-  final service = ref.watch(recentLocationsServiceProvider);
-  return service.getRecentLocations();
+final routeHistoryProvider = FutureProvider<List<RouteHistory>>((ref) async {
+  final service = ref.watch(routeHistoryServiceProvider);
+  return service.getRouteHistory();
 });
 
-class RecentLocationsService {
+class RouteHistoryService {
   final Ref _ref;
-  static const String _key = 'recent_locations';
-  static const int _limit = 5;
+  static const String _key = 'route_history';
+  static const int _limit = 10;
 
-  RecentLocationsService(this._ref);
+  RouteHistoryService(this._ref);
 
-  Future<List<RecentLocation>> getRecentLocations() async {
+  Future<List<RouteHistory>> getRouteHistory() async {
     final prefs = await SharedPreferences.getInstance();
     final String? data = prefs.getString(_key);
     if (data == null) return [];
 
     try {
       final List<dynamic> jsonList = jsonDecode(data);
-      return jsonList.map((e) => RecentLocation.fromJson(e)).toList();
+      return jsonList.map((e) => RouteHistory.fromJson(e)).toList();
     } catch (e) {
       return [];
     }
   }
 
-  Future<void> addRecentLocation(Room room) async {
+  Future<void> addRoute(Room start, Room end) async {
     final prefs = await SharedPreferences.getInstance();
-    List<RecentLocation> current = await getRecentLocations();
+    List<RouteHistory> current = await getRouteHistory();
 
-    // Remove duplicates
-    current.removeWhere((loc) => loc.locationId == room.id);
+    // Remove identical routes
+    current.removeWhere(
+      (route) =>
+          route.startLocationId == start.id && route.endLocationId == end.id,
+    );
 
     // Add new to top
-    current.insert(0, RecentLocation(
-      locationId: room.id,
-      name: room.name,
-      type: 'room',
-      timestamp: DateTime.now()
-    ));
+    current.insert(
+      0,
+      RouteHistory(
+        startLocationId: start.id,
+        startLocationName: start.name,
+        startFloorId: start.floorId,
+        endLocationId: end.id,
+        endLocationName: end.name,
+        endFloorId: end.floorId,
+        timestamp: DateTime.now(),
+      ),
+    );
 
-    // Limit
+    // Limit to 10
     if (current.length > _limit) {
       current = current.sublist(0, _limit);
     }
 
     // Save
-    await prefs.setString(_key, jsonEncode(current.map((e) => e.toJson()).toList()));
-    
+    await prefs.setString(
+      _key,
+      jsonEncode(current.map((e) => e.toJson()).toList()),
+    );
+
     // Invalidate provider to refresh UI
-    _ref.invalidate(recentLocationsProvider);
+    _ref.invalidate(routeHistoryProvider);
   }
-  
-  Future<void> clearRecents() async {
-     final prefs = await SharedPreferences.getInstance();
-     await prefs.remove(_key);
-     _ref.invalidate(recentLocationsProvider);
+
+  Future<void> clearHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+    _ref.invalidate(routeHistoryProvider);
   }
 }

@@ -10,6 +10,7 @@ class NavigationState {
   final List<String> pathIds;
   final List<Room> pathRooms; // Store full rooms for easier filtering
   final List<NavigationInstruction> instructions;
+  final int currentInstructionIndex;
   final bool isNavigating;
   final String? organizationId;
   final bool isAccessible;
@@ -20,6 +21,7 @@ class NavigationState {
     this.pathIds = const [],
     this.pathRooms = const [],
     this.instructions = const [],
+    this.currentInstructionIndex = 0,
     this.isNavigating = false,
     this.organizationId,
     this.isAccessible = false,
@@ -31,6 +33,7 @@ class NavigationState {
     List<String>? pathIds,
     List<Room>? pathRooms,
     List<NavigationInstruction>? instructions,
+    int? currentInstructionIndex,
     bool? isNavigating,
     String? organizationId,
     bool? isAccessible,
@@ -41,6 +44,8 @@ class NavigationState {
       pathIds: pathIds ?? this.pathIds,
       pathRooms: pathRooms ?? this.pathRooms,
       instructions: instructions ?? this.instructions,
+      currentInstructionIndex:
+          currentInstructionIndex ?? this.currentInstructionIndex,
       isNavigating: isNavigating ?? this.isNavigating,
       organizationId: organizationId ?? this.organizationId,
       isAccessible: isAccessible ?? this.isAccessible,
@@ -52,31 +57,35 @@ class NavigationNotifier extends Notifier<NavigationState> {
   @override
   NavigationState build() {
     print('NavigationNotifier: build() called - State Reset?');
-    
+
     // Listen to compass changes to update orientation-dependent instructions
     ref.listen(compassProvider, (prev, next) {
       if (state.isNavigating) {
-         _computePath();
+        _computePath();
       }
     });
-    
+
     return NavigationState();
   }
 
   Future<void> setStart(Room room, {String? organizationId}) async {
-    print('NavigationNotifier: setStart(${room.name}) - Current End: ${state.endRoom?.name}, Org: $organizationId');
+    print(
+      'NavigationNotifier: setStart(${room.name}) - Current End: ${state.endRoom?.name}, Org: $organizationId',
+    );
     state = state.copyWith(
-       startRoom: room, 
-       isNavigating: false, 
-       pathIds: [], 
-       instructions: [], 
-       organizationId: organizationId
+      startRoom: room,
+      isNavigating: false,
+      pathIds: [],
+      instructions: [],
+      organizationId: organizationId,
     );
     await _computePath();
   }
 
   Future<void> setEnd(Room room) async {
-    print('NavigationNotifier: setEnd(${room.name}) - Current Start: ${state.startRoom?.name}');
+    print(
+      'NavigationNotifier: setEnd(${room.name}) - Current Start: ${state.startRoom?.name}',
+    );
     state = state.copyWith(endRoom: room);
     await _computePath();
   }
@@ -90,70 +99,98 @@ class NavigationNotifier extends Notifier<NavigationState> {
 
   /// Refreshes the path computation, useful when graph data changes (e.g. node edits).
   Future<void> refreshPath() async {
-     if (state.isNavigating) {
-       await _computePath();
-     }
+    if (state.isNavigating) {
+      await _computePath();
+    }
   }
-  
 
-  
   void clear() {
     state = NavigationState();
+  }
+
+  void nextInstruction() {
+    if (state.currentInstructionIndex < state.instructions.length - 1) {
+      state = state.copyWith(
+        currentInstructionIndex: state.currentInstructionIndex + 1,
+      );
+    }
+  }
+
+  void previousInstruction() {
+    if (state.currentInstructionIndex > 0) {
+      state = state.copyWith(
+        currentInstructionIndex: state.currentInstructionIndex - 1,
+      );
+    }
   }
 
   Future<void> _computePath() async {
     print('NavigationNotifier: Computing Path...');
     if (state.startRoom == null || state.endRoom == null) {
-        print('NavigationNotifier: MISSING START OR END');
-        return;
+      print('NavigationNotifier: MISSING START OR END');
+      return;
     }
-    
+
     // Ensure Graph IS Built (Optimized internally by GraphService)
     final graphService = ref.read(graphServiceProvider);
     await graphService.buildGraph(organizationId: state.organizationId);
-    
+
     final pathIds = graphService.findPath(
-      state.startRoom!.id, 
+      state.startRoom!.id,
       state.endRoom!.id,
       isAccessible: state.isAccessible,
     );
-    
+
     if (pathIds.isNotEmpty) {
       print('NavigationNotifier: Path Found (${pathIds.length} nodes)');
       final pathRooms = <Room>[];
       for (final id in pathIds) {
         try {
-           final room = graphService.allRooms.firstWhere((r) => r.id == id);
-           pathRooms.add(room);
+          final room = graphService.allRooms.firstWhere((r) => r.id == id);
+          pathRooms.add(room);
         } catch (_) {}
       }
-      
+
       final currentHeading = ref.read(compassProvider);
-      
-      final instructions = ref.read(navigationInstructionServiceProvider).generateInstructions(
-        pathRooms,
-        corridors: graphService.allCorridors,
-        floorLevels: graphService.floorLevels,
-        currentHeading: currentHeading,
-        mapNorthOffset: 0.0, // Default to 0 until we fetch building metadata
-      );
-      
+
+      final instructions = ref
+          .read(navigationInstructionServiceProvider)
+          .generateInstructions(
+            pathRooms,
+            corridors: graphService.allCorridors,
+            floorLevels: graphService.floorLevels,
+            currentHeading: currentHeading,
+            mapNorthOffset:
+                0.0, // Default to 0 until we fetch building metadata
+          );
+
       state = state.copyWith(
         pathIds: pathIds,
         pathRooms: pathRooms,
         instructions: instructions,
+        currentInstructionIndex: 0,
         isNavigating: true,
       );
     } else {
-       // No path
-       print('NavigationNotifier: No Path Found');
-       state = state.copyWith(
-         isNavigating: false, 
-         pathIds: [],
-         instructions: [NavigationInstruction(message: "No Path Found", distance: 0, icon: 'error')],
-       );
+      // No path
+      print('NavigationNotifier: No Path Found');
+      state = state.copyWith(
+        isNavigating: false,
+        pathIds: [],
+        instructions: [
+          NavigationInstruction(
+            message: "No Path Found",
+            distance: 0,
+            icon: 'error',
+          ),
+        ],
+        currentInstructionIndex: 0,
+      );
     }
   }
 }
 
-final navigationProvider = NotifierProvider<NavigationNotifier, NavigationState>(NavigationNotifier.new);
+final navigationProvider =
+    NotifierProvider<NavigationNotifier, NavigationState>(
+      NavigationNotifier.new,
+    );
