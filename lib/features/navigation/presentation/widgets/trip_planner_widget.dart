@@ -715,48 +715,6 @@ class _TripPlannerWidgetState extends ConsumerState<TripPlannerWidget>
               ),
             ),
 
-            // Voice Guidance Toggle
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: SwitchListTile(
-                title: const Text(
-                  'Voice Guidance',
-                  style: TextStyle(color: paperWhite, fontSize: 14),
-                ),
-                subtitle: Text(
-                  'Spoken turn-by-turn directions',
-                  style: TextStyle(
-                    color: paperWhite.withOpacity(0.5),
-                    fontSize: 11,
-                  ),
-                ),
-                secondary: Icon(
-                  Icons.volume_up,
-                  color: ref.watch(settingsProvider).isVoiceEnabled
-                      ? electricGrid
-                      : Colors.grey,
-                ),
-                value: ref.watch(settingsProvider).isVoiceEnabled,
-                activeColor: electricGrid,
-                onChanged: (val) {
-                  ref.read(settingsProvider.notifier).toggleVoice(val);
-                },
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 0,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-
             // Action Button
             Container(
               width: double.infinity,
