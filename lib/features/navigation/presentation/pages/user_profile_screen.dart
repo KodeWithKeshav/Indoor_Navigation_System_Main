@@ -33,17 +33,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       appBar: AppBar(
         backgroundColor: deepVoidBlue,
         iconTheme: const IconThemeData(color: electricGrid),
-        title: const Text('My Profile',
-            style: TextStyle(
-                color: paperWhite,
-                fontFamily: 'Courier',
-                fontWeight: FontWeight.bold)),
+        title: const Text(
+          'My Profile',
+          style: TextStyle(
+            color: paperWhite,
+            fontFamily: 'Courier',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child:
-              Container(color: electricGrid.withOpacity(0.3), height: 1),
+          child: Container(color: electricGrid.withOpacity(0.3), height: 1),
         ),
       ),
       body: SingleChildScrollView(
@@ -61,9 +63,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     child: Text(
                       user?.email.substring(0, 1).toUpperCase() ?? 'U',
                       style: const TextStyle(
-                          color: electricGrid,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold),
+                        color: electricGrid,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -72,19 +75,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         ? 'Student Account'
                         : 'Guest Account',
                     style: const TextStyle(
-                        color: paperWhite, fontWeight: FontWeight.bold),
+                      color: paperWhite,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 32),
 
-            const Text("ACCOUNT DETAILS",
-                style: TextStyle(
-                    color: electricGrid,
-                    fontSize: 12,
-                    letterSpacing: 1.5,
-                    fontWeight: FontWeight.bold)),
+            const Text(
+              "ACCOUNT DETAILS",
+              style: TextStyle(
+                color: electricGrid,
+                fontSize: 12,
+                letterSpacing: 1.5,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 16),
 
             _buildReadOnlyField("Email Address", user?.email ?? 'Unknown'),
@@ -96,19 +104,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("SECURITY",
-                    style: TextStyle(
-                        color: electricGrid,
-                        fontSize: 12,
-                        letterSpacing: 1.5,
-                        fontWeight: FontWeight.bold)),
+                const Text(
+                  "SECURITY",
+                  style: TextStyle(
+                    color: electricGrid,
+                    fontSize: 12,
+                    letterSpacing: 1.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 if (!_isEditingPassword)
                   TextButton(
-                    onPressed: () =>
-                        setState(() => _isEditingPassword = true),
-                    child: const Text("Change Password",
-                        style: TextStyle(color: electricGrid)),
-                  )
+                    onPressed: () => setState(() => _isEditingPassword = true),
+                    child: const Text(
+                      "Change Password",
+                      style: TextStyle(color: electricGrid),
+                    ),
+                  ),
               ],
             ),
 
@@ -119,8 +131,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 decoration: BoxDecoration(
                   color: darkCardColor.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(16),
-                  border:
-                      Border.all(color: electricGrid.withOpacity(0.1)),
+                  border: Border.all(color: electricGrid.withOpacity(0.1)),
                 ),
                 child: Column(
                   children: [
@@ -131,13 +142,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       decoration: InputDecoration(
                         labelText: 'New Password',
                         labelStyle: TextStyle(
-                            color: paperWhite.withOpacity(0.6)),
+                          color: paperWhite.withOpacity(0.6),
+                        ),
                         enabledBorder: const UnderlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.white24)),
+                          borderSide: BorderSide(color: Colors.white24),
+                        ),
                         focusedBorder: const UnderlineInputBorder(
-                            borderSide:
-                                BorderSide(color: electricGrid)),
+                          borderSide: BorderSide(color: electricGrid),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -148,13 +160,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
                         labelStyle: TextStyle(
-                            color: paperWhite.withOpacity(0.6)),
+                          color: paperWhite.withOpacity(0.6),
+                        ),
                         enabledBorder: const UnderlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.white24)),
+                          borderSide: BorderSide(color: Colors.white24),
+                        ),
                         focusedBorder: const UnderlineInputBorder(
-                            borderSide:
-                                BorderSide(color: electricGrid)),
+                          borderSide: BorderSide(color: electricGrid),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -162,41 +175,46 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
-                          onPressed: () => setState(
-                              () => _isEditingPassword = false),
-                          child: const Text("Cancel",
-                              style:
-                                  TextStyle(color: Colors.white60)),
+                          onPressed: () =>
+                              setState(() => _isEditingPassword = false),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.white60),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                              backgroundColor: electricGrid,
-                              foregroundColor: deepVoidBlue),
+                            backgroundColor: electricGrid,
+                            foregroundColor: deepVoidBlue,
+                          ),
                           onPressed: () {
                             if (_passwordController.text !=
                                 _confirmController.text) {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(const SnackBar(
-                                      content: Text(
-                                          "Passwords do not match")));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Passwords do not match"),
+                                ),
+                              );
                               return;
                             }
-                            setState(
-                                () => _isEditingPassword = false);
+                            setState(() => _isEditingPassword = false);
                             ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        "Password updated successfully (Mock)")));
+                              const SnackBar(
+                                content: Text(
+                                  "Password updated successfully (Mock)",
+                                ),
+                              ),
+                            );
                           },
                           child: const Text("Update"),
-                        )
+                        ),
                       ],
-                    )
+                    ),
                   ],
                 ),
-              )
-            ]
+              ),
+            ],
           ],
         ),
       ),
@@ -208,9 +226,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: TextStyle(
-                color: paperWhite.withOpacity(0.6), fontSize: 12)),
+        Text(
+          label,
+          style: TextStyle(color: paperWhite.withOpacity(0.6), fontSize: 12),
+        ),
         const SizedBox(height: 4),
         Container(
           width: double.infinity,
@@ -220,10 +239,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white10),
           ),
-          child: Text(value,
-              style:
-                  const TextStyle(color: paperWhite, fontSize: 16)),
-        )
+          child: Text(
+            value,
+            style: const TextStyle(color: paperWhite, fontSize: 16),
+          ),
+        ),
       ],
     );
   }
@@ -236,14 +256,20 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Organization ID",
-                style: TextStyle(
-                    color: paperWhite.withOpacity(0.6), fontSize: 12)),
+            Text(
+              "Organization ID",
+              style: TextStyle(
+                color: paperWhite.withOpacity(0.6),
+                fontSize: 12,
+              ),
+            ),
             TextButton(
               onPressed: () => _showOrganizationDialog(currentOrgId),
-              child: const Text("Change",
-                  style: TextStyle(color: electricGrid)),
-            )
+              child: const Text(
+                "Change",
+                style: TextStyle(color: electricGrid),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 4),
@@ -256,12 +282,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             border: Border.all(color: Colors.white10),
           ),
           child: Text(
-              currentOrgId != null && currentOrgId.isNotEmpty
-                  ? currentOrgId
-                  : 'None',
-              style:
-                  const TextStyle(color: paperWhite, fontSize: 16)),
-        )
+            currentOrgId != null && currentOrgId.isNotEmpty
+                ? currentOrgId
+                : 'None',
+            style: const TextStyle(color: paperWhite, fontSize: 16),
+          ),
+        ),
       ],
     );
   }
@@ -276,20 +302,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       context: context,
       builder: (dialogContext) => Consumer(
         builder: (dialogContext, dialogRef, _) {
-          final organizationsAsync =
-              dialogRef.watch(organizationsProvider);
+          final organizationsAsync = dialogRef.watch(organizationsProvider);
 
           return AlertDialog(
             backgroundColor: darkCardColor,
-            title: const Text('Select Organization',
-                style: TextStyle(color: paperWhite)),
+            title: const Text(
+              'Select Organization',
+              style: TextStyle(color: paperWhite),
+            ),
             content: SizedBox(
               width: double.maxFinite,
               child: organizationsAsync.when(
                 data: (orgs) {
                   if (orgs.isEmpty) {
-                    return const Text('No organizations found.',
-                        style: TextStyle(color: Colors.white60));
+                    return const Text(
+                      'No organizations found.',
+                      style: TextStyle(color: Colors.white60),
+                    );
                   }
                   return ListView.builder(
                     shrinkWrap: true,
@@ -299,41 +328,43 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       final isSelected = org.id == currentOrgId;
 
                       return ListTile(
-                        title: Text(org.name,
-                            style:
-                                const TextStyle(color: paperWhite)),
-                        subtitle: Text(org.id,
-                            style: TextStyle(
-                                color:
-                                    paperWhite.withOpacity(0.5))),
+                        title: Text(
+                          org.name,
+                          style: const TextStyle(color: paperWhite),
+                        ),
+                        subtitle: Text(
+                          org.id,
+                          style: TextStyle(color: paperWhite.withOpacity(0.5)),
+                        ),
                         trailing: isSelected
-                            ? const Icon(Icons.check,
-                                color: electricGrid)
+                            ? const Icon(Icons.check, color: electricGrid)
                             : null,
                         onTap: () {
                           // Close dialog first
                           Navigator.pop(dialogContext);
                           // Then update using the widget's own ref
-                          _updateOrganization(
-                              scaffoldMessenger, org.id);
+                          _updateOrganization(scaffoldMessenger, org.id);
                         },
                       );
                     },
                   );
                 },
                 loading: () => const Center(
-                    child: CircularProgressIndicator(
-                        color: electricGrid)),
-                error: (e, s) => Text('Error: $e',
-                    style:
-                        const TextStyle(color: Colors.redAccent)),
+                  child: CircularProgressIndicator(color: electricGrid),
+                ),
+                error: (e, s) => Text(
+                  'Error: $e',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
               ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel',
-                    style: TextStyle(color: Colors.white60)),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.white60),
+                ),
               ),
             ],
           );
@@ -344,19 +375,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
   /// Updates the user's organization in Firestore and refreshes local state.
   Future<void> _updateOrganization(
-      ScaffoldMessengerState scaffoldMessenger, String newOrgId) async {
+    ScaffoldMessengerState scaffoldMessenger,
+    String newOrgId,
+  ) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
     try {
       final repo = ref.read(authRepositoryProvider);
       final result = await repo.updateUserOrganization(
-          uid: user.id, organizationId: newOrgId);
+        uid: user.id,
+        organizationId: newOrgId,
+      );
 
       result.fold(
         (failure) {
-          scaffoldMessenger.showSnackBar(SnackBar(
-              content: Text('Failed to update: ${failure.message}')));
+          scaffoldMessenger.showSnackBar(
+            SnackBar(content: Text('Failed to update: ${failure.message}')),
+          );
         },
         (_) {
           // Immediately update the local user state so the UI rebuilds
@@ -368,13 +404,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           );
           ref.read(currentUserProvider.notifier).setUser(updatedUser);
 
-          scaffoldMessenger.showSnackBar(const SnackBar(
-              content: Text('Organization updated successfully')));
+          scaffoldMessenger.showSnackBar(
+            const SnackBar(content: Text('Organization updated successfully')),
+          );
         },
       );
     } catch (e) {
-      scaffoldMessenger
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      scaffoldMessenger.showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 }
