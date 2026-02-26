@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
+import '../../../../core/providers/settings_provider.dart';
 
 class AdminDrawer extends ConsumerWidget {
   final String? organizationId;
@@ -107,8 +108,55 @@ class AdminDrawer extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  // Add specific org items here if needed later
                 ],
+                const Divider(color: Colors.white10),
+                const Padding(
+                  padding: EdgeInsets.only(left: 16, top: 8, bottom: 4),
+                  child: Text(
+                    "SYSTEM SETTINGS",
+                    style: TextStyle(
+                      color: Colors.white30,
+                      fontSize: 10,
+                      fontFamily: 'Courier',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final isVoiceOn = ref.watch(settingsProvider).isVoiceEnabled;
+                    return SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+                      secondary: Icon(
+                        isVoiceOn ? Icons.volume_up : Icons.volume_off,
+                        color: isVoiceOn ? Colors.greenAccent : Colors.white38,
+                        size: 22,
+                      ),
+                      title: Text(
+                        'VOICE GUIDANCE',
+                        style: TextStyle(
+                          fontFamily: 'Courier',
+                          color: isVoiceOn ? paperWhite : Colors.white54,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      subtitle: Text(
+                        isVoiceOn ? 'ENABLED' : 'DISABLED',
+                        style: TextStyle(
+                          fontFamily: 'Courier',
+                          color: isVoiceOn ? Colors.greenAccent : Colors.white30,
+                          fontSize: 10,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      value: isVoiceOn,
+                      activeColor: Colors.greenAccent,
+                      onChanged: (val) => ref.read(settingsProvider.notifier).toggleVoice(val),
+                    );
+                  },
+                ),
               ],
             ),
           ),

@@ -48,6 +48,8 @@ dependencies:
   json_annotation: ^4.9.0
   flutter_compass: ^0.8.1
   shared_preferences: ^2.5.4
+  flutter_tts: ^4.2.0
+  sensors_plus: ^6.1.1
 
 dev_dependencies:
   flutter_test:
