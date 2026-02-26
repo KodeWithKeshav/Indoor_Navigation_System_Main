@@ -16,7 +16,8 @@ import 'package:indoor_navigation_system/core/services/pathfinding_service.dart'
 import '../../../navigation/presentation/providers/navigation_provider.dart';
 import '../../../../core/services/navigation_instruction_service.dart';
 import '../../../../core/widgets/custom_toast.dart';
-
+import '../../../../core/providers/settings_provider.dart';
+import '../../../../core/services/voice_guidance_service.dart';
 
 class FloorParams extends Equatable {
   final String buildingId;
@@ -568,74 +569,99 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                  ),
                  Divider(color: electricGrid.withOpacity(0.3)),
                  Expanded(
-                   child: ListView.separated(
-                     padding: const EdgeInsets.only(top: 16),
-                     itemCount: instructions.length,
-                     separatorBuilder: (_, __) => Padding(
-                       padding: const EdgeInsets.only(left: 56), // Align with text start
-                       child: Divider(color: Colors.white10, height: 24),
-                     ),
-                     itemBuilder: (context, index) {
-                       final step = instructions[index];
-                       IconData icon;
-                       switch(step.icon) {
-                         case 'left': icon = Icons.turn_left; break;
-                         case 'right': icon = Icons.turn_right; break;
-                         case 'straight': icon = Icons.arrow_upward; break;
-                         case 'stairs_up': icon = Icons.stairs; break;
-                         case 'stairs_down': icon = Icons.stairs_outlined; break;
-                         case 'finish': icon = Icons.flag; break;
-                         case 'error': icon = Icons.error; break;
-                         default: icon = Icons.circle;
-                       }
-                       
-                       return Row(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           // Step Indicator
-                           Container(
-                             padding: const EdgeInsets.all(10),
-                             decoration: BoxDecoration(
-                               color: electricGrid.withOpacity(0.1),
-                               shape: BoxShape.circle,
-                               border: Border.all(color: electricGrid.withOpacity(0.5))
-                             ),
-                             child: Icon(icon, size: 20, color: electricGrid),
-                           ),
-                           const SizedBox(width: 16),
-                           // Step Text
-                           Expanded(
-                             child: Column(
-                               crossAxisAlignment: CrossAxisAlignment.start,
-                               children: [
-                                 Text(
-                                   step.message, 
-                                   style: const TextStyle(
-                                     color: paperWhite, 
-                                     fontWeight: FontWeight.w600,
-                                     fontSize: 14,
-                                   )
-                                 ),
-                                 if (step.distance > 0)
-                                   Padding(
-                                     padding: const EdgeInsets.only(top: 4),
-                                     child: Text(
-                                       '${step.distance.toStringAsFixed(1)} m',
-                                       style: TextStyle(
-                                         color: electricGrid.withOpacity(0.8),
-                                         fontSize: 12,
-                                         fontWeight: FontWeight.bold,
-                                         fontFamily: 'Courier'
-                                       ),
+                     child: ListView.separated(
+                       padding: const EdgeInsets.only(top: 16),
+                       itemCount: instructions.length,
+                       separatorBuilder: (_, __) => const Padding(
+                         padding: EdgeInsets.only(left: 56), // Align with text start
+                         child: Divider(color: Colors.white10, height: 24),
+                       ),
+                       itemBuilder: (context, index) {
+                         final step = instructions[index];
+                         IconData icon;
+                         switch(step.icon) {
+                           case 'left': icon = Icons.turn_left; break;
+                           case 'right': icon = Icons.turn_right; break;
+                           case 'straight': icon = Icons.arrow_upward; break;
+                           case 'stairs_up': icon = Icons.stairs; break;
+                           case 'stairs_down': icon = Icons.stairs_outlined; break;
+                           case 'finish': icon = Icons.flag; break;
+                           case 'error': icon = Icons.error; break;
+                           default: icon = Icons.circle;
+                         }
+                         
+                         return Material(
+                           color: Colors.transparent,
+                           child: InkWell(
+                             borderRadius: BorderRadius.circular(12),
+                             onTap: () {
+                               // Speak this specific instruction when tapped
+                               final settings = ref.read(settingsProvider);
+                               if (settings.isVoiceEnabled) {
+                                 String text = step.message;
+                                 if (step.distance > 0) {
+                                   text += ', ${step.distance.toStringAsFixed(0)} meters';
+                                 }
+                                 ref.read(voiceGuidanceServiceProvider).speak(text);
+                               } else {
+                                 _showToast('Voice Guidance is disabled in settings');
+                               }
+                             },
+                             child: Padding(
+                               padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+                               child: Row(
+                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                 children: [
+                                   // Step Indicator
+                                   Container(
+                                     padding: const EdgeInsets.all(10),
+                                     decoration: BoxDecoration(
+                                       color: electricGrid.withOpacity(0.1),
+                                       shape: BoxShape.circle,
+                                       border: Border.all(color: electricGrid.withOpacity(0.5))
+                                     ),
+                                     child: Icon(icon, size: 20, color: electricGrid),
+                                   ),
+                                   const SizedBox(width: 16),
+                                   // Step Text
+                                   Expanded(
+                                     child: Column(
+                                       crossAxisAlignment: CrossAxisAlignment.start,
+                                       children: [
+                                         Text(
+                                           step.message, 
+                                           style: const TextStyle(
+                                             color: paperWhite, 
+                                             fontWeight: FontWeight.w600,
+                                             fontSize: 14,
+                                           )
+                                         ),
+                                         if (step.distance > 0)
+                                           Padding(
+                                             padding: const EdgeInsets.only(top: 4),
+                                             child: Text(
+                                               '${step.distance.toStringAsFixed(1)} m',
+                                               style: TextStyle(
+                                                 color: electricGrid.withOpacity(0.8),
+                                                 fontSize: 12,
+                                                 fontWeight: FontWeight.bold,
+                                                 fontFamily: 'Courier'
+                                               ),
+                                             ),
+                                           ),
+                                       ],
                                      ),
                                    ),
-                               ],
+                                   // Play Icon to indicate it's tappable
+                                   if (ref.read(settingsProvider).isVoiceEnabled)
+                                     Icon(Icons.volume_up, size: 20, color: Colors.white54),
+                                 ],
+                               ),
                              ),
                            ),
-                         ],
-                       );
-                     },
-                   ),
+                         );
+                       },
+                     ),
                  ),
               ],
             ),
