@@ -317,6 +317,18 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                 onPressed: () => ref.read(navigationProvider.notifier).clear(),
               ),
             IconButton(
+              icon: Icon(
+                settings.isVoiceEnabled ? Icons.volume_up : Icons.volume_off,
+                color: settings.isVoiceEnabled ? electricGrid : Colors.white54,
+              ),
+              tooltip: settings.isVoiceEnabled
+                  ? 'Disable Voice Guidance'
+                  : 'Enable Voice Guidance',
+              onPressed: () => ref
+                  .read(settingsProvider.notifier)
+                  .toggleVoice(!settings.isVoiceEnabled),
+            ),
+            IconButton(
               icon: const Icon(Icons.settings),
               tooltip: 'Settings',
               onPressed: () => _showSettingsDialog(context, ref),

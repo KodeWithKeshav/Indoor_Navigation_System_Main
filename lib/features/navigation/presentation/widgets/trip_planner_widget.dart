@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
+import '../../../../core/providers/settings_provider.dart';
 import 'package:indoor_navigation_system/features/auth/presentation/providers/auth_providers.dart';
 import 'package:indoor_navigation_system/features/admin_map/presentation/providers/admin_map_providers.dart';
 import '../providers/user_location_provider.dart';
