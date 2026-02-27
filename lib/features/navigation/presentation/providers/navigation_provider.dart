@@ -69,13 +69,6 @@ class NavigationNotifier extends Notifier<NavigationState> {
   NavigationState build() {
     debugPrint('NavigationNotifier: build() called');
 
-    // Listen to compass changes to update orientation-dependent instructions
-    ref.listen(compassProvider, (prev, next) {
-      if (state.isNavigating) {
-        _computePath();
-      }
-    });
-
     // Clean up pedometer subscription on dispose
     ref.onDispose(() {
       _pedometerSubscription?.cancel();
@@ -94,7 +87,7 @@ class NavigationNotifier extends Notifier<NavigationState> {
 
     final instruction = state.instructions[state.currentInstructionIndex];
     String text = instruction.message;
-    
+
     // Append distance info for walk steps
     if (instruction.distance > 0) {
       text += ', ${instruction.distance.toStringAsFixed(0)} meters';
@@ -117,7 +110,7 @@ class NavigationNotifier extends Notifier<NavigationState> {
       if (state.currentInstructionIndex >= state.instructions.length) return;
 
       final currentStep = state.instructions[state.currentInstructionIndex];
-      
+
       // Update distance walked in state
       state = state.copyWith(distanceWalked: distance);
 
@@ -141,17 +134,17 @@ class NavigationNotifier extends Notifier<NavigationState> {
     if (state.currentInstructionIndex < state.instructions.length - 1) {
       final pedometer = ref.read(pedometerServiceProvider);
       pedometer.resetDistance();
-      
+
       state = state.copyWith(
         currentInstructionIndex: state.currentInstructionIndex + 1,
         distanceWalked: 0.0,
       );
-      
+
       _speakCurrentInstruction();
 
       // For zero-distance steps (turns), auto-advance again after a brief delay
       final newStep = state.instructions[state.currentInstructionIndex];
-      if (newStep.distance == 0 && 
+      if (newStep.distance == 0 &&
           state.currentInstructionIndex < state.instructions.length - 1 &&
           newStep.icon != 'finish') {
         Future.delayed(const Duration(seconds: 3), () {
@@ -209,7 +202,7 @@ class NavigationNotifier extends Notifier<NavigationState> {
     if (state.currentInstructionIndex < state.instructions.length - 1) {
       final pedometer = ref.read(pedometerServiceProvider);
       pedometer.resetDistance();
-      
+
       state = state.copyWith(
         currentInstructionIndex: state.currentInstructionIndex + 1,
         distanceWalked: 0.0,
@@ -222,7 +215,7 @@ class NavigationNotifier extends Notifier<NavigationState> {
     if (state.currentInstructionIndex > 0) {
       final pedometer = ref.read(pedometerServiceProvider);
       pedometer.resetDistance();
-      
+
       state = state.copyWith(
         currentInstructionIndex: state.currentInstructionIndex - 1,
         distanceWalked: 0.0,
@@ -281,7 +274,7 @@ class NavigationNotifier extends Notifier<NavigationState> {
 
       // Speak the first instruction
       _speakCurrentInstruction();
-      
+
       // Start pedometer tracking on mobile
       _startPedometerTracking();
     } else {

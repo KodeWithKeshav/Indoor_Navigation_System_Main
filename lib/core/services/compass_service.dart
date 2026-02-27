@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 bool get isMobilePlatform {
   if (kIsWeb) return false;
   return defaultTargetPlatform == TargetPlatform.android ||
-         defaultTargetPlatform == TargetPlatform.iOS;
+      defaultTargetPlatform == TargetPlatform.iOS;
 }
 
 /// Manages the device's compass heading.
@@ -23,8 +23,8 @@ class CompassNotifier extends Notifier<double?> {
     if (isMobilePlatform) {
       // On mobile, start listening to the actual hardware compass
       _subscription = FlutterCompass.events?.listen((event) {
-        if (!_isOverridden) {
-          state = event.heading;
+        if (!_isOverridden && event.heading != null) {
+          state = event.heading! % 360;
         }
       });
     } else {
@@ -57,4 +57,6 @@ class CompassNotifier extends Notifier<double?> {
   bool get isLiveCompass => isMobilePlatform && !_isOverridden;
 }
 
-final compassProvider = NotifierProvider<CompassNotifier, double?>(CompassNotifier.new);
+final compassProvider = NotifierProvider<CompassNotifier, double?>(
+  CompassNotifier.new,
+);

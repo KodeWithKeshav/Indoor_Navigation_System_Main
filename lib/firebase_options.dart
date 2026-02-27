@@ -15,7 +15,13 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnimplementedError('Run flutterfire configure');
+        return const FirebaseOptions(
+          apiKey: "AIzaSyChYL_6SQaKhxYwFgN6cCHlPgiqXrW5CS8",
+          appId: "1:298939372836:android:907659b1383bacc8584fb1",
+          messagingSenderId: "298939372836",
+          projectId: "indoor-nav-system-90d8e",
+          storageBucket: "indoor-nav-system-90d8e.firebasestorage.app",
+        );
       case TargetPlatform.iOS:
         throw UnimplementedError('Run flutterfire configure');
       case TargetPlatform.macOS:

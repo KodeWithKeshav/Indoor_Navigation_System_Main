@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "298939372836",
+    "project_id": "indoor-nav-system-90d8e",
+    "storage_bucket": "indoor-nav-system-90d8e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:298939372836:android:907659b1383bacc8584fb1",
+        "android_client_info": {
+          "package_name": "com.example.indoor_navigation_system"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChYL_6SQaKhxYwFgN6cCHlPgiqXrW5CS8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
