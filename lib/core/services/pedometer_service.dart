@@ -11,12 +11,15 @@ import 'package:sensors_plus/sensors_plus.dart';
 /// then multiplies by an average step length to estimate distance.
 class PedometerService {
   static const double _stepLength = 0.7; // Average step length in meters
-  static const double _stepThreshold = 12.0; // Acceleration magnitude threshold
-  static const Duration _stepCooldown = Duration(milliseconds: 350); // Min time between steps
+  static const double _stepThreshold =
+      2.5; // Acceleration magnitude threshold (gravity-filtered)
+  static const Duration _stepCooldown = Duration(
+    milliseconds: 350,
+  ); // Min time between steps
 
   StreamSubscription? _accelSubscription;
   final _distanceController = StreamController<double>.broadcast();
-  
+
   double _totalDistance = 0.0;
   int _stepCount = 0;
   DateTime _lastStepTime = DateTime.now();
@@ -39,7 +42,7 @@ class PedometerService {
   static bool get isSupported {
     if (kIsWeb) return false;
     return defaultTargetPlatform == TargetPlatform.android ||
-           defaultTargetPlatform == TargetPlatform.iOS;
+        defaultTargetPlatform == TargetPlatform.iOS;
   }
 
   /// Start tracking steps using the accelerometer.
@@ -50,7 +53,7 @@ class PedometerService {
     _accelSubscription = userAccelerometerEventStream(
       samplingPeriod: const Duration(milliseconds: 50),
     ).listen(_onAccelerometerData);
-    
+
     debugPrint('🦶 Pedometer: Started tracking');
   }
 
@@ -86,9 +89,12 @@ class PedometerService {
         _totalDistance += _stepLength;
         _lastStepTime = now;
         _distanceController.add(_totalDistance);
+        debugPrint(
+          '🦶 Step #$_stepCount detected (mag: ${magnitude.toStringAsFixed(2)}) — total: ${_totalDistance.toStringAsFixed(1)}m',
+        );
       }
       _wasBelowThreshold = false;
-    } else if (magnitude < _stepThreshold * 0.7) {
+    } else if (magnitude < _stepThreshold * 0.6) {
       _wasBelowThreshold = true;
     }
   }

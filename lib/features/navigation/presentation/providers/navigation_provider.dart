@@ -64,14 +64,17 @@ class NavigationState {
 
 class NavigationNotifier extends Notifier<NavigationState> {
   StreamSubscription? _pedometerSubscription;
+  StreamSubscription? _compassSubscription;
+  double? _turnStartHeading; // Heading when turn step began
 
   @override
   NavigationState build() {
     debugPrint('NavigationNotifier: build() called');
 
-    // Clean up pedometer subscription on dispose
+    // Clean up subscriptions on dispose
     ref.onDispose(() {
       _pedometerSubscription?.cancel();
+      _compassSubscription?.cancel();
       ref.read(voiceGuidanceServiceProvider).stop();
     });
 
@@ -142,18 +145,96 @@ class NavigationNotifier extends Notifier<NavigationState> {
 
       _speakCurrentInstruction();
 
-      // For zero-distance steps (turns), auto-advance again after a brief delay
+      // For zero-distance steps (turns), use compass-based detection on mobile
       final newStep = state.instructions[state.currentInstructionIndex];
       if (newStep.distance == 0 &&
           state.currentInstructionIndex < state.instructions.length - 1 &&
           newStep.icon != 'finish') {
-        Future.delayed(const Duration(seconds: 3), () {
-          if (state.isNavigating) {
+        _startCompassTurnDetection(newStep);
+      }
+    }
+  }
+
+  /// Start monitoring compass heading to detect when user completes a turn.
+  /// Falls back to a 3-second timer on platforms without compass.
+  void _startCompassTurnDetection(NavigationInstruction turnStep) {
+    _compassSubscription?.cancel();
+    _turnStartHeading = null;
+
+    final isTurnStep =
+        turnStep.icon == 'left' ||
+        turnStep.icon == 'right' ||
+        turnStep.icon == 'sharp_left' ||
+        turnStep.icon == 'sharp_right' ||
+        turnStep.icon == 'uturn';
+
+    if (!isTurnStep || !PedometerService.isSupported) {
+      // Not a turn or not on mobile — use timer fallback
+      Future.delayed(const Duration(seconds: 3), () {
+        if (state.isNavigating) {
+          _autoAdvanceStep();
+        }
+      });
+      return;
+    }
+
+    // Determine required heading change direction and threshold
+    double requiredChange = 45.0; // degrees
+    bool expectRight =
+        turnStep.icon == 'right' || turnStep.icon == 'sharp_right';
+    bool expectLeft = turnStep.icon == 'left' || turnStep.icon == 'sharp_left';
+    if (turnStep.icon == 'uturn') requiredChange = 135.0;
+
+    final currentHeading = ref.read(compassProvider);
+    _turnStartHeading = currentHeading;
+
+    debugPrint(
+      '🧭 Turn detection started: icon=${turnStep.icon}, startHeading=${_turnStartHeading?.toStringAsFixed(1)}',
+    );
+
+    // Listen to compass changes
+    _compassSubscription = Stream.periodic(const Duration(milliseconds: 200))
+        .listen((_) {
+          if (!state.isNavigating) {
+            _compassSubscription?.cancel();
+            return;
+          }
+
+          final newHeading = ref.read(compassProvider);
+          if (_turnStartHeading == null || newHeading == null) return;
+
+          // Calculate signed heading difference (positive = clockwise/right)
+          double diff = newHeading - _turnStartHeading!;
+          while (diff > 180) diff -= 360;
+          while (diff <= -180) diff += 360;
+
+          if (expectRight && diff >= requiredChange) {
+            debugPrint('🧭 Right turn detected: Δ${diff.toStringAsFixed(1)}°');
+            _compassSubscription?.cancel();
+            _autoAdvanceStep();
+          } else if (expectLeft && diff <= -requiredChange) {
+            debugPrint('🧭 Left turn detected: Δ${diff.toStringAsFixed(1)}°');
+            _compassSubscription?.cancel();
+            _autoAdvanceStep();
+          } else if (turnStep.icon == 'uturn' && diff.abs() >= requiredChange) {
+            debugPrint('🧭 U-turn detected: Δ${diff.toStringAsFixed(1)}°');
+            _compassSubscription?.cancel();
             _autoAdvanceStep();
           }
         });
+
+    // Fallback: if compass doesn't trigger within 10 seconds, auto-advance anyway
+    Future.delayed(const Duration(seconds: 10), () {
+      if (state.isNavigating &&
+          state.instructions.isNotEmpty &&
+          state.currentInstructionIndex < state.instructions.length &&
+          state.instructions[state.currentInstructionIndex].icon ==
+              turnStep.icon) {
+        debugPrint('🧭 Turn detection timeout — auto-advancing');
+        _compassSubscription?.cancel();
+        _autoAdvanceStep();
       }
-    }
+    });
   }
 
   Future<void> setStart(Room room, {String? organizationId}) async {
@@ -195,6 +276,8 @@ class NavigationNotifier extends Notifier<NavigationState> {
   void clear() {
     ref.read(voiceGuidanceServiceProvider).stop();
     _stopPedometerTracking();
+    _compassSubscription?.cancel();
+    _turnStartHeading = null;
     state = NavigationState();
   }
 

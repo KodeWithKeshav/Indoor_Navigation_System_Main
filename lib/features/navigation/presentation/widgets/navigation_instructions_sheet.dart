@@ -233,6 +233,55 @@ class NavigationInstructionsSheet extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
+
+        // Distance progress bar (for walk steps with pedometer tracking)
+        if (step.distance > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${navState.distanceWalked.toStringAsFixed(1)}m walked',
+                      style: TextStyle(
+                        color: paperWhite.withOpacity(0.6),
+                        fontSize: 11,
+                        fontFamily: 'Courier',
+                      ),
+                    ),
+                    Text(
+                      '${step.distance.toStringAsFixed(0)}m total',
+                      style: TextStyle(
+                        color: paperWhite.withOpacity(0.6),
+                        fontSize: 11,
+                        fontFamily: 'Courier',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: (navState.distanceWalked / step.distance).clamp(
+                      0.0,
+                      1.0,
+                    ),
+                    backgroundColor: Colors.white.withOpacity(0.1),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      navState.distanceWalked >= step.distance
+                          ? Colors.greenAccent.shade400
+                          : electricGrid,
+                    ),
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+            ),
+          ),
         Divider(color: Colors.white.withOpacity(0.1), height: 1),
         const SizedBox(height: 12),
 
