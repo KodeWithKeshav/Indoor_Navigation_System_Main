@@ -60,6 +60,16 @@ class NavigationState {
       distanceWalked: distanceWalked ?? this.distanceWalked,
     );
   }
+
+  /// The next room the user is walking toward on the current path.
+  Room? get currentTargetRoom {
+    if (pathRooms.isEmpty) return null;
+    final targetIdx = (currentInstructionIndex + 1).clamp(
+      0,
+      pathRooms.length - 1,
+    );
+    return pathRooms[targetIdx];
+  }
 }
 
 class NavigationNotifier extends Notifier<NavigationState> {

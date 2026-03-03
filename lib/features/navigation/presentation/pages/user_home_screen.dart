@@ -558,6 +558,24 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
             ],
           ),
         ),
+
+        // AR View FAB — placed above the bottom nav sheet so it doesn't overlap
+        floatingActionButton: navState.isNavigating
+            ? Padding(
+                padding: const EdgeInsets.only(bottom: 200),
+                child: FloatingActionButton(
+                  backgroundColor: electricGrid,
+                  onPressed: () => context.push('/ar-navigation'),
+                  tooltip: 'AR Navigation View',
+                  child: const Icon(
+                    Icons.camera_alt_rounded,
+                    color: deepVoidBlue,
+                  ),
+                ),
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
         drawer: Drawer(
           backgroundColor: deepVoidBlue,
           child: Column(
