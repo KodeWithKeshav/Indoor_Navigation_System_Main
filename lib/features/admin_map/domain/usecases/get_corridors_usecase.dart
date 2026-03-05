@@ -10,7 +10,8 @@ class GetCorridorsParams {
   GetCorridorsParams(this.buildingId, this.floorId);
 }
 
-class GetCorridorsUseCase implements UseCase<List<Corridor>, GetCorridorsParams> {
+class GetCorridorsUseCase
+    implements UseCase<List<Corridor>, GetCorridorsParams> {
   final AdminMapRepository repository;
   GetCorridorsUseCase(this.repository);
 

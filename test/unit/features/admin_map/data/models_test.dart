@@ -27,7 +27,11 @@ void main() {
 
   test('FloorModel maps firestore data', () async {
     final firestore = FakeFirebaseFirestore();
-    final docRef = firestore.collection('buildings').doc('b1').collection('floors').doc('f1');
+    final docRef = firestore
+        .collection('buildings')
+        .doc('b1')
+        .collection('floors')
+        .doc('f1');
     await docRef.set({'floorNumber': 2, 'name': 'F2'});
 
     final model = FloorModel.fromFirestore(await docRef.get(), 'b1');
@@ -38,7 +42,13 @@ void main() {
   test('RoomModel maps firestore data', () async {
     final firestore = FakeFirebaseFirestore();
     final docRef = firestore.collection('rooms').doc('r1');
-    await docRef.set({'name': 'R', 'x': 1, 'y': 2, 'type': 'lab', 'connectorId': 'c1'});
+    await docRef.set({
+      'name': 'R',
+      'x': 1,
+      'y': 2,
+      'type': 'lab',
+      'connectorId': 'c1',
+    });
 
     final model = RoomModel.fromFirestore(await docRef.get(), 'f1');
     expect(model.type, RoomType.lab);
@@ -58,7 +68,12 @@ void main() {
   test('CampusConnectionModel maps firestore data', () async {
     final firestore = FakeFirebaseFirestore();
     final docRef = firestore.collection('campus_connections').doc('cc1');
-    await docRef.set({'fromBuildingId': 'b1', 'toBuildingId': 'b2', 'distance': 50.0, 'bidirectional': false});
+    await docRef.set({
+      'fromBuildingId': 'b1',
+      'toBuildingId': 'b2',
+      'distance': 50.0,
+      'bidirectional': false,
+    });
 
     final model = CampusConnectionModel.fromFirestore(await docRef.get());
     expect(model.bidirectional, isFalse);

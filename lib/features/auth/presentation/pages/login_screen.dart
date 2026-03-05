@@ -11,14 +11,15 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   late AnimationController _sonarController;
   late AnimationController _gridScrollController;
-  
+
   // Entrance Animation Controllers
   late AnimationController _entranceController;
   late Animation<double> _scaleAnimation;
@@ -62,12 +63,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
     );
 
     // Slide Up Text
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _entranceController.forward();
   }
@@ -85,7 +87,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
   void _login() {
     if (_formKey.currentState!.validate()) {
       FocusScope.of(context).unfocus();
-      ref.read(authControllerProvider.notifier).login(
+      ref
+          .read(authControllerProvider.notifier)
+          .login(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
             context: context,
@@ -97,19 +101,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
   Widget build(BuildContext context) {
     // --- COLORS ---
     // Deep Void Blue (Bottom/Edges)
-    const deepVoidBlue = Color(0xFF020617); 
+    const deepVoidBlue = Color(0xFF020617);
     // Lighter Royal Blue (Top/Center Light source)
-    const topLightBlue = Color(0xFF1E3A8A); 
-    
+    const topLightBlue = Color(0xFF1E3A8A);
+
     // NEW: A very dark charcoal blue for the card box, matching the reference image style
-    const darkCardColor = Color(0xFF1A1F2C); 
+    const darkCardColor = Color(0xFF1A1F2C);
 
     const activeCardBlue = Color(0xFF172554); // Kept for the logo circle
-    const electricGrid = Color(0xFF38BDF8); 
+    const electricGrid = Color(0xFF38BDF8);
     const paperWhite = Colors.white;
 
     return Scaffold(
-      backgroundColor: deepVoidBlue, 
+      backgroundColor: deepVoidBlue,
       body: Stack(
         children: [
           // 0. GRADIENT BACKGROUND
@@ -169,10 +173,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                                   color: electricGrid.withOpacity(0.4),
                                   blurRadius: 20,
                                   spreadRadius: -5,
-                                )
+                                ),
                               ],
                             ),
-                            child: const Icon(Icons.architecture_rounded, color: paperWhite, size: 48),
+                            child: const Icon(
+                              Icons.architecture_rounded,
+                              color: paperWhite,
+                              size: 48,
+                            ),
                           ),
                         );
                       },
@@ -190,8 +198,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
                           // UPDATED COLOR HERE: Uses the new dark charcoal color
-                          color: darkCardColor.withOpacity(0.95), 
-                          border: Border.all(color: electricGrid.withOpacity(0.5), width: 1.5),
+                          color: darkCardColor.withOpacity(0.95),
+                          border: Border.all(
+                            color: electricGrid.withOpacity(0.5),
+                            width: 1.5,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: [
                             BoxShadow(
@@ -216,7 +227,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                                 // --- CENTERED HEADER SECTION ---
                                 Text(
                                   "CAMPUS WAYFINDER",
-                                  textAlign: TextAlign.center, 
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: electricGrid,
                                     fontFamily: 'Courier',
@@ -226,12 +237,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                                   ),
                                 ),
                                 const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 24, horizontal: 40),
-                                  child: Divider(color: Colors.white24, thickness: 1, height: 0),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 24,
+                                    horizontal: 40,
+                                  ),
+                                  child: Divider(
+                                    color: Colors.white24,
+                                    thickness: 1,
+                                    height: 0,
+                                  ),
                                 ),
                                 const Text(
                                   "SYSTEM LOGIN",
-                                  textAlign: TextAlign.center, 
+                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: paperWhite,
                                     fontSize: 24,
@@ -255,7 +273,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                                   icon: Icons.vpn_key_outlined,
                                   isPassword: true,
                                   obscureText: _obscurePassword,
-                                  onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+                                  onToggle: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                                   accentColor: electricGrid,
                                 ),
 
@@ -264,7 +284,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                                 // Action Button
                                 Consumer(
                                   builder: (context, ref, _) {
-                                    final isLoading = ref.watch(authControllerProvider);
+                                    final isLoading = ref.watch(
+                                      authControllerProvider,
+                                    );
                                     return SizedBox(
                                       width: double.infinity,
                                       height: 56,
@@ -273,11 +295,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: electricGrid,
                                           foregroundColor: deepVoidBlue,
-                                          shape: const RoundedRectangleBorder(), 
+                                          shape: const RoundedRectangleBorder(),
                                           elevation: 0,
                                         ),
                                         child: isLoading
-                                            ? const CircularProgressIndicator(color: deepVoidBlue)
+                                            ? const CircularProgressIndicator(
+                                                color: deepVoidBlue,
+                                              )
                                             : const Text(
                                                 "ACCESS SYSTEM",
                                                 style: TextStyle(
@@ -307,7 +331,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
                       children: [
                         const Text(
                           "NO CREDENTIALS? ",
-                          style: TextStyle(color: Colors.white60, fontFamily: 'Courier', fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontFamily: 'Courier',
+                            fontSize: 12,
+                          ),
                         ),
                         InkWell(
                           onTap: () => context.push('/signup'),
@@ -359,7 +387,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with TickerProviderSt
         TextFormField(
           controller: controller,
           obscureText: obscureText,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
           cursorColor: accentColor,
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: Colors.white70),
@@ -416,11 +447,17 @@ class BlueprintGridPainter extends CustomPainter {
 
     for (double x = -gridSize; x < size.width + gridSize; x += gridSize) {
       canvas.drawLine(
-          Offset(x + shift % gridSize, 0), Offset(x + shift % gridSize, size.height), paint);
+        Offset(x + shift % gridSize, 0),
+        Offset(x + shift % gridSize, size.height),
+        paint,
+      );
     }
     for (double y = -gridSize; y < size.height + gridSize; y += gridSize) {
       canvas.drawLine(
-          Offset(0, y + shift % gridSize), Offset(size.width, y + shift % gridSize), paint);
+        Offset(0, y + shift % gridSize),
+        Offset(size.width, y + shift % gridSize),
+        paint,
+      );
     }
   }
 

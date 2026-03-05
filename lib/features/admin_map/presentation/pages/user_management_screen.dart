@@ -9,10 +9,12 @@ class UserManagementScreen extends ConsumerStatefulWidget {
   const UserManagementScreen({super.key});
 
   @override
-  ConsumerState<UserManagementScreen> createState() => _UserManagementScreenState();
+  ConsumerState<UserManagementScreen> createState() =>
+      _UserManagementScreenState();
 }
 
-class _UserManagementScreenState extends ConsumerState<UserManagementScreen> with SingleTickerProviderStateMixin {
+class _UserManagementScreenState extends ConsumerState<UserManagementScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _gridScrollController;
 
   // --- THEME COLORS ---
@@ -52,11 +54,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
             Text(
               'SECURITY PROTOCOL',
               style: TextStyle(
-                fontFamily: 'Courier', 
-                fontWeight: FontWeight.bold, 
+                fontFamily: 'Courier',
+                fontWeight: FontWeight.bold,
                 letterSpacing: 2,
                 fontSize: 10,
-                color: electricGrid
+                color: electricGrid,
               ),
             ),
             SizedBox(height: 2),
@@ -65,7 +67,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
               style: TextStyle(
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
-                fontSize: 16
+                fontSize: 16,
               ),
             ),
           ],
@@ -118,7 +120,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
                   return Center(
                     child: Text(
                       "NO RECORDS FOUND",
-                      style: TextStyle(color: paperWhite.withOpacity(0.5), fontFamily: 'Courier'),
+                      style: TextStyle(
+                        color: paperWhite.withOpacity(0.5),
+                        fontFamily: 'Courier',
+                      ),
                     ),
                   );
                 }
@@ -131,8 +136,15 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator(color: electricGrid)),
-              error: (e, _) => Center(child: Text('SYSTEM ERROR: $e', style: const TextStyle(color: Colors.redAccent))),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: electricGrid),
+              ),
+              error: (e, _) => Center(
+                child: Text(
+                  'SYSTEM ERROR: $e',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
             ),
           ),
 
@@ -153,13 +165,15 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
 
   Widget _buildUserCard(UserEntity user, bool isUpdating) {
     final isAdmin = user.role == UserRole.admin;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: darkCardColor.withOpacity(0.9),
         border: Border.all(
-          color: isAdmin ? Colors.redAccent.withOpacity(0.5) : electricGrid.withOpacity(0.3)
+          color: isAdmin
+              ? Colors.redAccent.withOpacity(0.5)
+              : electricGrid.withOpacity(0.3),
         ),
         borderRadius: BorderRadius.circular(4),
         boxShadow: [
@@ -175,10 +189,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: isAdmin ? Colors.redAccent.withOpacity(0.1) : electricGrid.withOpacity(0.1),
+            color: isAdmin
+                ? Colors.redAccent.withOpacity(0.1)
+                : electricGrid.withOpacity(0.1),
             shape: BoxShape.circle,
             border: Border.all(
-              color: isAdmin ? Colors.redAccent.withOpacity(0.5) : electricGrid.withOpacity(0.3)
+              color: isAdmin
+                  ? Colors.redAccent.withOpacity(0.5)
+                  : electricGrid.withOpacity(0.3),
             ),
           ),
           child: Icon(
@@ -202,7 +220,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
             children: [
               Text(
                 'ACCESS LEVEL: ',
-                style: TextStyle(color: Colors.white38, fontSize: 10, fontFamily: 'Courier'),
+                style: TextStyle(
+                  color: Colors.white38,
+                  fontSize: 10,
+                  fontFamily: 'Courier',
+                ),
               ),
               Text(
                 user.role.name.toUpperCase(),
@@ -210,7 +232,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
                   color: isAdmin ? Colors.redAccent : electricGrid,
                   fontSize: 10,
                   fontFamily: 'Courier',
-                  fontWeight: FontWeight.bold
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -224,21 +246,35 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: Colors.redAccent.withOpacity(0.5)),
                     foregroundColor: Colors.redAccent,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                     padding: EdgeInsets.zero,
                   ),
-                  onPressed: isUpdating ? null : () => _updateRole(context, ref, user, UserRole.user),
-                  child: const Text('DEMOTE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                  onPressed: isUpdating
+                      ? null
+                      : () => _updateRole(context, ref, user, UserRole.user),
+                  child: const Text(
+                    'DEMOTE',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                  ),
                 )
               : ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: electricGrid,
                     foregroundColor: deepVoidBlue,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                     padding: EdgeInsets.zero,
                   ),
-                  onPressed: isUpdating ? null : () => _updateRole(context, ref, user, UserRole.admin),
-                  child: const Text('PROMOTE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                  onPressed: isUpdating
+                      ? null
+                      : () => _updateRole(context, ref, user, UserRole.admin),
+                  child: const Text(
+                    'PROMOTE',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                  ),
                 ),
         ),
       ),
@@ -247,19 +283,30 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
 
   // --- LOGIC ---
 
-  Future<void> _updateRole(BuildContext context, WidgetRef ref, UserEntity user, UserRole newRole) async {
+  Future<void> _updateRole(
+    BuildContext context,
+    WidgetRef ref,
+    UserEntity user,
+    UserRole newRole,
+  ) async {
     try {
-      await ref.read(userManagementControllerProvider.notifier).updateUserRole(user.id, newRole);
+      await ref
+          .read(userManagementControllerProvider.notifier)
+          .updateUserRole(user.id, newRole);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               'PERMISSIONS UPDATED: ${user.email} -> ${newRole.name.toUpperCase()}',
-              style: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold, color: deepVoidBlue)
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontWeight: FontWeight.bold,
+                color: deepVoidBlue,
+              ),
             ),
             backgroundColor: electricGrid,
             behavior: SnackBarBehavior.floating,
-          )
+          ),
         );
       }
     } catch (e) {
@@ -268,11 +315,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> wit
           SnackBar(
             content: Text(
               'OPERATION FAILED: $e',
-              style: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold)
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontWeight: FontWeight.bold,
+              ),
             ),
             backgroundColor: Colors.redAccent,
             behavior: SnackBarBehavior.floating,
-          )
+          ),
         );
       }
     }
@@ -286,16 +336,27 @@ class BlueprintGridPainter extends CustomPainter {
   BlueprintGridPainter({required this.scrollOffset, required this.lineColor});
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = lineColor..strokeWidth = 1;
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1;
     const gridSize = 40.0;
     final shift = (scrollOffset * gridSize);
     for (double x = -gridSize; x < size.width + gridSize; x += gridSize) {
-      canvas.drawLine(Offset(x + shift % gridSize, 0), Offset(x + shift % gridSize, size.height), paint);
+      canvas.drawLine(
+        Offset(x + shift % gridSize, 0),
+        Offset(x + shift % gridSize, size.height),
+        paint,
+      );
     }
     for (double y = -gridSize; y < size.height + gridSize; y += gridSize) {
-      canvas.drawLine(Offset(0, y + shift % gridSize), Offset(size.width, y + shift % gridSize), paint);
+      canvas.drawLine(
+        Offset(0, y + shift % gridSize),
+        Offset(size.width, y + shift % gridSize),
+        paint,
+      );
     }
   }
+
   @override
   bool shouldRepaint(covariant BlueprintGridPainter oldDelegate) => true;
 }

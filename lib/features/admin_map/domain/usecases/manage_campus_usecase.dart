@@ -9,20 +9,30 @@ class AddCampusConnectionParams {
   final String toBuildingId;
   final double distance;
 
-  AddCampusConnectionParams(this.fromBuildingId, this.toBuildingId, this.distance);
+  AddCampusConnectionParams(
+    this.fromBuildingId,
+    this.toBuildingId,
+    this.distance,
+  );
 }
 
-class AddCampusConnectionUseCase implements UseCase<void, AddCampusConnectionParams> {
+class AddCampusConnectionUseCase
+    implements UseCase<void, AddCampusConnectionParams> {
   final AdminMapRepository repository;
   AddCampusConnectionUseCase(this.repository);
 
   @override
   Future<Either<Failure, void>> call(AddCampusConnectionParams params) {
-    return repository.addCampusConnection(params.fromBuildingId, params.toBuildingId, params.distance);
+    return repository.addCampusConnection(
+      params.fromBuildingId,
+      params.toBuildingId,
+      params.distance,
+    );
   }
 }
 
-class GetCampusConnectionsUseCase implements UseCase<List<CampusConnection>, NoParams> {
+class GetCampusConnectionsUseCase
+    implements UseCase<List<CampusConnection>, NoParams> {
   final AdminMapRepository repository;
   GetCampusConnectionsUseCase(this.repository);
 

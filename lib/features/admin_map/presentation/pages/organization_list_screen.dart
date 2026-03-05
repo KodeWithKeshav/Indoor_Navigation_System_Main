@@ -10,17 +10,19 @@ import '../../domain/usecases/update_organization_usecase.dart';
 import '../../domain/entities/organization.dart';
 import '../../../../core/usecase/usecase.dart';
 // Make sure you import your AuthController to handle logout
-import '../../../auth/presentation/providers/auth_controller.dart'; 
+import '../../../auth/presentation/providers/auth_controller.dart';
 import '../widgets/admin_drawer.dart';
 
 class OrganizationListScreen extends ConsumerStatefulWidget {
   const OrganizationListScreen({super.key});
 
   @override
-  ConsumerState<OrganizationListScreen> createState() => _OrganizationListScreenState();
+  ConsumerState<OrganizationListScreen> createState() =>
+      _OrganizationListScreenState();
 }
 
-class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen> with SingleTickerProviderStateMixin {
+class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _gridScrollController;
 
   // --- THEME COLORS ---
@@ -57,10 +59,10 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
         title: const Text(
           'ORGANIZATION UNITS',
           style: TextStyle(
-            fontFamily: 'Courier', 
-            fontWeight: FontWeight.bold, 
+            fontFamily: 'Courier',
+            fontWeight: FontWeight.bold,
             letterSpacing: 2,
-            fontSize: 16
+            fontSize: 16,
           ),
         ),
         centerTitle: true,
@@ -118,7 +120,9 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
           // 2. CONTENT
           SafeArea(
             child: FutureBuilder<List<Organization>>(
-              future: getOrgsUseCase(NoParams()).then((result) => result.getOrElse((l) => [])),
+              future: getOrgsUseCase(
+                NoParams(),
+              ).then((result) => result.getOrElse((l) => [])),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -131,7 +135,11 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.folder_off_outlined, size: 64, color: electricGrid.withOpacity(0.5)),
+                        Icon(
+                          Icons.folder_off_outlined,
+                          size: 64,
+                          color: electricGrid.withOpacity(0.5),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           "NO DATA FOUND",
@@ -240,19 +248,27 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: 'edit',
-                child: Row(children: [
-                  Icon(Icons.edit_outlined, color: electricGrid, size: 18),
-                  SizedBox(width: 12),
-                  Text('EDIT DATA'),
-                ]),
+                child: Row(
+                  children: [
+                    Icon(Icons.edit_outlined, color: electricGrid, size: 18),
+                    SizedBox(width: 12),
+                    Text('EDIT DATA'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: 'delete',
-                child: Row(children: [
-                  Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
-                  SizedBox(width: 12),
-                  Text('DELETE ENTRY'),
-                ]),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                      size: 18,
+                    ),
+                    SizedBox(width: 12),
+                    Text('DELETE ENTRY'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -284,7 +300,10 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
             children: [
               Row(
                 children: [
-                  Icon(isEditing ? Icons.edit : Icons.add_circle_outline, color: electricGrid),
+                  Icon(
+                    isEditing ? Icons.edit : Icons.add_circle_outline,
+                    color: electricGrid,
+                  ),
                   const SizedBox(width: 12),
                   Text(
                     isEditing ? "UPDATE ENTRY" : "NEW ORGANIZATION",
@@ -298,19 +317,22 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
                 ],
               ),
               const Divider(color: Colors.white24, height: 32),
-              
+
               _buildTechTextField("NAME", nameController),
               const SizedBox(height: 16),
               _buildTechTextField("DESCRIPTION", descController),
-              
+
               const SizedBox(height: 32),
-              
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text("CANCEL", style: TextStyle(color: Colors.white54)),
+                    child: const Text(
+                      "CANCEL",
+                      style: TextStyle(color: Colors.white54),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -323,18 +345,26 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
                       if (nameController.text.isEmpty) return;
 
                       if (isEditing) {
-                        final useCase = ref.read(updateOrganizationUseCaseProvider);
-                        await useCase(UpdateOrganizationParams(
-                          org.id,
-                          nameController.text.trim(),
-                          descController.text.trim(),
-                        ));
+                        final useCase = ref.read(
+                          updateOrganizationUseCaseProvider,
+                        );
+                        await useCase(
+                          UpdateOrganizationParams(
+                            org.id,
+                            nameController.text.trim(),
+                            descController.text.trim(),
+                          ),
+                        );
                       } else {
-                        final addOrgUseCase = ref.read(addOrganizationUseCaseProvider);
-                        await addOrgUseCase(AddOrganizationParams(
-                          name: nameController.text.trim(),
-                          description: descController.text.trim(),
-                        ));
+                        final addOrgUseCase = ref.read(
+                          addOrganizationUseCaseProvider,
+                        );
+                        await addOrgUseCase(
+                          AddOrganizationParams(
+                            name: nameController.text.trim(),
+                            description: descController.text.trim(),
+                          ),
+                        );
                       }
 
                       if (mounted) {
@@ -367,11 +397,19 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.warning_amber_rounded, size: 48, color: Colors.redAccent),
+              const Icon(
+                Icons.warning_amber_rounded,
+                size: 48,
+                color: Colors.redAccent,
+              ),
               const SizedBox(height: 16),
               const Text(
                 "CONFIRM DELETION",
-                style: TextStyle(color: paperWhite, fontWeight: FontWeight.bold, letterSpacing: 1),
+                style: TextStyle(
+                  color: paperWhite,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
               ),
               const SizedBox(height: 12),
               Text(
@@ -385,7 +423,10 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text("CANCEL", style: TextStyle(color: Colors.white54)),
+                    child: const Text(
+                      "CANCEL",
+                      style: TextStyle(color: Colors.white54),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton(
@@ -395,7 +436,9 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
                       shape: const RoundedRectangleBorder(),
                     ),
                     onPressed: () async {
-                      final useCase = ref.read(deleteOrganizationUseCaseProvider);
+                      final useCase = ref.read(
+                        deleteOrganizationUseCaseProvider,
+                      );
                       await useCase(org.id);
                       if (mounted) {
                         Navigator.pop(ctx);
@@ -433,7 +476,10 @@ class _OrganizationListScreenState extends ConsumerState<OrganizationListScreen>
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.black.withOpacity(0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: electricGrid.withOpacity(0.3)),
               borderRadius: BorderRadius.zero,
@@ -467,16 +513,16 @@ class BlueprintGridPainter extends CustomPainter {
 
     for (double x = -gridSize; x < size.width + gridSize; x += gridSize) {
       canvas.drawLine(
-        Offset(x + shift % gridSize, 0), 
-        Offset(x + shift % gridSize, size.height), 
-        paint
+        Offset(x + shift % gridSize, 0),
+        Offset(x + shift % gridSize, size.height),
+        paint,
       );
     }
     for (double y = -gridSize; y < size.height + gridSize; y += gridSize) {
       canvas.drawLine(
-        Offset(0, y + shift % gridSize), 
-        Offset(size.width, y + shift % gridSize), 
-        paint
+        Offset(0, y + shift % gridSize),
+        Offset(size.width, y + shift % gridSize),
+        paint,
       );
     }
   }

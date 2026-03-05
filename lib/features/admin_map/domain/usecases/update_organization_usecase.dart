@@ -10,12 +10,17 @@ class UpdateOrganizationParams {
   UpdateOrganizationParams(this.id, this.name, this.description);
 }
 
-class UpdateOrganizationUseCase implements UseCase<void, UpdateOrganizationParams> {
+class UpdateOrganizationUseCase
+    implements UseCase<void, UpdateOrganizationParams> {
   final AdminMapRepository repository;
   UpdateOrganizationUseCase(this.repository);
 
   @override
   Future<Either<Failure, void>> call(UpdateOrganizationParams params) {
-    return repository.updateOrganization(params.id, params.name, params.description);
+    return repository.updateOrganization(
+      params.id,
+      params.name,
+      params.description,
+    );
   }
 }

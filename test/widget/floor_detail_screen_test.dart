@@ -29,25 +29,29 @@ class FakeGraphService extends GraphService {
 class FakeAddRoomUseCase extends AddRoomUseCase {
   FakeAddRoomUseCase() : super(FakeAdminMapRepository());
   @override
-  Future<Either<Failure, void>> call(AddRoomParams params) async => const Right(null);
+  Future<Either<Failure, void>> call(AddRoomParams params) async =>
+      const Right(null);
 }
 
 class FakeDeleteRoomUseCase extends DeleteRoomUseCase {
   FakeDeleteRoomUseCase() : super(FakeAdminMapRepository());
   @override
-  Future<Either<Failure, void>> call(DeleteRoomParams params) async => const Right(null);
+  Future<Either<Failure, void>> call(DeleteRoomParams params) async =>
+      const Right(null);
 }
 
 class FakeUpdateRoomUseCase extends UpdateRoomUseCase {
   FakeUpdateRoomUseCase() : super(FakeAdminMapRepository());
   @override
-  Future<Either<Failure, void>> call(UpdateRoomUseParams params) async => const Right(null);
+  Future<Either<Failure, void>> call(UpdateRoomUseParams params) async =>
+      const Right(null);
 }
 
 class FakeAddCorridorUseCase extends AddCorridorUseCase {
   FakeAddCorridorUseCase() : super(FakeAdminMapRepository());
   @override
-  Future<Either<Failure, void>> call(AddCorridorParams params) async => const Right(null);
+  Future<Either<Failure, void>> call(AddCorridorParams params) async =>
+      const Right(null);
 }
 
 // Mock Navigation Notifier
@@ -65,44 +69,82 @@ class FakeAuthController extends AuthController {
   @override
   Future<void> logout(BuildContext context) async {}
 }
+
 // Mock Compass
 class MockCompassNotifier extends CompassNotifier {
   @override
   double? build() => 0.0;
 }
 
-
 void main() {
   group('FloorDetailScreen Widget Tests', () {
-    testWidgets('renders FloorDetailScreen with rooms and corridors', (WidgetTester tester) async {
+    testWidgets('renders FloorDetailScreen with rooms and corridors', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final rooms = [
-        Room(id: 'r1', floorId: 'f1', name: 'Room 101', x: 100, y: 100, type: RoomType.room),
-        Room(id: 'r2', floorId: 'f1', name: 'Room 102', x: 200, y: 200, type: RoomType.room),
+        Room(
+          id: 'r1',
+          floorId: 'f1',
+          name: 'Room 101',
+          x: 100,
+          y: 100,
+          type: RoomType.room,
+        ),
+        Room(
+          id: 'r2',
+          floorId: 'f1',
+          name: 'Room 102',
+          x: 200,
+          y: 200,
+          type: RoomType.room,
+        ),
       ];
       final corridors = [
-        Corridor(id: 'c1', floorId: 'f1', startRoomId: 'r1', endRoomId: 'r2', distance: 10),
+        Corridor(
+          id: 'c1',
+          floorId: 'f1',
+          startRoomId: 'r1',
+          endRoomId: 'r2',
+          distance: 10,
+        ),
       ];
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            roomsProvider(const FloorParams('b1', 'f1')).overrideWith((ref) => Stream.value(rooms).first.then((value) => value)),
-            corridorsProvider(const FloorParams('b1', 'f1')).overrideWith((ref) => Stream.value(corridors).first.then((value) => value)),
+            roomsProvider(const FloorParams('b1', 'f1')).overrideWith(
+              (ref) => Stream.value(rooms).first.then((value) => value),
+            ),
+            corridorsProvider(const FloorParams('b1', 'f1')).overrideWith(
+              (ref) => Stream.value(corridors).first.then((value) => value),
+            ),
             buildingsProvider('org1').overrideWith((ref) => Future.value([])),
-            
+
             navigationProvider.overrideWith(() => MockNavigationNotifier()),
             compassProvider.overrideWith(() => MockCompassNotifier()),
             authControllerProvider.overrideWith(() => FakeAuthController()),
-            
+
             addRoomUseCaseProvider.overrideWithValue(FakeAddRoomUseCase()),
-            deleteRoomUseCaseProvider.overrideWithValue(FakeDeleteRoomUseCase()),
-            updateRoomUseCaseProvider.overrideWithValue(FakeUpdateRoomUseCase()),
-            addCorridorUseCaseProvider.overrideWithValue(FakeAddCorridorUseCase()),
-            graphServiceProvider.overrideWith((ref) => FakeGraphService(null as dynamic)),
+            deleteRoomUseCaseProvider.overrideWithValue(
+              FakeDeleteRoomUseCase(),
+            ),
+            updateRoomUseCaseProvider.overrideWithValue(
+              FakeUpdateRoomUseCase(),
+            ),
+            addCorridorUseCaseProvider.overrideWithValue(
+              FakeAddCorridorUseCase(),
+            ),
+            graphServiceProvider.overrideWith(
+              (ref) => FakeGraphService(null as dynamic),
+            ),
           ],
           child: const MaterialApp(
-            home: FloorDetailScreen(buildingId: 'b1', floorId: 'f1', floorName: 'First Floor'),
+            home: FloorDetailScreen(
+              buildingId: 'b1',
+              floorId: 'f1',
+              floorName: 'First Floor',
+            ),
           ),
         ),
       );
@@ -123,22 +165,38 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-             roomsProvider(const FloorParams('b1', 'f1')).overrideWith((ref) => Future.value([])),
-             corridorsProvider(const FloorParams('b1', 'f1')).overrideWith((ref) => Future.value([])),
-             buildingsProvider('org1').overrideWith((ref) => Future.value([])),
+            roomsProvider(
+              const FloorParams('b1', 'f1'),
+            ).overrideWith((ref) => Future.value([])),
+            corridorsProvider(
+              const FloorParams('b1', 'f1'),
+            ).overrideWith((ref) => Future.value([])),
+            buildingsProvider('org1').overrideWith((ref) => Future.value([])),
 
             navigationProvider.overrideWith(() => MockNavigationNotifier()),
             compassProvider.overrideWith(() => MockCompassNotifier()),
             authControllerProvider.overrideWith(() => FakeAuthController()),
-            
+
             addRoomUseCaseProvider.overrideWithValue(FakeAddRoomUseCase()),
-            deleteRoomUseCaseProvider.overrideWithValue(FakeDeleteRoomUseCase()),
-            updateRoomUseCaseProvider.overrideWithValue(FakeUpdateRoomUseCase()),
-            addCorridorUseCaseProvider.overrideWithValue(FakeAddCorridorUseCase()),
-            graphServiceProvider.overrideWith((ref) => FakeGraphService(null as dynamic)),
+            deleteRoomUseCaseProvider.overrideWithValue(
+              FakeDeleteRoomUseCase(),
+            ),
+            updateRoomUseCaseProvider.overrideWithValue(
+              FakeUpdateRoomUseCase(),
+            ),
+            addCorridorUseCaseProvider.overrideWithValue(
+              FakeAddCorridorUseCase(),
+            ),
+            graphServiceProvider.overrideWith(
+              (ref) => FakeGraphService(null as dynamic),
+            ),
           ],
           child: const MaterialApp(
-            home: FloorDetailScreen(buildingId: 'b1', floorId: 'f1', floorName: 'Empty Floor'),
+            home: FloorDetailScreen(
+              buildingId: 'b1',
+              floorId: 'f1',
+              floorName: 'Empty Floor',
+            ),
           ),
         ),
       );

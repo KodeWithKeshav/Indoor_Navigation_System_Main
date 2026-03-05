@@ -50,10 +50,7 @@ class FloorModel extends Floor {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'floorNumber': floorNumber,
-      'name': name,
-    };
+    return {'floorNumber': floorNumber, 'name': name};
   }
 }
 

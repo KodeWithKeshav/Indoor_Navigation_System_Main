@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Conditional import: picks the web implementation when dart:html is available,
 // otherwise uses the native (flutter_tts) implementation.
 import 'voice_guidance_impl.dart'
-    if (dart.library.html) 'voice_guidance_impl_web.dart' as impl;
+    if (dart.library.html) 'voice_guidance_impl_web.dart'
+    as impl;
 
 /// Interface for text-to-speech voice guidance.
 abstract class VoiceGuidanceService {

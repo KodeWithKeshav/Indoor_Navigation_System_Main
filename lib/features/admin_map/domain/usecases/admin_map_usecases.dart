@@ -18,7 +18,11 @@ class AddBuildingUseCase implements UseCase<void, AddBuildingParams> {
 
   @override
   Future<Either<Failure, void>> call(AddBuildingParams params) {
-    return repository.addBuilding(params.name, params.description, params.organizationId);
+    return repository.addBuilding(
+      params.name,
+      params.description,
+      params.organizationId,
+    );
   }
 }
 
@@ -27,10 +31,11 @@ class GetBuildingsParams {
   GetBuildingsParams({this.organizationId});
 }
 
-class GetBuildingsUseCase implements UseCase<List<Building>, GetBuildingsParams> {
+class GetBuildingsUseCase
+    implements UseCase<List<Building>, GetBuildingsParams> {
   final AdminMapRepository repository;
   GetBuildingsUseCase(this.repository);
-  
+
   @override
   Future<Either<Failure, List<Building>>> call(GetBuildingsParams params) {
     return repository.getBuildings(organizationId: params.organizationId);
@@ -51,14 +56,19 @@ class AddFloorUseCase implements UseCase<void, AddFloorParams> {
 
   @override
   Future<Either<Failure, void>> call(AddFloorParams params) {
-    return repository.addFloor(params.buildingId, params.floorNumber, params.name);
+    return repository.addFloor(
+      params.buildingId,
+      params.floorNumber,
+      params.name,
+    );
   }
 }
 
-class GetFloorsUseCase implements UseCase<List<Floor>, String> { // String as Param = BuildingId
+class GetFloorsUseCase implements UseCase<List<Floor>, String> {
+  // String as Param = BuildingId
   final AdminMapRepository repository;
   GetFloorsUseCase(this.repository);
-  
+
   @override
   Future<Either<Failure, List<Floor>>> call(String buildingId) {
     return repository.getFloors(buildingId);
@@ -93,11 +103,11 @@ class AddRoomUseCase implements UseCase<void, AddRoomParams> {
   @override
   Future<Either<Failure, void>> call(AddRoomParams params) {
     return repository.addRoom(
-      params.buildingId, 
-      params.floorId, 
-      params.name, 
-      params.x, 
-      params.y, 
+      params.buildingId,
+      params.floorId,
+      params.name,
+      params.x,
+      params.y,
       type: params.type,
       connectorId: params.connectorId,
     );
@@ -110,10 +120,10 @@ class GetRoomsParams {
   GetRoomsParams(this.buildingId, this.floorId);
 }
 
-class GetRoomsUseCase implements UseCase<List<Room>, GetRoomsParams> { 
+class GetRoomsUseCase implements UseCase<List<Room>, GetRoomsParams> {
   final AdminMapRepository repository;
   GetRoomsUseCase(this.repository);
-  
+
   @override
   Future<Either<Failure, List<Room>>> call(GetRoomsParams params) {
     return repository.getRooms(params.buildingId, params.floorId);

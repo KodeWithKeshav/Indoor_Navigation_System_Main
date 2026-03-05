@@ -33,23 +33,25 @@ class _FakeAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async => Right(UserEntity(id: '1', email: email, role: UserRole.user));
-  
+
   @override
   Future<Either<Failure, UserEntity>> signUp({
     required String email,
     required String password,
     required String organizationId,
   }) async => Right(UserEntity(id: '1', email: email, role: UserRole.user));
-  
+
   @override
   Future<Either<Failure, void>> logout() async => const Right(null);
-  
+
   @override
-  Future<Either<Failure, UserEntity?>> getCurrentUser() async => const Right(null);
-  
+  Future<Either<Failure, UserEntity?>> getCurrentUser() async =>
+      const Right(null);
+
   @override
-  Future<Either<Failure, List<UserEntity>>> getAllUsers() async => const Right([]);
-  
+  Future<Either<Failure, List<UserEntity>>> getAllUsers() async =>
+      const Right([]);
+
   @override
   Future<Either<Failure, void>> updateUserRole({
     required String uid,
@@ -65,7 +67,7 @@ class _FakeAuthRepository implements AuthRepository {
 
 class _FakeLoginUseCase extends LoginUseCase {
   _FakeLoginUseCase() : super(_FakeAuthRepository());
-  
+
   @override
   Future<Either<Failure, UserEntity>> call(LoginParams params) async {
     return Right(UserEntity(id: '1', email: params.email, role: UserRole.user));
@@ -74,47 +76,121 @@ class _FakeLoginUseCase extends LoginUseCase {
 
 class _NoopRepo implements AdminMapRepository {
   @override
-  Future<Either<Failure, void>> addOrganization(String name, String description) async => const Right(null);
+  Future<Either<Failure, void>> addOrganization(
+    String name,
+    String description,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, List<Organization>>> getOrganizations() async => const Right([]);
+  Future<Either<Failure, List<Organization>>> getOrganizations() async =>
+      const Right([]);
   @override
-  Future<Either<Failure, void>> deleteOrganization(String organizationId) async => const Right(null);
+  Future<Either<Failure, void>> deleteOrganization(
+    String organizationId,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, void>> updateOrganization(String organizationId, String name, String description) async => const Right(null);
+  Future<Either<Failure, void>> updateOrganization(
+    String organizationId,
+    String name,
+    String description,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, void>> addBuilding(String name, String description, String? organizationId) async => const Right(null);
+  Future<Either<Failure, void>> addBuilding(
+    String name,
+    String description,
+    String? organizationId,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, List<Building>>> getBuildings({String? organizationId}) async => const Right([]);
+  Future<Either<Failure, List<Building>>> getBuildings({
+    String? organizationId,
+  }) async => const Right([]);
   @override
-  Future<Either<Failure, void>> deleteBuilding(String buildingId) async => const Right(null);
+  Future<Either<Failure, void>> deleteBuilding(String buildingId) async =>
+      const Right(null);
   @override
-  Future<Either<Failure, void>> updateBuilding(String buildingId, String name, String description) async => const Right(null);
+  Future<Either<Failure, void>> updateBuilding(
+    String buildingId,
+    String name,
+    String description,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, void>> addFloor(String buildingId, int floorNumber, String name) async => const Right(null);
+  Future<Either<Failure, void>> addFloor(
+    String buildingId,
+    int floorNumber,
+    String name,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, List<Floor>>> getFloors(String buildingId) async => const Right([]);
+  Future<Either<Failure, List<Floor>>> getFloors(String buildingId) async =>
+      const Right([]);
   @override
-  Future<Either<Failure, void>> deleteFloor(String buildingId, String floorId) async => const Right(null);
+  Future<Either<Failure, void>> deleteFloor(
+    String buildingId,
+    String floorId,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, void>> updateFloor(String buildingId, String floorId, int floorNumber, String name) async => const Right(null);
+  Future<Either<Failure, void>> updateFloor(
+    String buildingId,
+    String floorId,
+    int floorNumber,
+    String name,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, void>> addRoom(String buildingId, String floorId, String name, double x, double y, {RoomType type = RoomType.room, String? connectorId}) async => const Right(null);
+  Future<Either<Failure, void>> addRoom(
+    String buildingId,
+    String floorId,
+    String name,
+    double x,
+    double y, {
+    RoomType type = RoomType.room,
+    String? connectorId,
+  }) async => const Right(null);
   @override
-  Future<Either<Failure, List<Room>>> getRooms(String buildingId, String floorId) async => const Right([]);
+  Future<Either<Failure, List<Room>>> getRooms(
+    String buildingId,
+    String floorId,
+  ) async => const Right([]);
   @override
-  Future<Either<Failure, void>> deleteRoom(String buildingId, String floorId, String roomId) async => const Right(null);
+  Future<Either<Failure, void>> deleteRoom(
+    String buildingId,
+    String floorId,
+    String roomId,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, void>> updateRoom(String buildingId, String floorId, String roomId, {double? x, double? y, String? name, RoomType? type, String? connectorId}) async => const Right(null);
+  Future<Either<Failure, void>> updateRoom(
+    String buildingId,
+    String floorId,
+    String roomId, {
+    double? x,
+    double? y,
+    String? name,
+    RoomType? type,
+    String? connectorId,
+  }) async => const Right(null);
   @override
-  Future<Either<Failure, void>> addCorridor(String buildingId, String floorId, String startRoomId, String endRoomId, double distance) async => const Right(null);
+  Future<Either<Failure, void>> addCorridor(
+    String buildingId,
+    String floorId,
+    String startRoomId,
+    String endRoomId,
+    double distance,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, List<Corridor>>> getCorridors(String buildingId, String floorId) async => const Right([]);
+  Future<Either<Failure, List<Corridor>>> getCorridors(
+    String buildingId,
+    String floorId,
+  ) async => const Right([]);
   @override
-  Future<Either<Failure, void>> addCampusConnection(String fromBuildingId, String toBuildingId, double distance) async => const Right(null);
+  Future<Either<Failure, void>> addCampusConnection(
+    String fromBuildingId,
+    String toBuildingId,
+    double distance,
+  ) async => const Right(null);
   @override
-  Future<Either<Failure, List<CampusConnection>>> getCampusConnections() async => const Right([]);
+  Future<Either<Failure, List<CampusConnection>>>
+  getCampusConnections() async => const Right([]);
   @override
-  Future<Either<Failure, void>> deleteCampusConnection(String connectionId) async => const Right(null);
+  Future<Either<Failure, void>> deleteCampusConnection(
+    String connectionId,
+  ) async => const Right(null);
 }
 
 void main() {
@@ -136,7 +212,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          getOrganizationsUseCaseProvider.overrideWithValue(_FakeGetOrganizationsUseCase()),
+          getOrganizationsUseCaseProvider.overrideWithValue(
+            _FakeGetOrganizationsUseCase(),
+          ),
           authRepositoryProvider.overrideWithValue(_FakeAuthRepository()),
           loginUseCaseProvider.overrideWithValue(_FakeLoginUseCase()),
         ],

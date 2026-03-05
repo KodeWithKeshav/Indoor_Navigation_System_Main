@@ -12,12 +12,32 @@ void main() {
   test('AuthRepositoryImpl returns user on login', () async {
     final remote = _MockAuthRemoteDataSource();
     final repo = AuthRepositoryImpl(remote);
-    when(() => remote.loginWithEmailPassword(email: 'u1@example.com', password: 'pw'))
-        .thenAnswer((_) async => const UserModel(id: 'u1', email: 'u1@example.com', role: UserRole.user));
+    when(
+      () => remote.loginWithEmailPassword(
+        email: 'u1@example.com',
+        password: 'pw',
+      ),
+    ).thenAnswer(
+      (_) async => const UserModel(
+        id: 'u1',
+        email: 'u1@example.com',
+        role: UserRole.user,
+      ),
+    );
 
-    final result = await repo.loginWithEmailPassword(email: 'u1@example.com', password: 'pw');
+    final result = await repo.loginWithEmailPassword(
+      email: 'u1@example.com',
+      password: 'pw',
+    );
 
-    expect(result.getOrElse((_) => const UserEntity(id: 'x', email: '', role: UserRole.user)).id, 'u1');
+    expect(
+      result
+          .getOrElse(
+            (_) => const UserEntity(id: 'x', email: '', role: UserRole.user),
+          )
+          .id,
+      'u1',
+    );
   });
 
   test('AuthRepositoryImpl returns failure on exception', () async {
@@ -28,6 +48,9 @@ void main() {
 
     final result = await repo.logout();
     expect(result.isLeft(), isTrue);
-    expect(result.swap().getOrElse((_) => const ServerFailure('')).message, contains('boom'));
+    expect(
+      result.swap().getOrElse((_) => const ServerFailure('')).message,
+      contains('boom'),
+    );
   });
 }

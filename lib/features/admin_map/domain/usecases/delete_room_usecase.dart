@@ -16,6 +16,10 @@ class DeleteRoomUseCase implements UseCase<void, DeleteRoomParams> {
 
   @override
   Future<Either<Failure, void>> call(DeleteRoomParams params) {
-    return repository.deleteRoom(params.buildingId, params.floorId, params.roomId);
+    return repository.deleteRoom(
+      params.buildingId,
+      params.floorId,
+      params.roomId,
+    );
   }
 }

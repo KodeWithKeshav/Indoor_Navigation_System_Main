@@ -8,9 +8,15 @@ import '../../../../test_utils/fakes.dart';
 
 void main() {
   test('UserManagementController updates role', () async {
-    final repo = FakeAuthRepository(users: [
-      const UserEntity(id: 'u1', email: 'u1@example.com', role: UserRole.user),
-    ]);
+    final repo = FakeAuthRepository(
+      users: [
+        const UserEntity(
+          id: 'u1',
+          email: 'u1@example.com',
+          role: UserRole.user,
+        ),
+      ],
+    );
 
     final container = ProviderContainer(
       overrides: [
@@ -19,7 +25,9 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    await container.read(userManagementControllerProvider.notifier).updateUserRole('u1', UserRole.admin);
+    await container
+        .read(userManagementControllerProvider.notifier)
+        .updateUserRole('u1', UserRole.admin);
 
     final users = await container.read(allUsersProvider.future);
     expect(users.first.role, UserRole.admin);

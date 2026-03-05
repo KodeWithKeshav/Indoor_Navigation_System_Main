@@ -30,56 +30,104 @@ final graphServiceProvider = Provider<GraphService>((ref) {
   return GraphService(repo);
 });
 
-final navigationInstructionServiceProvider = Provider((ref) => NavigationInstructionService());
+final navigationInstructionServiceProvider = Provider(
+  (ref) => NavigationInstructionService(),
+);
 
 // Use Cases - Organization
-final addOrganizationUseCaseProvider = Provider((ref) => AddOrganizationUseCase(ref.read(adminMapRepositoryProvider)));
-final getOrganizationsUseCaseProvider = Provider((ref) => GetOrganizationsUseCase(ref.read(adminMapRepositoryProvider)));
-final deleteOrganizationUseCaseProvider = Provider((ref) => DeleteOrganizationUseCase(ref.read(adminMapRepositoryProvider)));
-final updateOrganizationUseCaseProvider = Provider((ref) => UpdateOrganizationUseCase(ref.read(adminMapRepositoryProvider)));
+final addOrganizationUseCaseProvider = Provider(
+  (ref) => AddOrganizationUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final getOrganizationsUseCaseProvider = Provider(
+  (ref) => GetOrganizationsUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final deleteOrganizationUseCaseProvider = Provider(
+  (ref) => DeleteOrganizationUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final updateOrganizationUseCaseProvider = Provider(
+  (ref) => UpdateOrganizationUseCase(ref.read(adminMapRepositoryProvider)),
+);
 
 // Use Cases - Campus
-final addCampusConnectionUseCaseProvider = Provider((ref) => AddCampusConnectionUseCase(ref.read(adminMapRepositoryProvider)));
-final getCampusConnectionsUseCaseProvider = Provider((ref) => GetCampusConnectionsUseCase(ref.read(adminMapRepositoryProvider)));
-final deleteCampusConnectionUseCaseProvider = Provider((ref) => DeleteCampusConnectionUseCase(ref.read(adminMapRepositoryProvider)));
+final addCampusConnectionUseCaseProvider = Provider(
+  (ref) => AddCampusConnectionUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final getCampusConnectionsUseCaseProvider = Provider(
+  (ref) => GetCampusConnectionsUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final deleteCampusConnectionUseCaseProvider = Provider(
+  (ref) => DeleteCampusConnectionUseCase(ref.read(adminMapRepositoryProvider)),
+);
 
 // Use Cases - Buildings
-final addBuildingUseCaseProvider = Provider((ref) => AddBuildingUseCase(ref.read(adminMapRepositoryProvider)));
+final addBuildingUseCaseProvider = Provider(
+  (ref) => AddBuildingUseCase(ref.read(adminMapRepositoryProvider)),
+);
 final getBuildingsUseCaseProvider = Provider<GetBuildingsUseCase>((ref) {
   return GetBuildingsUseCase(ref.read(adminMapRepositoryProvider));
 });
-final deleteBuildingUseCaseProvider = Provider((ref) => DeleteBuildingUseCase(ref.read(adminMapRepositoryProvider)));
-final updateBuildingUseCaseProvider = Provider((ref) => UpdateBuildingUseCase(ref.read(adminMapRepositoryProvider)));
+final deleteBuildingUseCaseProvider = Provider(
+  (ref) => DeleteBuildingUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final updateBuildingUseCaseProvider = Provider(
+  (ref) => UpdateBuildingUseCase(ref.read(adminMapRepositoryProvider)),
+);
 
 // Use Cases - Floors
-final addFloorUseCaseProvider = Provider((ref) => AddFloorUseCase(ref.read(adminMapRepositoryProvider)));
-final getFloorsUseCaseProvider = Provider((ref) => GetFloorsUseCase(ref.read(adminMapRepositoryProvider)));
-final deleteFloorUseCaseProvider = Provider((ref) => DeleteFloorUseCase(ref.read(adminMapRepositoryProvider)));
-final updateFloorUseCaseProvider = Provider((ref) => UpdateFloorUseCase(ref.read(adminMapRepositoryProvider)));
+final addFloorUseCaseProvider = Provider(
+  (ref) => AddFloorUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final getFloorsUseCaseProvider = Provider(
+  (ref) => GetFloorsUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final deleteFloorUseCaseProvider = Provider(
+  (ref) => DeleteFloorUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final updateFloorUseCaseProvider = Provider(
+  (ref) => UpdateFloorUseCase(ref.read(adminMapRepositoryProvider)),
+);
 
 // Use Cases - Rooms/Corridors
-final addRoomUseCaseProvider = Provider((ref) => AddRoomUseCase(ref.read(adminMapRepositoryProvider)));
-final getRoomsUseCaseProvider = Provider((ref) => GetRoomsUseCase(ref.read(adminMapRepositoryProvider)));
-final updateRoomUseCaseProvider = Provider((ref) => UpdateRoomUseCase(ref.read(adminMapRepositoryProvider)));
-final addCorridorUseCaseProvider = Provider((ref) => AddCorridorUseCase(ref.read(adminMapRepositoryProvider)));
-final getCorridorsUseCaseProvider = Provider((ref) => GetCorridorsUseCase(ref.read(adminMapRepositoryProvider)));
-final deleteRoomUseCaseProvider = Provider((ref) => DeleteRoomUseCase(ref.read(adminMapRepositoryProvider)));
-
+final addRoomUseCaseProvider = Provider(
+  (ref) => AddRoomUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final getRoomsUseCaseProvider = Provider(
+  (ref) => GetRoomsUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final updateRoomUseCaseProvider = Provider(
+  (ref) => UpdateRoomUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final addCorridorUseCaseProvider = Provider(
+  (ref) => AddCorridorUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final getCorridorsUseCaseProvider = Provider(
+  (ref) => GetCorridorsUseCase(ref.read(adminMapRepositoryProvider)),
+);
+final deleteRoomUseCaseProvider = Provider(
+  (ref) => DeleteRoomUseCase(ref.read(adminMapRepositoryProvider)),
+);
 
 // Notifiers
 
 // 1. Buildings List - Using FutureProvider.family
-final buildingsProvider = FutureProvider.family<List<Building>, String?>((ref, organizationId) async {
-    final getBuildingsUseCase = ref.read(getBuildingsUseCaseProvider);
-    final result = await getBuildingsUseCase(GetBuildingsParams(organizationId: organizationId));
-    return result.fold(
-      (failure) => throw failure.message,
-      (buildings) => buildings,
-    );
+final buildingsProvider = FutureProvider.family<List<Building>, String?>((
+  ref,
+  organizationId,
+) async {
+  final getBuildingsUseCase = ref.read(getBuildingsUseCaseProvider);
+  final result = await getBuildingsUseCase(
+    GetBuildingsParams(organizationId: organizationId),
+  );
+  return result.fold(
+    (failure) => throw failure.message,
+    (buildings) => buildings,
+  );
 });
 
 // 2. Campus Connections
-final campusConnectionsProvider = FutureProvider<List<CampusConnection>>((ref) async {
+final campusConnectionsProvider = FutureProvider<List<CampusConnection>>((
+  ref,
+) async {
   final useCase = ref.read(getCampusConnectionsUseCaseProvider);
   final result = await useCase(NoParams());
   return result.fold(
@@ -99,11 +147,11 @@ final organizationsProvider = FutureProvider<List<Organization>>((ref) async {
 });
 
 // 3. Floors of Building
-final floorsOfBuildingProvider = FutureProvider.family<List<Floor>, String>((ref, buildingId) async {
+final floorsOfBuildingProvider = FutureProvider.family<List<Floor>, String>((
+  ref,
+  buildingId,
+) async {
   final getFloorsUseCase = ref.read(getFloorsUseCaseProvider);
   final result = await getFloorsUseCase(buildingId);
-  return result.fold(
-    (failure) => throw failure.message,
-    (floors) => floors,
-  );
+  return result.fold((failure) => throw failure.message, (floors) => floors);
 });

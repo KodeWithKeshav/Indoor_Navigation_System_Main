@@ -10,7 +10,11 @@ void main() {
 
     expect(container.read(currentUserProvider), isNull);
 
-    const user = UserEntity(id: 'u1', email: 'u1@example.com', role: UserRole.user);
+    const user = UserEntity(
+      id: 'u1',
+      email: 'u1@example.com',
+      role: UserRole.user,
+    );
     container.read(currentUserProvider.notifier).setUser(user);
 
     expect(container.read(currentUserProvider)?.id, 'u1');

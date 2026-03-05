@@ -57,7 +57,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
-  
+
   @override
   Future<Either<Failure, UserEntity?>> getCurrentUser() async {
     try {
@@ -67,6 +67,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
   @override
   Future<Either<Failure, List<UserEntity>>> getAllUsers() async {
     try {
@@ -78,7 +79,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateUserRole({required String uid, required String role}) async {
+  Future<Either<Failure, void>> updateUserRole({
+    required String uid,
+    required String role,
+  }) async {
     try {
       await remoteDataSource.updateUserRole(uid: uid, role: role);
       return const Right(null);
@@ -86,10 +90,17 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
   @override
-  Future<Either<Failure, void>> updateUserOrganization({required String uid, required String organizationId}) async {
+  Future<Either<Failure, void>> updateUserOrganization({
+    required String uid,
+    required String organizationId,
+  }) async {
     try {
-      await remoteDataSource.updateUserOrganization(uid: uid, organizationId: organizationId);
+      await remoteDataSource.updateUserOrganization(
+        uid: uid,
+        organizationId: organizationId,
+      );
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

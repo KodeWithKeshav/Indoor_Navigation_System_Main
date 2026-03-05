@@ -16,5 +16,11 @@ class CampusConnection extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, fromBuildingId, toBuildingId, distance, bidirectional];
+  List<Object?> get props => [
+    id,
+    fromBuildingId,
+    toBuildingId,
+    distance,
+    bidirectional,
+  ];
 }

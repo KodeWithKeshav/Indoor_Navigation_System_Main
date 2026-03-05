@@ -8,30 +8,36 @@ import '../../domain/usecases/manage_floors_usecase.dart';
 import '../providers/admin_map_providers.dart';
 // --- IMPORT AUTH CONTROLLER ---
 // --- IMPORT AUTH CONTROLLER ---
-import '../../../auth/presentation/providers/auth_controller.dart'; 
-import '../../../../core/widgets/custom_toast.dart'; 
+import '../../../auth/presentation/providers/auth_controller.dart';
+import '../../../../core/widgets/custom_toast.dart';
 
 // Family provider
-final floorsProvider = FutureProvider.family<List<Floor>, String>((ref, buildingId) async {
+final floorsProvider = FutureProvider.family<List<Floor>, String>((
+  ref,
+  buildingId,
+) async {
   final getFloorsUseCase = ref.read(getFloorsUseCaseProvider);
   final result = await getFloorsUseCase(buildingId);
-  return result.fold(
-    (failure) => throw failure.message,
-    (floors) => floors,
-  );
+  return result.fold((failure) => throw failure.message, (floors) => floors);
 });
 
 class BuildingDetailScreen extends ConsumerStatefulWidget {
   final String buildingId;
   final String buildingName;
 
-  const BuildingDetailScreen({super.key, required this.buildingId, required this.buildingName});
+  const BuildingDetailScreen({
+    super.key,
+    required this.buildingId,
+    required this.buildingName,
+  });
 
   @override
-  ConsumerState<BuildingDetailScreen> createState() => _BuildingDetailScreenState();
+  ConsumerState<BuildingDetailScreen> createState() =>
+      _BuildingDetailScreenState();
 }
 
-class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> with SingleTickerProviderStateMixin {
+class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _gridScrollController;
 
   // --- THEME COLORS ---
@@ -69,11 +75,11 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
             const Text(
               'BUILDING CONFIGURATION',
               style: TextStyle(
-                fontFamily: 'Courier', 
-                fontWeight: FontWeight.bold, 
+                fontFamily: 'Courier',
+                fontWeight: FontWeight.bold,
                 letterSpacing: 2,
                 fontSize: 10,
-                color: electricGrid
+                color: electricGrid,
               ),
             ),
             const SizedBox(height: 2),
@@ -82,7 +88,7 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
               style: const TextStyle(
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
-                fontSize: 16
+                fontSize: 16,
               ),
             ),
           ],
@@ -140,42 +146,56 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
           // 2. CONTENT
           SafeArea(
             child: floorsAsync.when(
-              data: (floors) => floors.isEmpty 
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.layers_clear_outlined, size: 64, color: electricGrid.withOpacity(0.3)),
-                        const SizedBox(height: 16),
-                        Text(
-                          'NO FLOORS DETECTED',
-                          style: TextStyle(
-                            color: paperWhite.withOpacity(0.5),
-                            fontFamily: 'Courier',
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
+              data: (floors) => floors.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.layers_clear_outlined,
+                            size: 64,
+                            color: electricGrid.withOpacity(0.3),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 16),
+                          Text(
+                            'NO FLOORS DETECTED',
+                            style: TextStyle(
+                              color: paperWhite.withOpacity(0.5),
+                              fontFamily: 'Courier',
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: floors.length,
+                      itemBuilder: (context, index) {
+                        final floor = floors[index];
+                        return _buildFloorCard(floor);
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: floors.length,
-                    itemBuilder: (context, index) {
-                      final floor = floors[index];
-                      return _buildFloorCard(floor);
-                    },
-                  ),
-              loading: () => const Center(child: CircularProgressIndicator(color: electricGrid)),
-              error: (error, _) => Center(child: Text('SYSTEM ERROR: $error', style: const TextStyle(color: Colors.redAccent))),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: electricGrid),
+              ),
+              error: (error, _) => Center(
+                child: Text(
+                  'SYSTEM ERROR: $error',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
             ),
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddFloorDialog(context, ref),
-        label: const Text('ADD FLOOR', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+        label: const Text(
+          'ADD FLOOR',
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+        ),
         icon: const Icon(Icons.post_add),
         backgroundColor: electricGrid,
         foregroundColor: deepVoidBlue,
@@ -201,7 +221,10 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 12,
+        ),
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -212,9 +235,9 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
           child: Text(
             "${floor.floorNumber}",
             style: const TextStyle(
-              color: electricGrid, 
-              fontWeight: FontWeight.bold, 
-              fontSize: 18
+              color: electricGrid,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
             ),
           ),
         ),
@@ -231,13 +254,17 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
           padding: EdgeInsets.only(top: 4.0),
           child: Text(
             "TAP TO EDIT LAYOUT // MANAGE ROOMS",
-            style: TextStyle(color: Colors.white54, fontSize: 10, fontFamily: 'Courier'),
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              fontFamily: 'Courier',
+            ),
           ),
         ),
         onTap: () {
           final params = GoRouterState.of(context).pathParameters;
           final orgId = params['orgId'];
-          
+
           if (orgId != null) {
             context.pushNamed(
               'floor_detail',
@@ -249,7 +276,7 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
               extra: floor.name,
             );
           } else {
-             context.push('/floor/${floor.id}', extra: floor.name);
+            context.push('/floor/${floor.id}', extra: floor.name);
           }
         },
         trailing: _buildPopupMenu(floor),
@@ -274,19 +301,31 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
         icon: const Icon(Icons.more_vert, color: Colors.white54),
         onSelected: (value) {
           if (value == 'edit') {
-             _showEditFloorDialog(context, ref, floor);
+            _showEditFloorDialog(context, ref, floor);
           } else if (value == 'delete') {
-             _confirmDeleteFloor(context, ref, floor);
+            _confirmDeleteFloor(context, ref, floor);
           }
         },
         itemBuilder: (context) => [
           const PopupMenuItem(
             value: 'edit',
-            child: Row(children: [Icon(Icons.edit_outlined, color: electricGrid, size: 18), SizedBox(width: 12), Text('EDIT METADATA')]),
+            child: Row(
+              children: [
+                Icon(Icons.edit_outlined, color: electricGrid, size: 18),
+                SizedBox(width: 12),
+                Text('EDIT METADATA'),
+              ],
+            ),
           ),
           const PopupMenuItem(
             value: 'delete',
-            child: Row(children: [Icon(Icons.delete_outline, color: Colors.redAccent, size: 18), SizedBox(width: 12), Text('DELETE LAYER')]),
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                SizedBox(width: 12),
+                Text('DELETE LAYER'),
+              ],
+            ),
           ),
         ],
       ),
@@ -304,7 +343,11 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
       icon: Icons.post_add,
       content: Column(
         children: [
-          _buildTechTextField("FLOOR NUMBER (INT)", numberController, isNumber: true),
+          _buildTechTextField(
+            "FLOOR NUMBER (INT)",
+            numberController,
+            isNumber: true,
+          ),
           const SizedBox(height: 16),
           _buildTechTextField("FLOOR NAME / LABEL", nameController),
         ],
@@ -313,22 +356,25 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
       onConfirm: () async {
         final number = int.tryParse(numberController.text.trim());
         if (number == null) {
-           _showSnackBar(context, 'INVALID NUMBER FORMAT', isError: true);
-           return;
+          _showSnackBar(context, 'INVALID NUMBER FORMAT', isError: true);
+          return;
         }
-        
+
         Navigator.pop(context);
-        
+
         final useCase = ref.read(addFloorUseCaseProvider);
-        final result = await useCase(AddFloorParams(
-          widget.buildingId,
-          number,
-          nameController.text.trim(),
-        ));
-        
+        final result = await useCase(
+          AddFloorParams(widget.buildingId, number, nameController.text.trim()),
+        );
+
         result.fold(
           (failure) {
-            if (context.mounted) _showSnackBar(context, 'ERROR: ${failure.message}', isError: true);
+            if (context.mounted)
+              _showSnackBar(
+                context,
+                'ERROR: ${failure.message}',
+                isError: true,
+              );
           },
           (_) {
             if (context.mounted) _showSnackBar(context, 'FLOOR INITIALIZED');
@@ -341,14 +387,20 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
 
   void _showEditFloorDialog(BuildContext context, WidgetRef ref, Floor floor) {
     final nameController = TextEditingController(text: floor.name);
-    final numberController = TextEditingController(text: floor.floorNumber.toString());
+    final numberController = TextEditingController(
+      text: floor.floorNumber.toString(),
+    );
 
     _showTechDialog(
       title: "EDIT FLOOR DATA",
       icon: Icons.edit_note,
       content: Column(
         children: [
-          _buildTechTextField("FLOOR NUMBER (INT)", numberController, isNumber: true),
+          _buildTechTextField(
+            "FLOOR NUMBER (INT)",
+            numberController,
+            isNumber: true,
+          ),
           const SizedBox(height: 16),
           _buildTechTextField("FLOOR NAME / LABEL", nameController),
         ],
@@ -356,23 +408,34 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
       confirmLabel: "UPDATE",
       onConfirm: () async {
         final number = int.tryParse(numberController.text.trim());
-         if (number == null) {
-           _showSnackBar(context, 'INVALID NUMBER FORMAT', isError: true);
-           return;
-         }
+        if (number == null) {
+          _showSnackBar(context, 'INVALID NUMBER FORMAT', isError: true);
+          return;
+        }
 
         Navigator.pop(context);
         final useCase = ref.read(updateFloorUseCaseProvider);
         final result = await useCase(
-            UpdateFloorParams(widget.buildingId, floor.id, number, nameController.text.trim()));
-        
+          UpdateFloorParams(
+            widget.buildingId,
+            floor.id,
+            number,
+            nameController.text.trim(),
+          ),
+        );
+
         result.fold(
           (failure) {
-             if(context.mounted) _showSnackBar(context, 'UPDATE FAILED: ${failure.message}', isError: true);
+            if (context.mounted)
+              _showSnackBar(
+                context,
+                'UPDATE FAILED: ${failure.message}',
+                isError: true,
+              );
           },
           (_) {
-             if(context.mounted) _showSnackBar(context, 'METADATA UPDATED');
-             ref.invalidate(floorsProvider(widget.buildingId));
+            if (context.mounted) _showSnackBar(context, 'METADATA UPDATED');
+            ref.invalidate(floorsProvider(widget.buildingId));
           },
         );
       },
@@ -393,15 +456,22 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
       onConfirm: () async {
         Navigator.pop(context);
         final useCase = ref.read(deleteFloorUseCaseProvider);
-        final result = await useCase(DeleteFloorParams(widget.buildingId, floor.id));
-        
+        final result = await useCase(
+          DeleteFloorParams(widget.buildingId, floor.id),
+        );
+
         result.fold(
           (failure) {
-             if(context.mounted) _showSnackBar(context, 'DELETION FAILED: ${failure.message}', isError: true);
+            if (context.mounted)
+              _showSnackBar(
+                context,
+                'DELETION FAILED: ${failure.message}',
+                isError: true,
+              );
           },
           (_) {
-             if(context.mounted) _showSnackBar(context, 'LAYER PURGED');
-             ref.invalidate(floorsProvider(widget.buildingId));
+            if (context.mounted) _showSnackBar(context, 'LAYER PURGED');
+            ref.invalidate(floorsProvider(widget.buildingId));
           },
         );
       },
@@ -411,10 +481,10 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
   // --- HELPER FUNCTIONS ---
 
   void _showTechDialog({
-    required String title, 
-    required IconData icon, 
-    required Widget content, 
-    required String confirmLabel, 
+    required String title,
+    required IconData icon,
+    required Widget content,
+    required String confirmLabel,
     required VoidCallback onConfirm,
     bool isDanger = false,
   }) {
@@ -424,7 +494,9 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
         backgroundColor: darkCardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
-          side: BorderSide(color: isDanger ? Colors.redAccent : electricGrid.withOpacity(0.5)),
+          side: BorderSide(
+            color: isDanger ? Colors.redAccent : electricGrid.withOpacity(0.5),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -437,7 +509,12 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
                   const SizedBox(width: 12),
                   Text(
                     title,
-                    style: const TextStyle(color: paperWhite, fontFamily: 'Courier', fontWeight: FontWeight.bold, letterSpacing: 1),
+                    style: const TextStyle(
+                      color: paperWhite,
+                      fontFamily: 'Courier',
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
                   ),
                 ],
               ),
@@ -449,12 +526,17 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text("ABORT", style: TextStyle(color: Colors.white54)),
+                    child: const Text(
+                      "ABORT",
+                      style: TextStyle(color: Colors.white54),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDanger ? Colors.redAccent : electricGrid,
+                      backgroundColor: isDanger
+                          ? Colors.redAccent
+                          : electricGrid,
                       foregroundColor: isDanger ? paperWhite : deepVoidBlue,
                       shape: const RoundedRectangleBorder(),
                     ),
@@ -470,13 +552,22 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
     );
   }
 
-  Widget _buildTechTextField(String label, TextEditingController controller, {bool isNumber = false}) {
+  Widget _buildTechTextField(
+    String label,
+    TextEditingController controller, {
+    bool isNumber = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(color: electricGrid, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+          style: const TextStyle(
+            color: electricGrid,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -486,7 +577,10 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.black.withOpacity(0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: electricGrid.withOpacity(0.3)),
               borderRadius: BorderRadius.zero,
@@ -501,7 +595,11 @@ class _BuildingDetailScreenState extends ConsumerState<BuildingDetailScreen> wit
     );
   }
 
-  void _showSnackBar(BuildContext context, String message, {bool isError = false}) {
+  void _showSnackBar(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     if (!mounted) return;
     ToastService.show(context, message, isError: isError);
   }
@@ -514,16 +612,27 @@ class BlueprintGridPainter extends CustomPainter {
   BlueprintGridPainter({required this.scrollOffset, required this.lineColor});
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = lineColor..strokeWidth = 1;
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1;
     const gridSize = 40.0;
     final shift = (scrollOffset * gridSize);
     for (double x = -gridSize; x < size.width + gridSize; x += gridSize) {
-      canvas.drawLine(Offset(x + shift % gridSize, 0), Offset(x + shift % gridSize, size.height), paint);
+      canvas.drawLine(
+        Offset(x + shift % gridSize, 0),
+        Offset(x + shift % gridSize, size.height),
+        paint,
+      );
     }
     for (double y = -gridSize; y < size.height + gridSize; y += gridSize) {
-      canvas.drawLine(Offset(0, y + shift % gridSize), Offset(size.width, y + shift % gridSize), paint);
+      canvas.drawLine(
+        Offset(0, y + shift % gridSize),
+        Offset(size.width, y + shift % gridSize),
+        paint,
+      );
     }
   }
+
   @override
   bool shouldRepaint(covariant BlueprintGridPainter oldDelegate) => true;
 }

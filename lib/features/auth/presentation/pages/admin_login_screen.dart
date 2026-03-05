@@ -23,11 +23,13 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
 
   void _loginAdmin() {
     if (_formKey.currentState!.validate()) {
-      ref.read(authControllerProvider.notifier).loginAdmin(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        context: context,
-      );
+      ref
+          .read(authControllerProvider.notifier)
+          .loginAdmin(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+            context: context,
+          );
     }
   }
 
@@ -48,13 +50,17 @@ class _AdminLoginScreenState extends ConsumerState<AdminLoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Icon(Icons.admin_panel_settings, size: 64, color: Colors.blueGrey),
+                  const Icon(
+                    Icons.admin_panel_settings,
+                    size: 64,
+                    color: Colors.blueGrey,
+                  ),
                   const SizedBox(height: 24),
                   Text(
                     'Admin Login',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),

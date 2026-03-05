@@ -10,7 +10,7 @@ void main() {
     // This test verifies that the test framework works correctly.
     // Full widget tests require proper Firebase initialization which
     // needs integration test setup.
-    
+
     // Simple assertion to ensure test framework is working
     expect(1 + 1, 2);
   });

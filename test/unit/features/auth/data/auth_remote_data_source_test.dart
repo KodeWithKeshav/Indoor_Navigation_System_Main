@@ -8,7 +8,10 @@ void main() {
   test('getCurrentUser returns null when no user', () async {
     final firestore = FakeFirebaseFirestore();
     final auth = MockFirebaseAuth(signedIn: false);
-    final dataSource = AuthRemoteDataSourceImpl(firebaseAuth: auth, firestore: firestore);
+    final dataSource = AuthRemoteDataSourceImpl(
+      firebaseAuth: auth,
+      firestore: firestore,
+    );
 
     final user = await dataSource.getCurrentUser();
     expect(user, isNull);
@@ -27,7 +30,10 @@ void main() {
       'organizationId': 'org1',
     });
 
-    final dataSource = AuthRemoteDataSourceImpl(firebaseAuth: auth, firestore: firestore);
+    final dataSource = AuthRemoteDataSourceImpl(
+      firebaseAuth: auth,
+      firestore: firestore,
+    );
     final user = await dataSource.getCurrentUser();
 
     expect(user, isNotNull);

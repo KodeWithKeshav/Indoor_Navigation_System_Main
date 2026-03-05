@@ -31,9 +31,18 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addOrganization(String name, String description) async {
+  Future<Either<Failure, void>> addOrganization(
+    String name,
+    String description,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
-    _organizations.add(Organization(id: 'org-${_organizations.length + 1}', name: name, description: description));
+    _organizations.add(
+      Organization(
+        id: 'org-${_organizations.length + 1}',
+        name: name,
+        description: description,
+      ),
+    );
     return const Right(null);
   }
 
@@ -44,34 +53,59 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteOrganization(String organizationId) async {
+  Future<Either<Failure, void>> deleteOrganization(
+    String organizationId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     _organizations.removeWhere((o) => o.id == organizationId);
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> updateOrganization(String organizationId, String name, String description) async {
+  Future<Either<Failure, void>> updateOrganization(
+    String organizationId,
+    String name,
+    String description,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final index = _organizations.indexWhere((o) => o.id == organizationId);
     if (index != -1) {
-      _organizations[index] = Organization(id: organizationId, name: name, description: description);
+      _organizations[index] = Organization(
+        id: organizationId,
+        name: name,
+        description: description,
+      );
     }
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> addBuilding(String name, String description, String? organizationId) async {
+  Future<Either<Failure, void>> addBuilding(
+    String name,
+    String description,
+    String? organizationId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
-    _buildings.add(Building(id: 'b-${_buildings.length + 1}', name: name, description: description, organizationId: organizationId));
+    _buildings.add(
+      Building(
+        id: 'b-${_buildings.length + 1}',
+        name: name,
+        description: description,
+        organizationId: organizationId,
+      ),
+    );
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, List<Building>>> getBuildings({String? organizationId}) async {
+  Future<Either<Failure, List<Building>>> getBuildings({
+    String? organizationId,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     if (organizationId != null) {
-      return Right(_buildings.where((b) => b.organizationId == organizationId).toList());
+      return Right(
+        _buildings.where((b) => b.organizationId == organizationId).toList(),
+      );
     }
     return Right(_buildings);
   }
@@ -84,21 +118,41 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateBuilding(String buildingId, String name, String description) async {
+  Future<Either<Failure, void>> updateBuilding(
+    String buildingId,
+    String name,
+    String description,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final index = _buildings.indexWhere((b) => b.id == buildingId);
     if (index != -1) {
       final old = _buildings[index];
-      _buildings[index] = Building(id: buildingId, name: name, description: description, organizationId: old.organizationId);
+      _buildings[index] = Building(
+        id: buildingId,
+        name: name,
+        description: description,
+        organizationId: old.organizationId,
+      );
     }
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> addFloor(String buildingId, int floorNumber, String name) async {
+  Future<Either<Failure, void>> addFloor(
+    String buildingId,
+    int floorNumber,
+    String name,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     _floors.putIfAbsent(buildingId, () => []);
-    _floors[buildingId]!.add(Floor(id: 'f-${floorNumber}', buildingId: buildingId, floorNumber: floorNumber, name: name));
+    _floors[buildingId]!.add(
+      Floor(
+        id: 'f-${floorNumber}',
+        buildingId: buildingId,
+        floorNumber: floorNumber,
+        name: name,
+      ),
+    );
     return const Right(null);
   }
 
@@ -109,43 +163,81 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteFloor(String buildingId, String floorId) async {
+  Future<Either<Failure, void>> deleteFloor(
+    String buildingId,
+    String floorId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     _floors[buildingId]?.removeWhere((f) => f.id == floorId);
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> updateFloor(String buildingId, String floorId, int floorNumber, String name) async {
+  Future<Either<Failure, void>> updateFloor(
+    String buildingId,
+    String floorId,
+    int floorNumber,
+    String name,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final floors = _floors[buildingId];
     if (floors != null) {
       final index = floors.indexWhere((f) => f.id == floorId);
       if (index != -1) {
-        floors[index] = Floor(id: floorId, buildingId: buildingId, floorNumber: floorNumber, name: name);
+        floors[index] = Floor(
+          id: floorId,
+          buildingId: buildingId,
+          floorNumber: floorNumber,
+          name: name,
+        );
       }
     }
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> addRoom(String buildingId, String floorId, String name, double x, double y, {RoomType type = RoomType.room, String? connectorId}) async {
+  Future<Either<Failure, void>> addRoom(
+    String buildingId,
+    String floorId,
+    String name,
+    double x,
+    double y, {
+    RoomType type = RoomType.room,
+    String? connectorId,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     _rooms.putIfAbsent(key, () => []);
-    _rooms[key]!.add(Room(id: 'r-${_rooms[key]!.length + 1}', floorId: floorId, name: name, x: x, y: y, type: type, connectorId: connectorId));
+    _rooms[key]!.add(
+      Room(
+        id: 'r-${_rooms[key]!.length + 1}',
+        floorId: floorId,
+        name: name,
+        x: x,
+        y: y,
+        type: type,
+        connectorId: connectorId,
+      ),
+    );
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, List<Room>>> getRooms(String buildingId, String floorId) async {
+  Future<Either<Failure, List<Room>>> getRooms(
+    String buildingId,
+    String floorId,
+  ) async {
     if (shouldFail) return Left(ValidationFailure(failureMessage));
     final key = '$buildingId-$floorId';
     return Right(_rooms[key] ?? []);
   }
 
   @override
-  Future<Either<Failure, void>> deleteRoom(String buildingId, String floorId, String roomId) async {
+  Future<Either<Failure, void>> deleteRoom(
+    String buildingId,
+    String floorId,
+    String roomId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     _rooms[key]?.removeWhere((r) => r.id == roomId);
@@ -153,7 +245,16 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateRoom(String buildingId, String floorId, String roomId, {double? x, double? y, String? name, RoomType? type, String? connectorId}) async {
+  Future<Either<Failure, void>> updateRoom(
+    String buildingId,
+    String floorId,
+    String roomId, {
+    double? x,
+    double? y,
+    String? name,
+    RoomType? type,
+    String? connectorId,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     final rooms = _rooms[key];
@@ -176,25 +277,53 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addCorridor(String buildingId, String floorId, String startRoomId, String endRoomId, double distance) async {
+  Future<Either<Failure, void>> addCorridor(
+    String buildingId,
+    String floorId,
+    String startRoomId,
+    String endRoomId,
+    double distance,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     _corridors.putIfAbsent(key, () => []);
-    _corridors[key]!.add(Corridor(id: 'c-${_corridors[key]!.length + 1}', floorId: floorId, startRoomId: startRoomId, endRoomId: endRoomId, distance: distance));
+    _corridors[key]!.add(
+      Corridor(
+        id: 'c-${_corridors[key]!.length + 1}',
+        floorId: floorId,
+        startRoomId: startRoomId,
+        endRoomId: endRoomId,
+        distance: distance,
+      ),
+    );
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, List<Corridor>>> getCorridors(String buildingId, String floorId) async {
+  Future<Either<Failure, List<Corridor>>> getCorridors(
+    String buildingId,
+    String floorId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     return Right(_corridors[key] ?? []);
   }
 
   @override
-  Future<Either<Failure, void>> addCampusConnection(String fromBuildingId, String toBuildingId, double distance) async {
+  Future<Either<Failure, void>> addCampusConnection(
+    String fromBuildingId,
+    String toBuildingId,
+    double distance,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
-    _campusConnections.add(CampusConnection(id: 'cc-${_campusConnections.length + 1}', fromBuildingId: fromBuildingId, toBuildingId: toBuildingId, distance: distance));
+    _campusConnections.add(
+      CampusConnection(
+        id: 'cc-${_campusConnections.length + 1}',
+        fromBuildingId: fromBuildingId,
+        toBuildingId: toBuildingId,
+        distance: distance,
+      ),
+    );
     return const Right(null);
   }
 
@@ -205,7 +334,9 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteCampusConnection(String connectionId) async {
+  Future<Either<Failure, void>> deleteCampusConnection(
+    String connectionId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     _campusConnections.removeWhere((c) => c.id == connectionId);
     return const Right(null);
@@ -227,7 +358,10 @@ void main() {
     // ============ ORGANIZATION TESTS ============
     group('Organization Management', () {
       test('should add a new organization successfully', () async {
-        final result = await repository.addOrganization('Tech University', 'A modern tech campus');
+        final result = await repository.addOrganization(
+          'Tech University',
+          'A modern tech campus',
+        );
 
         expect(result.isRight(), true);
         final orgs = await repository.getOrganizations();
@@ -238,10 +372,16 @@ void main() {
         repository.shouldFail = true;
         repository.failureMessage = 'Database connection error';
 
-        final result = await repository.addOrganization('Tech University', 'A modern tech campus');
+        final result = await repository.addOrganization(
+          'Tech University',
+          'A modern tech campus',
+        );
 
         expect(result.isLeft(), true);
-        expect(result.fold((l) => l.message, (r) => ''), 'Database connection error');
+        expect(
+          result.fold((l) => l.message, (r) => ''),
+          'Database connection error',
+        );
       });
 
       test('should retrieve all organizations', () async {
@@ -271,24 +411,39 @@ void main() {
         final orgs = await repository.getOrganizations();
         final orgId = orgs.fold((l) => <Organization>[], (r) => r).first.id;
 
-        final result = await repository.updateOrganization(orgId, 'New Name', 'New desc');
+        final result = await repository.updateOrganization(
+          orgId,
+          'New Name',
+          'New desc',
+        );
 
         expect(result.isRight(), true);
         final updated = await repository.getOrganizations();
-        expect(updated.fold((l) => <Organization>[], (r) => r).first.name, 'New Name');
+        expect(
+          updated.fold((l) => <Organization>[], (r) => r).first.name,
+          'New Name',
+        );
       });
     });
 
     // ============ BUILDING TESTS ============
     group('Building Management', () {
       test('should add a new building with organization', () async {
-        final result = await repository.addBuilding('Engineering Building', 'Main engineering', 'org-1');
+        final result = await repository.addBuilding(
+          'Engineering Building',
+          'Main engineering',
+          'org-1',
+        );
 
         expect(result.isRight(), true);
       });
 
       test('should add building without organization', () async {
-        final result = await repository.addBuilding('Standalone Building', 'No org', null);
+        final result = await repository.addBuilding(
+          'Standalone Building',
+          'No org',
+          null,
+        );
 
         expect(result.isRight(), true);
       });
@@ -306,7 +461,10 @@ void main() {
       test('should delete a building', () async {
         await repository.addBuilding('To Delete', 'Delete me', null);
         final buildings = await repository.getBuildings();
-        final buildingId = buildings.fold((l) => <Building>[], (r) => r).first.id;
+        final buildingId = buildings
+            .fold((l) => <Building>[], (r) => r)
+            .first
+            .id;
 
         final result = await repository.deleteBuilding(buildingId);
 
@@ -316,9 +474,16 @@ void main() {
       test('should update building details', () async {
         await repository.addBuilding('Old Building', 'Old desc', null);
         final buildings = await repository.getBuildings();
-        final buildingId = buildings.fold((l) => <Building>[], (r) => r).first.id;
+        final buildingId = buildings
+            .fold((l) => <Building>[], (r) => r)
+            .first
+            .id;
 
-        final result = await repository.updateBuilding(buildingId, 'New Building', 'New desc');
+        final result = await repository.updateBuilding(
+          buildingId,
+          'New Building',
+          'New desc',
+        );
 
         expect(result.isRight(), true);
       });
@@ -350,7 +515,12 @@ void main() {
         final floors = await repository.getFloors('b1');
         final floorId = floors.fold((l) => <Floor>[], (r) => r).first.id;
 
-        final result = await repository.updateFloor('b1', floorId, 0, 'Ground Floor Updated');
+        final result = await repository.updateFloor(
+          'b1',
+          floorId,
+          0,
+          'Ground Floor Updated',
+        );
 
         expect(result.isRight(), true);
       });
@@ -359,29 +529,64 @@ void main() {
     // ============ ROOM TESTS ============
     group('Room Management', () {
       test('should add a room with default type', () async {
-        final result = await repository.addRoom('b1', 'f1', 'Room 101', 10.0, 20.0);
+        final result = await repository.addRoom(
+          'b1',
+          'f1',
+          'Room 101',
+          10.0,
+          20.0,
+        );
 
         expect(result.isRight(), true);
       });
 
       test('should add a hallway', () async {
-        final result = await repository.addRoom('b1', 'f1', 'Main Hallway', 50.0, 50.0, type: RoomType.hallway);
+        final result = await repository.addRoom(
+          'b1',
+          'f1',
+          'Main Hallway',
+          50.0,
+          50.0,
+          type: RoomType.hallway,
+        );
 
         expect(result.isRight(), true);
         final rooms = await repository.getRooms('b1', 'f1');
-        expect(rooms.fold((l) => <Room>[], (r) => r).first.type, RoomType.hallway);
+        expect(
+          rooms.fold((l) => <Room>[], (r) => r).first.type,
+          RoomType.hallway,
+        );
       });
 
       test('should add stairs with connector ID', () async {
-        final result = await repository.addRoom('b1', 'f1', 'Staircase A', 30.0, 30.0, type: RoomType.stairs, connectorId: 'stair-a');
+        final result = await repository.addRoom(
+          'b1',
+          'f1',
+          'Staircase A',
+          30.0,
+          30.0,
+          type: RoomType.stairs,
+          connectorId: 'stair-a',
+        );
 
         expect(result.isRight(), true);
         final rooms = await repository.getRooms('b1', 'f1');
-        expect(rooms.fold((l) => <Room>[], (r) => r).first.connectorId, 'stair-a');
+        expect(
+          rooms.fold((l) => <Room>[], (r) => r).first.connectorId,
+          'stair-a',
+        );
       });
 
       test('should add an elevator', () async {
-        final result = await repository.addRoom('b1', 'f1', 'Elevator 1', 40.0, 40.0, type: RoomType.elevator, connectorId: 'elev-1');
+        final result = await repository.addRoom(
+          'b1',
+          'f1',
+          'Elevator 1',
+          40.0,
+          40.0,
+          type: RoomType.elevator,
+          connectorId: 'elev-1',
+        );
 
         expect(result.isRight(), true);
       });
@@ -389,7 +594,14 @@ void main() {
       test('should retrieve all rooms on a floor', () async {
         await repository.addRoom('b1', 'f1', 'Room 1', 10.0, 10.0);
         await repository.addRoom('b1', 'f1', 'Room 2', 20.0, 20.0);
-        await repository.addRoom('b1', 'f1', 'Hallway', 30.0, 30.0, type: RoomType.hallway);
+        await repository.addRoom(
+          'b1',
+          'f1',
+          'Hallway',
+          30.0,
+          30.0,
+          type: RoomType.hallway,
+        );
 
         final result = await repository.getRooms('b1', 'f1');
 
@@ -411,7 +623,13 @@ void main() {
         final rooms = await repository.getRooms('b1', 'f1');
         final roomId = rooms.fold((l) => <Room>[], (r) => r).first.id;
 
-        final result = await repository.updateRoom('b1', 'f1', roomId, x: 50.0, y: 60.0);
+        final result = await repository.updateRoom(
+          'b1',
+          'f1',
+          roomId,
+          x: 50.0,
+          y: 60.0,
+        );
 
         expect(result.isRight(), true);
       });
@@ -420,7 +638,13 @@ void main() {
     // ============ CORRIDOR TESTS ============
     group('Corridor Management', () {
       test('should add a corridor between rooms', () async {
-        final result = await repository.addCorridor('b1', 'f1', 'r1', 'r2', 25.5);
+        final result = await repository.addCorridor(
+          'b1',
+          'f1',
+          'r1',
+          'r2',
+          25.5,
+        );
 
         expect(result.isRight(), true);
       });
@@ -441,7 +665,9 @@ void main() {
 
         final result = await repository.getCorridors('b1', 'f1');
         final corridors = result.fold((l) => <Corridor>[], (r) => r);
-        final totalDistance = corridors.map((c) => c.distance).reduce((a, b) => a + b);
+        final totalDistance = corridors
+            .map((c) => c.distance)
+            .reduce((a, b) => a + b);
 
         expect(totalDistance, 37.0);
       });
@@ -467,7 +693,10 @@ void main() {
       test('should delete a campus connection', () async {
         await repository.addCampusConnection('b1', 'b2', 150.0);
         final connections = await repository.getCampusConnections();
-        final connectionId = connections.fold((l) => <CampusConnection>[], (r) => r).first.id;
+        final connectionId = connections
+            .fold((l) => <CampusConnection>[], (r) => r)
+            .first
+            .id;
 
         final result = await repository.deleteCampusConnection(connectionId);
 
@@ -480,7 +709,9 @@ void main() {
 
         final result = await repository.getCampusConnections();
         final connections = result.fold((l) => <CampusConnection>[], (r) => r);
-        final totalDistance = connections.map((c) => c.distance).reduce((a, b) => a + b);
+        final totalDistance = connections
+            .map((c) => c.distance)
+            .reduce((a, b) => a + b);
 
         expect(totalDistance, 350.0);
       });
@@ -495,7 +726,10 @@ void main() {
         final result = await repository.addOrganization('Test', 'Test');
 
         expect(result.isLeft(), true);
-        expect(result.fold((l) => l.message, (r) => ''), 'Database connection error');
+        expect(
+          result.fold((l) => l.message, (r) => ''),
+          'Database connection error',
+        );
       });
 
       test('should handle empty list retrieval', () async {
@@ -518,13 +752,28 @@ void main() {
     // ============ ENTITY MODEL TESTS ============
     group('Entity Models', () {
       test('Building equality', () {
-        const building1 = Building(id: 'b1', name: 'Eng', description: 'Eng', organizationId: 'org-1');
-        const building2 = Building(id: 'b1', name: 'Eng', description: 'Eng', organizationId: 'org-1');
+        const building1 = Building(
+          id: 'b1',
+          name: 'Eng',
+          description: 'Eng',
+          organizationId: 'org-1',
+        );
+        const building2 = Building(
+          id: 'b1',
+          name: 'Eng',
+          description: 'Eng',
+          organizationId: 'org-1',
+        );
         expect(building1, equals(building2));
       });
 
       test('Floor entity props', () {
-        const floor = Floor(id: 'f1', buildingId: 'b1', floorNumber: 0, name: 'Ground');
+        const floor = Floor(
+          id: 'f1',
+          buildingId: 'b1',
+          floorNumber: 0,
+          name: 'Ground',
+        );
         expect(floor.props, contains('f1'));
         expect(floor.props, contains(0));
       });
@@ -537,20 +786,39 @@ void main() {
       });
 
       test('Corridor has correct properties', () {
-        const corridor = Corridor(id: 'c1', floorId: 'f1', startRoomId: 'r1', endRoomId: 'r2', distance: 25.5);
+        const corridor = Corridor(
+          id: 'c1',
+          floorId: 'f1',
+          startRoomId: 'r1',
+          endRoomId: 'r2',
+          distance: 25.5,
+        );
         expect(corridor.distance, 25.5);
         expect(corridor.startRoomId, 'r1');
         expect(corridor.endRoomId, 'r2');
       });
 
       test('Room with connector ID', () {
-        const room = Room(id: 'r1', floorId: 'f1', name: 'Staircase', x: 30.0, y: 30.0, type: RoomType.stairs, connectorId: 'stair-a');
+        const room = Room(
+          id: 'r1',
+          floorId: 'f1',
+          name: 'Staircase',
+          x: 30.0,
+          y: 30.0,
+          type: RoomType.stairs,
+          connectorId: 'stair-a',
+        );
         expect(room.connectorId, 'stair-a');
         expect(room.type, RoomType.stairs);
       });
 
       test('CampusConnection has correct properties', () {
-        const connection = CampusConnection(id: 'cc1', fromBuildingId: 'b1', toBuildingId: 'b2', distance: 150.0);
+        const connection = CampusConnection(
+          id: 'cc1',
+          fromBuildingId: 'b1',
+          toBuildingId: 'b2',
+          distance: 150.0,
+        );
         expect(connection.fromBuildingId, 'b1');
         expect(connection.toBuildingId, 'b2');
         expect(connection.distance, 150.0);
@@ -572,7 +840,14 @@ void main() {
       test('building with multiple rooms and corridors', () async {
         await repository.addRoom('b1', 'f1', 'Room 101', 10.0, 20.0);
         await repository.addRoom('b1', 'f1', 'Room 102', 30.0, 40.0);
-        await repository.addRoom('b1', 'f1', 'Hallway', 50.0, 50.0, type: RoomType.hallway);
+        await repository.addRoom(
+          'b1',
+          'f1',
+          'Hallway',
+          50.0,
+          50.0,
+          type: RoomType.hallway,
+        );
         await repository.addCorridor('b1', 'f1', 'r-1', 'r-3', 20.0);
         await repository.addCorridor('b1', 'f1', 'r-3', 'r-2', 25.0);
 
@@ -584,14 +859,36 @@ void main() {
       });
 
       test('vertical connections via stairs', () async {
-        await repository.addRoom('b1', 'f1', 'Staircase A', 30.0, 30.0, type: RoomType.stairs, connectorId: 'stair-a');
-        await repository.addRoom('b1', 'f2', 'Staircase A', 30.0, 30.0, type: RoomType.stairs, connectorId: 'stair-a');
+        await repository.addRoom(
+          'b1',
+          'f1',
+          'Staircase A',
+          30.0,
+          30.0,
+          type: RoomType.stairs,
+          connectorId: 'stair-a',
+        );
+        await repository.addRoom(
+          'b1',
+          'f2',
+          'Staircase A',
+          30.0,
+          30.0,
+          type: RoomType.stairs,
+          connectorId: 'stair-a',
+        );
 
         final floor1Rooms = await repository.getRooms('b1', 'f1');
         final floor2Rooms = await repository.getRooms('b1', 'f2');
 
-        expect(floor1Rooms.fold((l) => <Room>[], (r) => r).first.connectorId, 'stair-a');
-        expect(floor2Rooms.fold((l) => <Room>[], (r) => r).first.connectorId, 'stair-a');
+        expect(
+          floor1Rooms.fold((l) => <Room>[], (r) => r).first.connectorId,
+          'stair-a',
+        );
+        expect(
+          floor2Rooms.fold((l) => <Room>[], (r) => r).first.connectorId,
+          'stair-a',
+        );
       });
 
       test('campus with connected buildings', () async {
@@ -599,7 +896,9 @@ void main() {
         await repository.addBuilding('Building B', 'Second', 'org-1');
         await repository.addCampusConnection('b-1', 'b-2', 150.0);
 
-        final buildings = await repository.getBuildings(organizationId: 'org-1');
+        final buildings = await repository.getBuildings(
+          organizationId: 'org-1',
+        );
         final connections = await repository.getCampusConnections();
 
         expect(buildings.fold((l) => [], (r) => r).length, 2);

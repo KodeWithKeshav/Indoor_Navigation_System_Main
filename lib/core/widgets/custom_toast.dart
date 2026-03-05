@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class ToastService {
-  static void show(BuildContext context, String message, {bool isError = false}) {
+  static void show(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     final overlay = Overlay.of(context);
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
@@ -34,7 +38,8 @@ class _CustomToastWidget extends StatefulWidget {
   State<_CustomToastWidget> createState() => _CustomToastWidgetState();
 }
 
-class _CustomToastWidgetState extends State<_CustomToastWidget> with SingleTickerProviderStateMixin {
+class _CustomToastWidgetState extends State<_CustomToastWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _opacity;
   late Animation<Offset> _slide;
@@ -48,16 +53,18 @@ class _CustomToastWidgetState extends State<_CustomToastWidget> with SingleTicke
       reverseDuration: const Duration(milliseconds: 400),
     );
 
-    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _opacity = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    _slide = Tween<Offset>(begin: const Offset(0, -0.5), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
-    );
+    _slide = Tween<Offset>(
+      begin: const Offset(0, -0.5),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
 
     _controller.forward();
-    
+
     // Start exit animation before parent removes it
     Future.delayed(const Duration(seconds: 2, milliseconds: 500)).then((_) {
       if (mounted) _controller.reverse();
@@ -73,7 +80,9 @@ class _CustomToastWidgetState extends State<_CustomToastWidget> with SingleTicke
   @override
   Widget build(BuildContext context) {
     // Theme Colors (Cyberpunk/Sci-Fi)
-    final color = widget.isError ? Colors.redAccent : const Color(0xFF38BDF8); // electricGrid
+    final color = widget.isError
+        ? Colors.redAccent
+        : const Color(0xFF38BDF8); // electricGrid
     const bgColor = Color(0xFF020617); // deepVoidBlue
 
     return SlideTransition(
@@ -99,7 +108,9 @@ class _CustomToastWidgetState extends State<_CustomToastWidget> with SingleTicke
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                widget.isError ? Icons.warning_amber_rounded : Icons.check_circle_outline,
+                widget.isError
+                    ? Icons.warning_amber_rounded
+                    : Icons.check_circle_outline,
                 color: color,
                 size: 24,
               ),

@@ -14,12 +14,16 @@ import 'package:indoor_navigation_system/features/navigation/presentation/pages/
 
 class MockAuthRepository extends Fake implements AuthRepository {
   @override
-  Future<Either<Failure, void>> updateUserOrganization({required String uid, required String organizationId}) async {
+  Future<Either<Failure, void>> updateUserOrganization({
+    required String uid,
+    required String organizationId,
+  }) async {
     return const Right(null);
   }
 }
 
-class MockGetOrganizationsUseCase extends Fake implements GetOrganizationsUseCase {
+class MockGetOrganizationsUseCase extends Fake
+    implements GetOrganizationsUseCase {
   @override
   Future<Either<Failure, List<Organization>>> call(NoParams params) async {
     return const Right([
@@ -30,48 +34,54 @@ class MockGetOrganizationsUseCase extends Fake implements GetOrganizationsUseCas
 }
 
 void main() {
-  testWidgets('UserProfileScreen updates organization ID immediately after change', (tester) async {
-    final authRepo = MockAuthRepository();
-    final getOrgs = MockGetOrganizationsUseCase();
-    
-    final container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(authRepo),
-        getOrganizationsUseCaseProvider.overrideWithValue(getOrgs),
-      ],
-    );
+  testWidgets(
+    'UserProfileScreen updates organization ID immediately after change',
+    (tester) async {
+      final authRepo = MockAuthRepository();
+      final getOrgs = MockGetOrganizationsUseCase();
 
-    // Set initial user
-    final initialUser = const UserEntity(id: '1', email: 'test@example.com', role: UserRole.user, organizationId: 'org1');
-    container.read(currentUserProvider.notifier).setUser(initialUser);
+      final container = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(authRepo),
+          getOrganizationsUseCaseProvider.overrideWithValue(getOrgs),
+        ],
+      );
 
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const MaterialApp(
-          home: UserProfileScreen(),
+      // Set initial user
+      final initialUser = const UserEntity(
+        id: '1',
+        email: 'test@example.com',
+        role: UserRole.user,
+        organizationId: 'org1',
+      );
+      container.read(currentUserProvider.notifier).setUser(initialUser);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: UserProfileScreen()),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    // Verify initial org
-    expect(find.text('org1'), findsOneWidget);
+      // Verify initial org
+      expect(find.text('org1'), findsOneWidget);
 
-    // Open dialog
-    await tester.tap(find.text('Change'));
-    await tester.pumpAndSettle();
+      // Open dialog
+      await tester.tap(find.text('Change'));
+      await tester.pumpAndSettle();
 
-    // Select new org
-    await tester.tap(find.text('Org 2'));
-    await tester.pumpAndSettle();
+      // Select new org
+      await tester.tap(find.text('Org 2'));
+      await tester.pumpAndSettle();
 
-    // Verify new org is shown
-    // This expects 'org2' to be visible in the profile screen
-    expect(find.text('org2'), findsOneWidget);
-    
-    // Cleanup
-    container.dispose();
-  });
+      // Verify new org is shown
+      // This expects 'org2' to be visible in the profile screen
+      expect(find.text('org2'), findsOneWidget);
+
+      // Cleanup
+      container.dispose();
+    },
+  );
 }

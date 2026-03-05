@@ -18,7 +18,7 @@ import 'package:indoor_navigation_system/features/admin_map/domain/repositories/
 class FakeAdminMapRepository extends Fake implements AdminMapRepository {}
 
 class FakeAuthController extends AuthController {
-  FakeAuthController() : super(); 
+  FakeAuthController() : super();
 
   @override
   Future<void> logout(BuildContext context) async {
@@ -27,7 +27,7 @@ class FakeAuthController extends AuthController {
 }
 
 class FakeAddBuildingUseCase extends AddBuildingUseCase {
-  FakeAddBuildingUseCase() : super(FakeAdminMapRepository()); 
+  FakeAddBuildingUseCase() : super(FakeAdminMapRepository());
 
   @override
   Future<Either<Failure, void>> call(AddBuildingParams params) async {
@@ -55,21 +55,41 @@ class FakeUpdateBuildingUseCase extends UpdateBuildingUseCase {
 
 void main() {
   group('AdminDashboardScreen Widget Tests', () {
-    testWidgets('renders AdminDashboardScreen with buildings list', (WidgetTester tester) async {
+    testWidgets('renders AdminDashboardScreen with buildings list', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final buildings = [
-        Building(id: 'b1', name: 'Building A', description: 'Main Building', organizationId: 'org1'),
-        Building(id: 'b2', name: 'Building B', description: 'Science Block', organizationId: 'org1'),
+        Building(
+          id: 'b1',
+          name: 'Building A',
+          description: 'Main Building',
+          organizationId: 'org1',
+        ),
+        Building(
+          id: 'b2',
+          name: 'Building B',
+          description: 'Science Block',
+          organizationId: 'org1',
+        ),
       ];
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            buildingsProvider('org1').overrideWith((ref) => Stream.value(buildings).first.then((value) => value)), // Simulating AsyncValue.data
+            buildingsProvider('org1').overrideWith(
+              (ref) => Stream.value(buildings).first.then((value) => value),
+            ), // Simulating AsyncValue.data
             authControllerProvider.overrideWith(() => FakeAuthController()),
-             addBuildingUseCaseProvider.overrideWithValue(FakeAddBuildingUseCase()),
-             deleteBuildingUseCaseProvider.overrideWithValue(FakeDeleteBuildingUseCase()),
-             updateBuildingUseCaseProvider.overrideWithValue(FakeUpdateBuildingUseCase()),
+            addBuildingUseCaseProvider.overrideWithValue(
+              FakeAddBuildingUseCase(),
+            ),
+            deleteBuildingUseCaseProvider.overrideWithValue(
+              FakeDeleteBuildingUseCase(),
+            ),
+            updateBuildingUseCaseProvider.overrideWithValue(
+              FakeUpdateBuildingUseCase(),
+            ),
           ],
           child: const MaterialApp(
             home: AdminDashboardScreen(organizationId: 'org1'),
@@ -78,7 +98,9 @@ void main() {
       );
 
       // Act
-      await tester.pump(const Duration(seconds: 2)); // Wait for FutureProvider and animation
+      await tester.pump(
+        const Duration(seconds: 2),
+      ); // Wait for FutureProvider and animation
 
       // Assert
       expect(find.text('CAMPUS MAP EDITOR'), findsOneWidget);
@@ -88,16 +110,24 @@ void main() {
       expect(find.byIcon(Icons.add), findsOneWidget);
     });
 
-    testWidgets('shows empty state when no buildings', (WidgetTester tester) async {
+    testWidgets('shows empty state when no buildings', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             buildingsProvider('org1').overrideWith((ref) => Future.value([])),
             authControllerProvider.overrideWith(() => FakeAuthController()),
-             addBuildingUseCaseProvider.overrideWithValue(FakeAddBuildingUseCase()),
-             deleteBuildingUseCaseProvider.overrideWithValue(FakeDeleteBuildingUseCase()),
-             updateBuildingUseCaseProvider.overrideWithValue(FakeUpdateBuildingUseCase()),
+            addBuildingUseCaseProvider.overrideWithValue(
+              FakeAddBuildingUseCase(),
+            ),
+            deleteBuildingUseCaseProvider.overrideWithValue(
+              FakeDeleteBuildingUseCase(),
+            ),
+            updateBuildingUseCaseProvider.overrideWithValue(
+              FakeUpdateBuildingUseCase(),
+            ),
           ],
           child: const MaterialApp(
             home: AdminDashboardScreen(organizationId: 'org1'),
@@ -112,31 +142,37 @@ void main() {
       expect(find.text('NO STRUCTURES DETECTED'), findsOneWidget);
       expect(find.text('INITIALIZE FIRST BUILDING'), findsOneWidget);
     });
-    
+
     testWidgets('opens drawer', (WidgetTester tester) async {
-       // Arrange
+      // Arrange
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-             buildingsProvider('org1').overrideWith((ref) => Future.value([])),
-             authControllerProvider.overrideWith(() => FakeAuthController()),
-             addBuildingUseCaseProvider.overrideWithValue(FakeAddBuildingUseCase()),
-             deleteBuildingUseCaseProvider.overrideWithValue(FakeDeleteBuildingUseCase()),
-             updateBuildingUseCaseProvider.overrideWithValue(FakeUpdateBuildingUseCase()),
+            buildingsProvider('org1').overrideWith((ref) => Future.value([])),
+            authControllerProvider.overrideWith(() => FakeAuthController()),
+            addBuildingUseCaseProvider.overrideWithValue(
+              FakeAddBuildingUseCase(),
+            ),
+            deleteBuildingUseCaseProvider.overrideWithValue(
+              FakeDeleteBuildingUseCase(),
+            ),
+            updateBuildingUseCaseProvider.overrideWithValue(
+              FakeUpdateBuildingUseCase(),
+            ),
           ],
           child: const MaterialApp(
             home: AdminDashboardScreen(organizationId: 'org1'),
           ),
         ),
       );
-      
+
       await tester.pump(const Duration(seconds: 2));
-      
+
       // Act
       await tester.tap(find.byIcon(Icons.menu)); // Default drawer icon
       await tester.pump(); // Start animation
       await tester.pump(const Duration(seconds: 1)); // Wait for drawer to open
-      
+
       // Assert
       expect(find.text('ADMIN CONSOLE'), findsOneWidget);
       expect(find.text('ACCESS LEVEL: ROOT'), findsOneWidget);

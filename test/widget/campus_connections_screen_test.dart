@@ -18,7 +18,8 @@ class FakeAdminMapRepository extends Fake implements AdminMapRepository {}
 class FakeAddCampusConnectionUseCase extends AddCampusConnectionUseCase {
   FakeAddCampusConnectionUseCase() : super(FakeAdminMapRepository());
   @override
-  Future<Either<Failure, void>> call(AddCampusConnectionParams params) async => const Right(null);
+  Future<Either<Failure, void>> call(AddCampusConnectionParams params) async =>
+      const Right(null);
 }
 
 class FakeDeleteCampusConnectionUseCase extends DeleteCampusConnectionUseCase {
@@ -37,32 +38,64 @@ class MockCurrentUserNotifier extends CurrentUserNotifier {
 
 void main() {
   group('CampusConnectionsScreen Widget Tests', () {
-    testWidgets('renders CampusConnectionsScreen with list', (WidgetTester tester) async {
+    testWidgets('renders CampusConnectionsScreen with list', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final buildings = [
-        Building(id: 'b1', name: 'Building A', description: 'Desc A', organizationId: 'org1'),
-        Building(id: 'b2', name: 'Building B', description: 'Desc B', organizationId: 'org1'),
+        Building(
+          id: 'b1',
+          name: 'Building A',
+          description: 'Desc A',
+          organizationId: 'org1',
+        ),
+        Building(
+          id: 'b2',
+          name: 'Building B',
+          description: 'Desc B',
+          organizationId: 'org1',
+        ),
       ];
       final connections = [
-        CampusConnection(id: 'cc1', fromBuildingId: 'b1', toBuildingId: 'b2', distance: 50.0),
+        CampusConnection(
+          id: 'cc1',
+          fromBuildingId: 'b1',
+          toBuildingId: 'b2',
+          distance: 50.0,
+        ),
       ];
-      final user = UserEntity(id: 'u1', email: 'test@test.com', role: UserRole.admin, organizationId: 'org1');
+      final user = UserEntity(
+        id: 'u1',
+        email: 'test@test.com',
+        role: UserRole.admin,
+        organizationId: 'org1',
+      );
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            currentUserProvider.overrideWith(() => MockCurrentUserNotifier(user)), // Correctly override with Notifier
+            currentUserProvider.overrideWith(
+              () => MockCurrentUserNotifier(user),
+            ), // Correctly override with Notifier
             // Override both possible calls to buildingsProvider
-            buildingsProvider(null).overrideWith((ref) => Future.value(buildings)),
-            buildingsProvider('org1').overrideWith((ref) => Future.value(buildings)),
-            campusConnectionsProvider.overrideWith((ref) => Future.value(connections)),
-            
-            addCampusConnectionUseCaseProvider.overrideWithValue(FakeAddCampusConnectionUseCase()),
-            deleteCampusConnectionUseCaseProvider.overrideWithValue(FakeDeleteCampusConnectionUseCase()),
+            buildingsProvider(
+              null,
+            ).overrideWith((ref) => Future.value(buildings)),
+            buildingsProvider(
+              'org1',
+            ).overrideWith((ref) => Future.value(buildings)),
+            campusConnectionsProvider.overrideWith(
+              (ref) => Future.value(connections),
+            ),
+
+            addCampusConnectionUseCaseProvider.overrideWithValue(
+              FakeAddCampusConnectionUseCase(),
+            ),
+            deleteCampusConnectionUseCaseProvider.overrideWithValue(
+              FakeDeleteCampusConnectionUseCase(),
+            ),
           ],
-          child: const MaterialApp(
-            home: CampusConnectionsScreen(),
-          ),
+          child: const MaterialApp(home: CampusConnectionsScreen()),
         ),
       );
 
@@ -75,32 +108,52 @@ void main() {
       expect(find.text('Building A  ⟷  Building B'), findsOneWidget);
     });
 
-    testWidgets('shows empty state when no connections', (WidgetTester tester) async {
-       // Arrange
+    testWidgets('shows empty state when no connections', (
+      WidgetTester tester,
+    ) async {
+      // Arrange
       final buildings = [
-        Building(id: 'b1', name: 'Building A', description: 'Desc A', organizationId: 'org1'),
+        Building(
+          id: 'b1',
+          name: 'Building A',
+          description: 'Desc A',
+          organizationId: 'org1',
+        ),
       ];
-      final user = UserEntity(id: 'u1', email: 'test@test.com', role: UserRole.admin, organizationId: 'org1');
+      final user = UserEntity(
+        id: 'u1',
+        email: 'test@test.com',
+        role: UserRole.admin,
+        organizationId: 'org1',
+      );
 
       await tester.pumpWidget(
-         ProviderScope(
+        ProviderScope(
           overrides: [
-            currentUserProvider.overrideWith(() => MockCurrentUserNotifier(user)),
-            buildingsProvider(null).overrideWith((ref) => Future.value(buildings)),
-            buildingsProvider('org1').overrideWith((ref) => Future.value(buildings)),
+            currentUserProvider.overrideWith(
+              () => MockCurrentUserNotifier(user),
+            ),
+            buildingsProvider(
+              null,
+            ).overrideWith((ref) => Future.value(buildings)),
+            buildingsProvider(
+              'org1',
+            ).overrideWith((ref) => Future.value(buildings)),
             campusConnectionsProvider.overrideWith((ref) => Future.value([])),
-             
-             addCampusConnectionUseCaseProvider.overrideWithValue(FakeAddCampusConnectionUseCase()),
-             deleteCampusConnectionUseCaseProvider.overrideWithValue(FakeDeleteCampusConnectionUseCase()),
+
+            addCampusConnectionUseCaseProvider.overrideWithValue(
+              FakeAddCampusConnectionUseCase(),
+            ),
+            deleteCampusConnectionUseCaseProvider.overrideWithValue(
+              FakeDeleteCampusConnectionUseCase(),
+            ),
           ],
-          child: const MaterialApp(
-            home: CampusConnectionsScreen(),
-          ),
+          child: const MaterialApp(home: CampusConnectionsScreen()),
         ),
       );
-      
+
       await tester.pumpAndSettle();
-      
+
       // Assert
       expect(find.text('No connections yet.'), findsOneWidget);
     });

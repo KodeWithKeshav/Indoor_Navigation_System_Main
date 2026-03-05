@@ -9,12 +9,9 @@ class AppTheme {
       brightness: Brightness.light,
     ),
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
     ),
-
   );
 
   static final darkTheme = ThemeData(
@@ -25,12 +22,9 @@ class AppTheme {
       brightness: Brightness.dark,
     ),
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       filled: true,
     ),
-
   );
 
   static final highContrastTheme = ThemeData(
@@ -53,10 +47,7 @@ class AppTheme {
       foregroundColor: Colors.yellow,
       elevation: 0,
     ),
-    iconTheme: const IconThemeData(
-      color: Colors.black, 
-      size: 28,
-    ),
+    iconTheme: const IconThemeData(color: Colors.black, size: 28),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(4),

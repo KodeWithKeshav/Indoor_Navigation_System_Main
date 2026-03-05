@@ -8,20 +8,37 @@ import '../../../test_utils/fakes.dart';
 void main() {
   test('GraphService builds graph and maps floors to buildings', () async {
     final building = Building(id: 'b1', name: 'Main', description: 'desc');
-    final floor = Floor(id: 'f1', buildingId: 'b1', floorNumber: 1, name: 'Floor 1');
+    final floor = Floor(
+      id: 'f1',
+      buildingId: 'b1',
+      floorNumber: 1,
+      name: 'Floor 1',
+    );
     final rooms = [
       Room(id: 'r1', floorId: 'f1', name: 'Room 1', x: 0, y: 0),
       Room(id: 'r2', floorId: 'f1', name: 'Room 2', x: 1, y: 1),
     ];
     final corridors = [
-      Corridor(id: 'c1', floorId: 'f1', startRoomId: 'r1', endRoomId: 'r2', distance: 2),
+      Corridor(
+        id: 'c1',
+        floorId: 'f1',
+        startRoomId: 'r1',
+        endRoomId: 'r2',
+        distance: 2,
+      ),
     ];
 
     final repo = FakeAdminMapRepository(
       buildings: [building],
-      floorsByBuilding: {'b1': [floor]},
-      roomsByFloor: {'b1-f1': rooms}, // Key needs to be buildingId-floorId as per implementation
-      corridorsByFloor: {'b1-f1': corridors}, // Key needs to be buildingId-floorId
+      floorsByBuilding: {
+        'b1': [floor],
+      },
+      roomsByFloor: {
+        'b1-f1': rooms,
+      }, // Key needs to be buildingId-floorId as per implementation
+      corridorsByFloor: {
+        'b1-f1': corridors,
+      }, // Key needs to be buildingId-floorId
       campusConnections: const <CampusConnection>[],
     );
 

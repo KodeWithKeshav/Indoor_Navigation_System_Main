@@ -18,7 +18,7 @@ class UserModel extends UserEntity {
       organizationId: data['organizationId'] ?? '',
     );
   }
-  
+
   // For creating a user locally if needed later
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(

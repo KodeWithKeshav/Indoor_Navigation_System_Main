@@ -38,25 +38,26 @@ final authStateProvider = StreamProvider<User?>((ref) {
 class CurrentUserNotifier extends Notifier<UserEntity?> {
   @override
   UserEntity? build() => null;
-  
+
   void setUser(UserEntity? user) {
     state = user;
   }
 }
 
-final currentUserProvider = NotifierProvider<CurrentUserNotifier, UserEntity?>(CurrentUserNotifier.new);
+final currentUserProvider = NotifierProvider<CurrentUserNotifier, UserEntity?>(
+  CurrentUserNotifier.new,
+);
 
 final userProfileProvider = FutureProvider<UserEntity?>((ref) async {
   final authState = ref.watch(authStateProvider);
   final user = authState.value;
   if (user != null) {
-      final remoteDataSource = ref.read(authRemoteDataSourceProvider);
-      final userModel = await remoteDataSource.getCurrentUser();
-      ref.read(currentUserProvider.notifier).setUser(userModel);
-      return userModel;
+    final remoteDataSource = ref.read(authRemoteDataSourceProvider);
+    final userModel = await remoteDataSource.getCurrentUser();
+    ref.read(currentUserProvider.notifier).setUser(userModel);
+    return userModel;
   } else {
     ref.read(currentUserProvider.notifier).setUser(null);
   }
   return null;
 });
-

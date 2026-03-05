@@ -8,7 +8,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   if (Firebase.apps.isEmpty) {
     try {
       await Firebase.initializeApp(
@@ -32,16 +32,22 @@ class MyApp extends ConsumerWidget {
 
     return MaterialApp.router(
       title: 'Indoor Navigation',
-      theme: settings.isHighContrast ? AppTheme.highContrastTheme : AppTheme.lightTheme,
-      darkTheme: settings.isHighContrast ? AppTheme.highContrastTheme : AppTheme.darkTheme, // High Contrast overrides Dark Mode
-      themeMode: settings.isHighContrast ? ThemeMode.light : ThemeMode.system, // Force light-based high contrast or system
+      theme: settings.isHighContrast
+          ? AppTheme.highContrastTheme
+          : AppTheme.lightTheme,
+      darkTheme: settings.isHighContrast
+          ? AppTheme.highContrastTheme
+          : AppTheme.darkTheme, // High Contrast overrides Dark Mode
+      themeMode: settings.isHighContrast
+          ? ThemeMode.light
+          : ThemeMode.system, // Force light-based high contrast or system
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(settings.textScaleFactor),
-          ),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(settings.textScaleFactor)),
           child: child!,
         );
       },

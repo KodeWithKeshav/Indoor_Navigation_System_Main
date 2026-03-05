@@ -15,10 +15,10 @@ class UpdateRoomUseParams {
   final String? connectorId;
 
   UpdateRoomUseParams({
-    required this.buildingId, 
-    required this.floorId, 
-    required this.roomId, 
-    this.x, 
+    required this.buildingId,
+    required this.floorId,
+    required this.roomId,
+    this.x,
     this.y,
     this.name,
     this.type,

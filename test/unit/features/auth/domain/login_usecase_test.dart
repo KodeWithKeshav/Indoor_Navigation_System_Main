@@ -30,39 +30,43 @@ void main() {
 
     test('should return UserEntity when login is successful', () async {
       // Arrange
-      when(() => mockAuthRepository.loginWithEmailPassword(
-        email: testEmail,
-        password: testPassword,
-      )).thenAnswer((_) async => const Right(testUser));
+      when(
+        () => mockAuthRepository.loginWithEmailPassword(
+          email: testEmail,
+          password: testPassword,
+        ),
+      ).thenAnswer((_) async => const Right(testUser));
 
       // Act
-      final result = await loginUseCase(LoginParams(
-        email: testEmail,
-        password: testPassword,
-      ));
+      final result = await loginUseCase(
+        LoginParams(email: testEmail, password: testPassword),
+      );
 
       // Assert
       expect(result.isRight(), isTrue);
       expect(result.getOrElse((l) => throw l), testUser);
-      verify(() => mockAuthRepository.loginWithEmailPassword(
-        email: testEmail,
-        password: testPassword,
-      )).called(1);
+      verify(
+        () => mockAuthRepository.loginWithEmailPassword(
+          email: testEmail,
+          password: testPassword,
+        ),
+      ).called(1);
     });
 
     test('should return ServerFailure when login fails', () async {
       // Arrange
       const failure = ServerFailure('Invalid credentials');
-      when(() => mockAuthRepository.loginWithEmailPassword(
-        email: testEmail,
-        password: testPassword,
-      )).thenAnswer((_) async => const Left(failure));
+      when(
+        () => mockAuthRepository.loginWithEmailPassword(
+          email: testEmail,
+          password: testPassword,
+        ),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
-      final result = await loginUseCase(LoginParams(
-        email: testEmail,
-        password: testPassword,
-      ));
+      final result = await loginUseCase(
+        LoginParams(email: testEmail, password: testPassword),
+      );
 
       // Assert
       expect(result.isLeft(), isTrue);
@@ -76,23 +80,26 @@ void main() {
       // Arrange
       const customEmail = 'custom@test.com';
       const customPassword = 'customPass!@#';
-      
-      when(() => mockAuthRepository.loginWithEmailPassword(
-        email: any(named: 'email'),
-        password: any(named: 'password'),
-      )).thenAnswer((_) async => const Right(testUser));
+
+      when(
+        () => mockAuthRepository.loginWithEmailPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => const Right(testUser));
 
       // Act
-      await loginUseCase(LoginParams(
-        email: customEmail,
-        password: customPassword,
-      ));
+      await loginUseCase(
+        LoginParams(email: customEmail, password: customPassword),
+      );
 
       // Assert
-      verify(() => mockAuthRepository.loginWithEmailPassword(
-        email: customEmail,
-        password: customPassword,
-      )).called(1);
+      verify(
+        () => mockAuthRepository.loginWithEmailPassword(
+          email: customEmail,
+          password: customPassword,
+        ),
+      ).called(1);
     });
 
     test('should return admin user when admin logs in', () async {
@@ -103,17 +110,18 @@ void main() {
         role: UserRole.admin,
         organizationId: 'org-1',
       );
-      
-      when(() => mockAuthRepository.loginWithEmailPassword(
-        email: 'admin@example.com',
-        password: testPassword,
-      )).thenAnswer((_) async => const Right(adminUser));
+
+      when(
+        () => mockAuthRepository.loginWithEmailPassword(
+          email: 'admin@example.com',
+          password: testPassword,
+        ),
+      ).thenAnswer((_) async => const Right(adminUser));
 
       // Act
-      final result = await loginUseCase(LoginParams(
-        email: 'admin@example.com',
-        password: testPassword,
-      ));
+      final result = await loginUseCase(
+        LoginParams(email: 'admin@example.com', password: testPassword),
+      );
 
       // Assert
       expect(result.isRight(), isTrue);
@@ -126,16 +134,17 @@ void main() {
     test('should handle network errors gracefully', () async {
       // Arrange
       const failure = ServerFailure('Network error');
-      when(() => mockAuthRepository.loginWithEmailPassword(
-        email: testEmail,
-        password: testPassword,
-      )).thenAnswer((_) async => const Left(failure));
+      when(
+        () => mockAuthRepository.loginWithEmailPassword(
+          email: testEmail,
+          password: testPassword,
+        ),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
-      final result = await loginUseCase(LoginParams(
-        email: testEmail,
-        password: testPassword,
-      ));
+      final result = await loginUseCase(
+        LoginParams(email: testEmail, password: testPassword),
+      );
 
       // Assert
       expect(result.isLeft(), isTrue);
@@ -150,9 +159,9 @@ void main() {
     test('should store email and password correctly', () {
       const email = 'test@test.com';
       const password = 'pass123';
-      
+
       final params = LoginParams(email: email, password: password);
-      
+
       expect(params.email, email);
       expect(params.password, password);
     });

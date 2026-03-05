@@ -8,23 +8,20 @@ abstract interface class AuthRemoteDataSource {
     required String email,
     required String password,
   });
-  
+
   Future<UserModel> signUp({
     required String email,
     required String password,
     required String organizationId,
   });
-  
+
   Future<void> logout();
 
   Future<UserModel?> getCurrentUser();
-  
+
   Future<List<UserModel>> getAllUsers();
-  
-  Future<void> updateUserRole({
-    required String uid,
-    required String role,
-  });
+
+  Future<void> updateUserRole({required String uid, required String role});
 
   Future<void> updateUserOrganization({
     required String uid,
@@ -56,8 +53,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
 
     // Fetch user role from Firestore
-    final doc =
-        await firestore.collection('users').doc(credential.user!.uid).get();
+    final doc = await firestore
+        .collection('users')
+        .doc(credential.user!.uid)
+        .get();
 
     if (doc.exists) {
       return UserModel.fromFirestore(doc);
@@ -71,8 +70,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
     }
   }
-
-
 
   @override
   Future<UserModel> signUp({
@@ -96,8 +93,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       organizationId: organizationId,
     );
 
-    await firestore.collection('users').doc(credential.user!.uid).set(newUser.toJson());
-    
+    await firestore
+        .collection('users')
+        .doc(credential.user!.uid)
+        .set(newUser.toJson());
+
     return newUser;
   }
 
@@ -105,20 +105,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> logout() async {
     await firebaseAuth.signOut();
   }
-  
+
   @override
   Future<UserModel?> getCurrentUser() async {
     final user = firebaseAuth.currentUser;
     if (user == null) return null;
-    
-     final doc =
-        await firestore.collection('users').doc(user.uid).get();
+
+    final doc = await firestore.collection('users').doc(user.uid).get();
 
     if (doc.exists) {
       return UserModel.fromFirestore(doc);
     }
-    
-    return UserModel(id: user.uid, email: user.email ?? '', role: UserRole.user);
+
+    return UserModel(
+      id: user.uid,
+      email: user.email ?? '',
+      role: UserRole.user,
+    );
   }
 
   @override
@@ -128,12 +131,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<void> updateUserRole({required String uid, required String role}) async {
+  Future<void> updateUserRole({
+    required String uid,
+    required String role,
+  }) async {
     await firestore.collection('users').doc(uid).update({'role': role});
   }
 
   @override
-  Future<void> updateUserOrganization({required String uid, required String organizationId}) async {
-    await firestore.collection('users').doc(uid).update({'organizationId': organizationId});
+  Future<void> updateUserOrganization({
+    required String uid,
+    required String organizationId,
+  }) async {
+    await firestore.collection('users').doc(uid).update({
+      'organizationId': organizationId,
+    });
   }
 }

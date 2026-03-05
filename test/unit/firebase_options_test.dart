@@ -12,7 +12,10 @@ void main() {
     final previous = debugDefaultTargetPlatformOverride;
     debugDefaultTargetPlatformOverride = TargetPlatform.windows;
     try {
-      expect(() => DefaultFirebaseOptions.currentPlatform, throwsUnimplementedError);
+      expect(
+        () => DefaultFirebaseOptions.currentPlatform,
+        throwsUnimplementedError,
+      );
     } finally {
       debugDefaultTargetPlatformOverride = previous;
     }

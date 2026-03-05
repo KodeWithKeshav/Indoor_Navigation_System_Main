@@ -26,6 +26,10 @@ class UpdateBuildingUseCase implements UseCase<void, UpdateBuildingParams> {
 
   @override
   Future<Either<Failure, void>> call(UpdateBuildingParams params) {
-    return repository.updateBuilding(params.id, params.name, params.description);
+    return repository.updateBuilding(
+      params.id,
+      params.name,
+      params.description,
+    );
   }
 }

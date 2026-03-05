@@ -21,8 +21,5 @@ class UpdateUserOrgParams {
   final String uid;
   final String organizationId;
 
-  const UpdateUserOrgParams({
-    required this.uid,
-    required this.organizationId,
-  });
+  const UpdateUserOrgParams({required this.uid, required this.organizationId});
 }

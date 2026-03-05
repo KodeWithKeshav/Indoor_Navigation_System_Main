@@ -4,8 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'voice_guidance_service.dart';
 
 /// Creates the web-specific voice guidance implementation.
-VoiceGuidanceService createVoiceGuidanceService() =>
-    WebVoiceGuidanceService();
+VoiceGuidanceService createVoiceGuidanceService() => WebVoiceGuidanceService();
 
 /// Web TTS implementation using direct JavaScript interop.
 /// Uses dart:js to call the browser's native SpeechSynthesis API directly,
@@ -47,7 +46,9 @@ class WebVoiceGuidanceService implements VoiceGuidanceService {
       synth.callMethod('cancel');
 
       // Create the utterance via JS constructor
-      final utterance = js.JsObject(js.context['SpeechSynthesisUtterance'], [cleanText]);
+      final utterance = js.JsObject(js.context['SpeechSynthesisUtterance'], [
+        cleanText,
+      ]);
       utterance['rate'] = 0.9;
       utterance['volume'] = 1.0;
 

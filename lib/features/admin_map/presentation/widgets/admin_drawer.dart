@@ -27,7 +27,12 @@ class AdminDrawer extends ConsumerWidget {
           // 1. TECH HEADER
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(24, 48, 24, 24), // Extra top padding
+            padding: const EdgeInsets.fromLTRB(
+              24,
+              48,
+              24,
+              24,
+            ), // Extra top padding
             decoration: const BoxDecoration(
               color: darkCardColor,
               border: Border(bottom: BorderSide(color: electricGrid, width: 2)),
@@ -43,7 +48,11 @@ class AdminDrawer extends ConsumerWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: electricGrid),
                   ),
-                  child: const Icon(Icons.admin_panel_settings_outlined, size: 32, color: electricGrid),
+                  child: const Icon(
+                    Icons.admin_panel_settings_outlined,
+                    size: 32,
+                    color: electricGrid,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -124,9 +133,14 @@ class AdminDrawer extends ConsumerWidget {
                 ),
                 Consumer(
                   builder: (context, ref, _) {
-                    final isVoiceOn = ref.watch(settingsProvider).isVoiceEnabled;
+                    final isVoiceOn = ref
+                        .watch(settingsProvider)
+                        .isVoiceEnabled;
                     return SwitchListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 0,
+                      ),
                       secondary: Icon(
                         isVoiceOn ? Icons.volume_up : Icons.volume_off,
                         color: isVoiceOn ? Colors.greenAccent : Colors.white38,
@@ -146,14 +160,17 @@ class AdminDrawer extends ConsumerWidget {
                         isVoiceOn ? 'ENABLED' : 'DISABLED',
                         style: TextStyle(
                           fontFamily: 'Courier',
-                          color: isVoiceOn ? Colors.greenAccent : Colors.white30,
+                          color: isVoiceOn
+                              ? Colors.greenAccent
+                              : Colors.white30,
                           fontSize: 10,
                           letterSpacing: 1,
                         ),
                       ),
                       value: isVoiceOn,
                       activeColor: Colors.greenAccent,
-                      onChanged: (val) => ref.read(settingsProvider.notifier).toggleVoice(val),
+                      onChanged: (val) =>
+                          ref.read(settingsProvider.notifier).toggleVoice(val),
                     );
                   },
                 ),

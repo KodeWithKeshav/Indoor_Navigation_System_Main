@@ -8,9 +8,9 @@ class SignUpParams {
   final String email;
   final String password;
   final String organizationId;
-  
+
   SignUpParams({
-    required this.email, 
+    required this.email,
     required this.password,
     required this.organizationId,
   });

@@ -15,7 +15,10 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
 
   // Organizations
   @override
-  Future<Either<Failure, void>> addOrganization(String name, String description) async {
+  Future<Either<Failure, void>> addOrganization(
+    String name,
+    String description,
+  ) async {
     try {
       final docRef = firestore.collection('organizations').doc();
       final model = OrganizationModel(
@@ -44,8 +47,10 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteOrganization(String organizationId) async {
-     try {
+  Future<Either<Failure, void>> deleteOrganization(
+    String organizationId,
+  ) async {
+    try {
       await firestore.collection('organizations').doc(organizationId).delete();
       return const Right(null);
     } catch (e) {
@@ -54,7 +59,11 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateOrganization(String organizationId, String name, String description) async {
+  Future<Either<Failure, void>> updateOrganization(
+    String organizationId,
+    String name,
+    String description,
+  ) async {
     try {
       await firestore.collection('organizations').doc(organizationId).update({
         'name': name,
@@ -68,7 +77,11 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
 
   // Buildings
   @override
-  Future<Either<Failure, void>> addBuilding(String name, String description, String? organizationId) async {
+  Future<Either<Failure, void>> addBuilding(
+    String name,
+    String description,
+    String? organizationId,
+  ) async {
     try {
       final docRef = firestore.collection('buildings').doc();
       final model = BuildingModel(
@@ -85,14 +98,16 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, List<Building>>> getBuildings({String? organizationId}) async {
+  Future<Either<Failure, List<Building>>> getBuildings({
+    String? organizationId,
+  }) async {
     try {
       Query query = firestore.collection('buildings');
-      
+
       if (organizationId != null) {
         query = query.where('organizationId', isEqualTo: organizationId);
       }
-      
+
       final querySnapshot = await query.get();
       final buildings = querySnapshot.docs
           .map((doc) => BuildingModel.fromFirestore(doc))
@@ -104,7 +119,11 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addFloor(String buildingId, int floorNumber, String name) async {
+  Future<Either<Failure, void>> addFloor(
+    String buildingId,
+    int floorNumber,
+    String name,
+  ) async {
     try {
       // Validate uniqueness of floor number in building
       final existing = await firestore
@@ -113,9 +132,11 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
           .collection('floors')
           .where('floorNumber', isEqualTo: floorNumber)
           .get();
-          
+
       if (existing.docs.isNotEmpty) {
-        return const Left(ValidationFailure('Floor number already exists in this building'));
+        return const Left(
+          ValidationFailure('Floor number already exists in this building'),
+        );
       }
 
       final docRef = firestore
@@ -123,14 +144,14 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
           .doc(buildingId)
           .collection('floors')
           .doc();
-          
+
       final model = FloorModel(
         id: docRef.id,
         buildingId: buildingId,
         floorNumber: floorNumber,
         name: name,
       );
-      
+
       await docRef.set(model.toJson());
       return const Right(null);
     } catch (e) {
@@ -149,7 +170,11 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateBuilding(String buildingId, String name, String description) async {
+  Future<Either<Failure, void>> updateBuilding(
+    String buildingId,
+    String name,
+    String description,
+  ) async {
     try {
       await firestore.collection('buildings').doc(buildingId).update({
         'name': name,
@@ -163,14 +188,14 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
 
   @override
   Future<Either<Failure, List<Floor>>> getFloors(String buildingId) async {
-     try {
+    try {
       final querySnapshot = await firestore
           .collection('buildings')
           .doc(buildingId)
           .collection('floors')
           .orderBy('floorNumber')
           .get();
-          
+
       final floors = querySnapshot.docs
           .map((doc) => FloorModel.fromFirestore(doc, buildingId))
           .toList();
@@ -181,7 +206,10 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteFloor(String buildingId, String floorId) async {
+  Future<Either<Failure, void>> deleteFloor(
+    String buildingId,
+    String floorId,
+  ) async {
     try {
       await firestore
           .collection('buildings')
@@ -196,17 +224,19 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateFloor(String buildingId, String floorId, int floorNumber, String name) async {
+  Future<Either<Failure, void>> updateFloor(
+    String buildingId,
+    String floorId,
+    int floorNumber,
+    String name,
+  ) async {
     try {
       await firestore
           .collection('buildings')
           .doc(buildingId)
           .collection('floors')
           .doc(floorId)
-          .update({
-            'floorNumber': floorNumber,
-            'name': name,
-          });
+          .update({'floorNumber': floorNumber, 'name': name});
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -214,8 +244,16 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addRoom(String buildingId, String floorId, String name, double x, double y, {RoomType type = RoomType.room, String? connectorId}) async {
-     try {
+  Future<Either<Failure, void>> addRoom(
+    String buildingId,
+    String floorId,
+    String name,
+    double x,
+    double y, {
+    RoomType type = RoomType.room,
+    String? connectorId,
+  }) async {
+    try {
       final docRef = firestore
           .collection('buildings')
           .doc(buildingId)
@@ -223,7 +261,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
           .doc(floorId)
           .collection('rooms')
           .doc();
-          
+
       final model = RoomModel(
         id: docRef.id,
         floorId: floorId,
@@ -233,7 +271,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
         type: type,
         connectorId: connectorId,
       );
-      
+
       await docRef.set(model.toJson());
       return const Right(null);
     } catch (e) {
@@ -242,7 +280,10 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, List<Room>>> getRooms(String buildingId, String floorId) async {
+  Future<Either<Failure, List<Room>>> getRooms(
+    String buildingId,
+    String floorId,
+  ) async {
     try {
       final querySnapshot = await firestore
           .collection('buildings')
@@ -251,7 +292,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
           .doc(floorId)
           .collection('rooms')
           .get();
-          
+
       final rooms = querySnapshot.docs
           .map((doc) => RoomModel.fromFirestore(doc, floorId))
           .toList();
@@ -262,7 +303,11 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteRoom(String buildingId, String floorId, String roomId) async {
+  Future<Either<Failure, void>> deleteRoom(
+    String buildingId,
+    String floorId,
+    String roomId,
+  ) async {
     try {
       await firestore
           .collection('buildings')
@@ -279,7 +324,13 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addCorridor(String buildingId, String floorId, String startRoomId, String endRoomId, double distance) async {
+  Future<Either<Failure, void>> addCorridor(
+    String buildingId,
+    String floorId,
+    String startRoomId,
+    String endRoomId,
+    double distance,
+  ) async {
     try {
       final docRef = firestore
           .collection('buildings')
@@ -288,7 +339,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
           .doc(floorId)
           .collection('corridors')
           .doc();
-          
+
       final model = CorridorModel(
         id: docRef.id,
         floorId: floorId,
@@ -296,17 +347,19 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
         endRoomId: endRoomId,
         distance: distance,
       );
-      
+
       await docRef.set(model.toJson());
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
-
   }
 
   @override
-  Future<Either<Failure, List<Corridor>>> getCorridors(String buildingId, String floorId) async {
+  Future<Either<Failure, List<Corridor>>> getCorridors(
+    String buildingId,
+    String floorId,
+  ) async {
     try {
       final querySnapshot = await firestore
           .collection('buildings')
@@ -315,7 +368,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
           .doc(floorId)
           .collection('corridors')
           .get();
-          
+
       final corridors = querySnapshot.docs
           .map((doc) => CorridorModel.fromFirestore(doc, floorId))
           .toList();
@@ -326,7 +379,16 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateRoom(String buildingId, String floorId, String roomId, {double? x, double? y, String? name, RoomType? type, String? connectorId}) async {
+  Future<Either<Failure, void>> updateRoom(
+    String buildingId,
+    String floorId,
+    String roomId, {
+    double? x,
+    double? y,
+    String? name,
+    RoomType? type,
+    String? connectorId,
+  }) async {
     try {
       final updates = <String, dynamic>{};
       if (x != null) updates['x'] = x;
@@ -334,7 +396,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
       if (name != null) updates['name'] = name;
       if (type != null) updates['type'] = type.name;
       if (connectorId != null) updates['connectorId'] = connectorId;
-      
+
       if (updates.isEmpty) return const Right(null);
 
       await firestore
@@ -353,7 +415,11 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
 
   // Campus Connections
   @override
-  Future<Either<Failure, void>> addCampusConnection(String fromBuildingId, String toBuildingId, double distance) async {
+  Future<Either<Failure, void>> addCampusConnection(
+    String fromBuildingId,
+    String toBuildingId,
+    double distance,
+  ) async {
     try {
       final docRef = firestore.collection('campus_connections').doc();
       final model = CampusConnectionModel(
@@ -373,7 +439,9 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   @override
   Future<Either<Failure, List<CampusConnection>>> getCampusConnections() async {
     try {
-      final querySnapshot = await firestore.collection('campus_connections').get();
+      final querySnapshot = await firestore
+          .collection('campus_connections')
+          .get();
       final connections = querySnapshot.docs
           .map((doc) => CampusConnectionModel.fromFirestore(doc))
           .toList();
@@ -384,9 +452,14 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteCampusConnection(String connectionId) async {
+  Future<Either<Failure, void>> deleteCampusConnection(
+    String connectionId,
+  ) async {
     try {
-      await firestore.collection('campus_connections').doc(connectionId).delete();
+      await firestore
+          .collection('campus_connections')
+          .doc(connectionId)
+          .delete();
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

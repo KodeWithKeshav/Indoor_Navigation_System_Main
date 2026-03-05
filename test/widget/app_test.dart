@@ -19,9 +19,7 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          routerProvider.overrideWithValue(router),
-        ],
+        overrides: [routerProvider.overrideWithValue(router)],
         child: const MyApp(),
       ),
     );

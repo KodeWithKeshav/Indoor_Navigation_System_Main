@@ -22,7 +22,10 @@ void main() {
     final repo = AdminMapRepositoryImpl(firestore);
 
     final buildingId = 'b1';
-    await firestore.collection('buildings').doc(buildingId).set({'name': 'B', 'description': 'D'});
+    await firestore.collection('buildings').doc(buildingId).set({
+      'name': 'B',
+      'description': 'D',
+    });
 
     final first = await repo.addFloor(buildingId, 1, 'F1');
     expect(first.isRight(), isTrue);

@@ -14,7 +14,9 @@ class _FakeGetOrganizationsUseCase extends GetOrganizationsUseCase {
 
   @override
   Future<Either<Failure, List<Organization>>> call(NoParams params) async {
-    return Right([const Organization(id: 'o1', name: 'Org', description: 'Desc')]);
+    return Right([
+      const Organization(id: 'o1', name: 'Org', description: 'Desc'),
+    ]);
   }
 }
 
@@ -22,7 +24,9 @@ void main() {
   test('organizationListProvider returns organizations', () async {
     final container = ProviderContainer(
       overrides: [
-        getOrganizationsUseCaseProvider.overrideWithValue(_FakeGetOrganizationsUseCase()),
+        getOrganizationsUseCaseProvider.overrideWithValue(
+          _FakeGetOrganizationsUseCase(),
+        ),
       ],
     );
     addTearDown(container.dispose);

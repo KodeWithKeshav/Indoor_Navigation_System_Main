@@ -32,7 +32,6 @@ class FakeAdminMapRepository implements AdminMapRepository {
     if (campusConnections != null) _campusConnections.addAll(campusConnections);
   }
 
-
   // Flags to simulate failures
   bool shouldFail = false;
   String failureMessage = 'Test failure';
@@ -49,9 +48,18 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addOrganization(String name, String description) async {
+  Future<Either<Failure, void>> addOrganization(
+    String name,
+    String description,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
-    _organizations.add(Organization(id: 'org-${_organizations.length + 1}', name: name, description: description));
+    _organizations.add(
+      Organization(
+        id: 'org-${_organizations.length + 1}',
+        name: name,
+        description: description,
+      ),
+    );
     return const Right(null);
   }
 
@@ -62,34 +70,59 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteOrganization(String organizationId) async {
+  Future<Either<Failure, void>> deleteOrganization(
+    String organizationId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     _organizations.removeWhere((o) => o.id == organizationId);
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> updateOrganization(String organizationId, String name, String description) async {
+  Future<Either<Failure, void>> updateOrganization(
+    String organizationId,
+    String name,
+    String description,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final index = _organizations.indexWhere((o) => o.id == organizationId);
     if (index != -1) {
-      _organizations[index] = Organization(id: organizationId, name: name, description: description);
+      _organizations[index] = Organization(
+        id: organizationId,
+        name: name,
+        description: description,
+      );
     }
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> addBuilding(String name, String description, String? organizationId) async {
+  Future<Either<Failure, void>> addBuilding(
+    String name,
+    String description,
+    String? organizationId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
-    _buildings.add(Building(id: 'b-${_buildings.length + 1}', name: name, description: description, organizationId: organizationId));
+    _buildings.add(
+      Building(
+        id: 'b-${_buildings.length + 1}',
+        name: name,
+        description: description,
+        organizationId: organizationId,
+      ),
+    );
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, List<Building>>> getBuildings({String? organizationId}) async {
+  Future<Either<Failure, List<Building>>> getBuildings({
+    String? organizationId,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     if (organizationId != null) {
-      return Right(_buildings.where((b) => b.organizationId == organizationId).toList());
+      return Right(
+        _buildings.where((b) => b.organizationId == organizationId).toList(),
+      );
     }
     return Right(_buildings);
   }
@@ -102,21 +135,41 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateBuilding(String buildingId, String name, String description) async {
+  Future<Either<Failure, void>> updateBuilding(
+    String buildingId,
+    String name,
+    String description,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final index = _buildings.indexWhere((b) => b.id == buildingId);
     if (index != -1) {
       final old = _buildings[index];
-      _buildings[index] = Building(id: buildingId, name: name, description: description, organizationId: old.organizationId);
+      _buildings[index] = Building(
+        id: buildingId,
+        name: name,
+        description: description,
+        organizationId: old.organizationId,
+      );
     }
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> addFloor(String buildingId, int floorNumber, String name) async {
+  Future<Either<Failure, void>> addFloor(
+    String buildingId,
+    int floorNumber,
+    String name,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     _floors.putIfAbsent(buildingId, () => []);
-    _floors[buildingId]!.add(Floor(id: 'f-${floorNumber}', buildingId: buildingId, floorNumber: floorNumber, name: name));
+    _floors[buildingId]!.add(
+      Floor(
+        id: 'f-${floorNumber}',
+        buildingId: buildingId,
+        floorNumber: floorNumber,
+        name: name,
+      ),
+    );
     return const Right(null);
   }
 
@@ -127,43 +180,81 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteFloor(String buildingId, String floorId) async {
+  Future<Either<Failure, void>> deleteFloor(
+    String buildingId,
+    String floorId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     _floors[buildingId]?.removeWhere((f) => f.id == floorId);
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> updateFloor(String buildingId, String floorId, int floorNumber, String name) async {
+  Future<Either<Failure, void>> updateFloor(
+    String buildingId,
+    String floorId,
+    int floorNumber,
+    String name,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final floors = _floors[buildingId];
     if (floors != null) {
       final index = floors.indexWhere((f) => f.id == floorId);
       if (index != -1) {
-        floors[index] = Floor(id: floorId, buildingId: buildingId, floorNumber: floorNumber, name: name);
+        floors[index] = Floor(
+          id: floorId,
+          buildingId: buildingId,
+          floorNumber: floorNumber,
+          name: name,
+        );
       }
     }
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, void>> addRoom(String buildingId, String floorId, String name, double x, double y, {RoomType type = RoomType.room, String? connectorId}) async {
+  Future<Either<Failure, void>> addRoom(
+    String buildingId,
+    String floorId,
+    String name,
+    double x,
+    double y, {
+    RoomType type = RoomType.room,
+    String? connectorId,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     _rooms.putIfAbsent(key, () => []);
-    _rooms[key]!.add(Room(id: 'r-${_rooms[key]!.length + 1}', floorId: floorId, name: name, x: x, y: y, type: type, connectorId: connectorId));
+    _rooms[key]!.add(
+      Room(
+        id: 'r-${_rooms[key]!.length + 1}',
+        floorId: floorId,
+        name: name,
+        x: x,
+        y: y,
+        type: type,
+        connectorId: connectorId,
+      ),
+    );
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, List<Room>>> getRooms(String buildingId, String floorId) async {
+  Future<Either<Failure, List<Room>>> getRooms(
+    String buildingId,
+    String floorId,
+  ) async {
     if (shouldFail) return Left(ValidationFailure(failureMessage));
     final key = '$buildingId-$floorId';
     return Right(_rooms[key] ?? []);
   }
 
   @override
-  Future<Either<Failure, void>> deleteRoom(String buildingId, String floorId, String roomId) async {
+  Future<Either<Failure, void>> deleteRoom(
+    String buildingId,
+    String floorId,
+    String roomId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     _rooms[key]?.removeWhere((r) => r.id == roomId);
@@ -171,7 +262,16 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> updateRoom(String buildingId, String floorId, String roomId, {double? x, double? y, String? name, RoomType? type, String? connectorId}) async {
+  Future<Either<Failure, void>> updateRoom(
+    String buildingId,
+    String floorId,
+    String roomId, {
+    double? x,
+    double? y,
+    String? name,
+    RoomType? type,
+    String? connectorId,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     final rooms = _rooms[key];
@@ -194,25 +294,53 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> addCorridor(String buildingId, String floorId, String startRoomId, String endRoomId, double distance) async {
+  Future<Either<Failure, void>> addCorridor(
+    String buildingId,
+    String floorId,
+    String startRoomId,
+    String endRoomId,
+    double distance,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     _corridors.putIfAbsent(key, () => []);
-    _corridors[key]!.add(Corridor(id: 'c-${_corridors[key]!.length + 1}', floorId: floorId, startRoomId: startRoomId, endRoomId: endRoomId, distance: distance));
+    _corridors[key]!.add(
+      Corridor(
+        id: 'c-${_corridors[key]!.length + 1}',
+        floorId: floorId,
+        startRoomId: startRoomId,
+        endRoomId: endRoomId,
+        distance: distance,
+      ),
+    );
     return const Right(null);
   }
 
   @override
-  Future<Either<Failure, List<Corridor>>> getCorridors(String buildingId, String floorId) async {
+  Future<Either<Failure, List<Corridor>>> getCorridors(
+    String buildingId,
+    String floorId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
     return Right(_corridors[key] ?? []);
   }
 
   @override
-  Future<Either<Failure, void>> addCampusConnection(String fromBuildingId, String toBuildingId, double distance) async {
+  Future<Either<Failure, void>> addCampusConnection(
+    String fromBuildingId,
+    String toBuildingId,
+    double distance,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
-    _campusConnections.add(CampusConnection(id: 'cc-${_campusConnections.length + 1}', fromBuildingId: fromBuildingId, toBuildingId: toBuildingId, distance: distance));
+    _campusConnections.add(
+      CampusConnection(
+        id: 'cc-${_campusConnections.length + 1}',
+        fromBuildingId: fromBuildingId,
+        toBuildingId: toBuildingId,
+        distance: distance,
+      ),
+    );
     return const Right(null);
   }
 
@@ -223,7 +351,9 @@ class FakeAdminMapRepository implements AdminMapRepository {
   }
 
   @override
-  Future<Either<Failure, void>> deleteCampusConnection(String connectionId) async {
+  Future<Either<Failure, void>> deleteCampusConnection(
+    String connectionId,
+  ) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     _campusConnections.removeWhere((c) => c.id == connectionId);
     return const Right(null);
@@ -240,19 +370,34 @@ class FakeAuthRepository implements AuthRepository {
   FakeAuthRepository({List<UserEntity>? users}) : users = users ?? [];
 
   @override
-  Future<Either<Failure, UserEntity>> loginWithEmailPassword({required String email, required String password}) async {
+  Future<Either<Failure, UserEntity>> loginWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
-    final user = users.firstWhere((u) => u.email == email, orElse: () => throw Exception('User not found')); // Should handle gracefully normally
-    _currentUser = user; 
+    final user = users.firstWhere(
+      (u) => u.email == email,
+      orElse: () => throw Exception('User not found'),
+    ); // Should handle gracefully normally
+    _currentUser = user;
     return Right(user);
   }
 
   @override
-  Future<Either<Failure, UserEntity>> signUp({required String email, required String password, required String organizationId}) async {
-      if (shouldFail) return Left(ServerFailure(failureMessage));
-      final newUser = UserEntity(id: 'u-${users.length + 1}', email: email, role: UserRole.user, organizationId: organizationId);
-      // In a real fake we would add to list, but here we just return
-      return Right(newUser);
+  Future<Either<Failure, UserEntity>> signUp({
+    required String email,
+    required String password,
+    required String organizationId,
+  }) async {
+    if (shouldFail) return Left(ServerFailure(failureMessage));
+    final newUser = UserEntity(
+      id: 'u-${users.length + 1}',
+      email: email,
+      role: UserRole.user,
+      organizationId: organizationId,
+    );
+    // In a real fake we would add to list, but here we just return
+    return Right(newUser);
   }
 
   @override
@@ -264,36 +409,52 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, UserEntity?>> getCurrentUser() async {
-     if (shouldFail) return Left(ServerFailure(failureMessage));
-     return Right(_currentUser);
+    if (shouldFail) return Left(ServerFailure(failureMessage));
+    return Right(_currentUser);
   }
 
   @override
   Future<Either<Failure, List<UserEntity>>> getAllUsers() async {
-     if (shouldFail) return Left(ServerFailure(failureMessage));
-     return Right(users);
+    if (shouldFail) return Left(ServerFailure(failureMessage));
+    return Right(users);
   }
 
   @override
-  Future<Either<Failure, void>> updateUserRole({required String uid, required String role}) async {
-     if (shouldFail) return Left(ServerFailure(failureMessage));
-     final index = users.indexWhere((u) => u.id == uid);
-     if (index != -1) {
-        final old = users[index];
-        // Convert string role to enum
-        final newRole = role == 'admin' ? UserRole.admin : UserRole.user;
-        users[index] = UserEntity(id: uid, email: old.email, role: newRole, organizationId: old.organizationId);
-     }
-     return const Right(null);
-  }
-
-  @override
-  Future<Either<Failure, void>> updateUserOrganization({required String uid, required String organizationId}) async {
+  Future<Either<Failure, void>> updateUserRole({
+    required String uid,
+    required String role,
+  }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final index = users.indexWhere((u) => u.id == uid);
     if (index != -1) {
       final old = users[index];
-      users[index] = UserEntity(id: uid, email: old.email, role: old.role, organizationId: organizationId);
+      // Convert string role to enum
+      final newRole = role == 'admin' ? UserRole.admin : UserRole.user;
+      users[index] = UserEntity(
+        id: uid,
+        email: old.email,
+        role: newRole,
+        organizationId: old.organizationId,
+      );
+    }
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, void>> updateUserOrganization({
+    required String uid,
+    required String organizationId,
+  }) async {
+    if (shouldFail) return Left(ServerFailure(failureMessage));
+    final index = users.indexWhere((u) => u.id == uid);
+    if (index != -1) {
+      final old = users[index];
+      users[index] = UserEntity(
+        id: uid,
+        email: old.email,
+        role: old.role,
+        organizationId: organizationId,
+      );
     }
     return const Right(null);
   }

@@ -7,7 +7,8 @@ class Building extends Equatable {
   final String name;
   final String description;
   final String? organizationId;
-  final double northOffset; // Angle in degrees where map "Up" is relative to North
+  final double
+  northOffset; // Angle in degrees where map "Up" is relative to North
 
   const Building({
     required this.id,
@@ -18,7 +19,13 @@ class Building extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, name, description, organizationId, northOffset];
+  List<Object?> get props => [
+    id,
+    name,
+    description,
+    organizationId,
+    northOffset,
+  ];
 }
 
 class Floor extends Equatable {
@@ -39,18 +46,18 @@ class Floor extends Equatable {
 }
 
 enum RoomType {
-  room,       // Generic Classroom/Room
-  hallway,    // Navigation node
-  stairs,     // Vertical
-  elevator,   // Vertical
-  entrance,   // Building Connector
-  restroom,   // WC
-  cafeteria,  // Food
-  lab,        // Laboratory
-  library,    // Library building or room
-  parking,    // Parking Lot
-  ground,     // Sports ground / Open area
-  office,     // Admin/Faculty office
+  room, // Generic Classroom/Room
+  hallway, // Navigation node
+  stairs, // Vertical
+  elevator, // Vertical
+  entrance, // Building Connector
+  restroom, // WC
+  cafeteria, // Food
+  lab, // Laboratory
+  library, // Library building or room
+  parking, // Parking Lot
+  ground, // Sports ground / Open area
+  office, // Admin/Faculty office
 }
 
 class Room extends Equatable {

@@ -96,8 +96,18 @@ void main() {
     });
 
     test('should be equal when all properties match', () {
-      const floor1 = Floor(id: 'f1', buildingId: 'b1', floorNumber: 1, name: 'F1');
-      const floor2 = Floor(id: 'f1', buildingId: 'b1', floorNumber: 1, name: 'F1');
+      const floor1 = Floor(
+        id: 'f1',
+        buildingId: 'b1',
+        floorNumber: 1,
+        name: 'F1',
+      );
+      const floor2 = Floor(
+        id: 'f1',
+        buildingId: 'b1',
+        floorNumber: 1,
+        name: 'F1',
+      );
 
       expect(floor1, equals(floor2));
     });
@@ -171,8 +181,22 @@ void main() {
     });
 
     test('should not be equal when connectorId differs', () {
-      const room1 = Room(id: 'r1', floorId: 'f1', name: 'R', x: 0, y: 0, connectorId: 'a');
-      const room2 = Room(id: 'r1', floorId: 'f1', name: 'R', x: 0, y: 0, connectorId: 'b');
+      const room1 = Room(
+        id: 'r1',
+        floorId: 'f1',
+        name: 'R',
+        x: 0,
+        y: 0,
+        connectorId: 'a',
+      );
+      const room2 = Room(
+        id: 'r1',
+        floorId: 'f1',
+        name: 'R',
+        x: 0,
+        y: 0,
+        connectorId: 'b',
+      );
 
       expect(room1, isNot(equals(room2)));
     });
@@ -220,15 +244,39 @@ void main() {
     });
 
     test('should be equal when all properties match', () {
-      const cor1 = Corridor(id: 'c1', floorId: 'f1', startRoomId: 'r1', endRoomId: 'r2', distance: 10);
-      const cor2 = Corridor(id: 'c1', floorId: 'f1', startRoomId: 'r1', endRoomId: 'r2', distance: 10);
+      const cor1 = Corridor(
+        id: 'c1',
+        floorId: 'f1',
+        startRoomId: 'r1',
+        endRoomId: 'r2',
+        distance: 10,
+      );
+      const cor2 = Corridor(
+        id: 'c1',
+        floorId: 'f1',
+        startRoomId: 'r1',
+        endRoomId: 'r2',
+        distance: 10,
+      );
 
       expect(cor1, equals(cor2));
     });
 
     test('should not be equal when distance differs', () {
-      const cor1 = Corridor(id: 'c1', floorId: 'f1', startRoomId: 'r1', endRoomId: 'r2', distance: 10);
-      const cor2 = Corridor(id: 'c1', floorId: 'f1', startRoomId: 'r1', endRoomId: 'r2', distance: 20);
+      const cor1 = Corridor(
+        id: 'c1',
+        floorId: 'f1',
+        startRoomId: 'r1',
+        endRoomId: 'r2',
+        distance: 10,
+      );
+      const cor2 = Corridor(
+        id: 'c1',
+        floorId: 'f1',
+        startRoomId: 'r1',
+        endRoomId: 'r2',
+        distance: 20,
+      );
 
       expect(cor1, isNot(equals(cor2)));
     });

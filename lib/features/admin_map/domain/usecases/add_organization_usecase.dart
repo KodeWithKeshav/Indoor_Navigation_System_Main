@@ -7,10 +7,7 @@ class AddOrganizationParams {
   final String name;
   final String description;
 
-  const AddOrganizationParams({
-    required this.name,
-    required this.description,
-  });
+  const AddOrganizationParams({required this.name, required this.description});
 }
 
 class AddOrganizationUseCase implements UseCase<void, AddOrganizationParams> {

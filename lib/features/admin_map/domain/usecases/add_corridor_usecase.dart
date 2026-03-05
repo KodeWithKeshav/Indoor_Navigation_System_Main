@@ -10,7 +10,13 @@ class AddCorridorParams {
   final String startRoomId;
   final String endRoomId;
   final double distance;
-  AddCorridorParams(this.buildingId, this.floorId, this.startRoomId, this.endRoomId, this.distance);
+  AddCorridorParams(
+    this.buildingId,
+    this.floorId,
+    this.startRoomId,
+    this.endRoomId,
+    this.distance,
+  );
 }
 
 class AddCorridorUseCase implements UseCase<void, AddCorridorParams> {
@@ -19,6 +25,12 @@ class AddCorridorUseCase implements UseCase<void, AddCorridorParams> {
 
   @override
   Future<Either<Failure, void>> call(AddCorridorParams params) {
-    return repository.addCorridor(params.buildingId, params.floorId, params.startRoomId, params.endRoomId, params.distance);
+    return repository.addCorridor(
+      params.buildingId,
+      params.floorId,
+      params.startRoomId,
+      params.endRoomId,
+      params.distance,
+    );
   }
 }

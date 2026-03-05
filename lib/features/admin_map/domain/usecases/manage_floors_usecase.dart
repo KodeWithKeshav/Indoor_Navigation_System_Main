@@ -33,6 +33,11 @@ class UpdateFloorUseCase implements UseCase<void, UpdateFloorParams> {
 
   @override
   Future<Either<Failure, void>> call(UpdateFloorParams params) {
-    return repository.updateFloor(params.buildingId, params.floorId, params.floorNumber, params.name);
+    return repository.updateFloor(
+      params.buildingId,
+      params.floorId,
+      params.floorNumber,
+      params.name,
+    );
   }
 }

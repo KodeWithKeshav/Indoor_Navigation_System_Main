@@ -13,19 +13,21 @@ class SignUpScreen extends ConsumerStatefulWidget {
   ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProviderStateMixin {
+class _SignUpScreenState extends ConsumerState<SignUpScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   String? _selectedOrganizationId;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   // Animation Controllers
-  late AnimationController _gridScrollController; // Renamed from _backgroundController to match Login
+  late AnimationController
+  _gridScrollController; // Renamed from _backgroundController to match Login
   late AnimationController _sonarController;
   late AnimationController _entranceController;
 
@@ -37,7 +39,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
   @override
   void initState() {
     super.initState();
-    
+
     // 1. Grid/Background Animation
     _gridScrollController = AnimationController(
       vsync: this,
@@ -69,12 +71,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
     );
 
     // Slide Up Content
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
-      ),
-    );
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _entranceController.forward();
   }
@@ -93,33 +96,35 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedOrganizationId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ORGANIZATION_REQUIRED')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('ORGANIZATION_REQUIRED')));
       return;
     }
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PASSWORDS_DO_NOT_MATCH')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('PASSWORDS_DO_NOT_MATCH')));
       return;
     }
 
     setState(() => _isLoading = true);
 
     final signUpUseCase = ref.read(signUpUseCaseProvider);
-    final result = await signUpUseCase(SignUpParams(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-      organizationId: _selectedOrganizationId!,
-    ));
+    final result = await signUpUseCase(
+      SignUpParams(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        organizationId: _selectedOrganizationId!,
+      ),
+    );
 
     if (mounted) {
       setState(() => _isLoading = false);
       result.fold(
-        (failure) => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message)),
-        ),
+        (failure) => ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message))),
         (user) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('REGISTRATION_COMPLETE')),
@@ -133,15 +138,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
   Widget build(BuildContext context) {
     // --- COLORS (Matching LoginScreen) ---
     // Deep Void Blue (Bottom/Edges)
-    const deepVoidBlue = Color(0xFF020617); 
+    const deepVoidBlue = Color(0xFF020617);
     // Lighter Royal Blue (Top/Center Light source)
-    const topLightBlue = Color(0xFF1E3A8A); 
-    
+    const topLightBlue = Color(0xFF1E3A8A);
+
     // Dark Charcoal Blue for the Card
-    const darkCardColor = Color(0xFF1A1F2C); 
+    const darkCardColor = Color(0xFF1A1F2C);
 
     const activeCardBlue = Color(0xFF172554); // For Logo Circle
-    const electricGrid = Color(0xFF38BDF8); 
+    const electricGrid = Color(0xFF38BDF8);
     const paperWhite = Colors.white;
 
     return Scaffold(
@@ -201,7 +206,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                               border: Border.all(color: paperWhite, width: 3),
                               color: activeCardBlue,
                             ),
-                            child: const Icon(Icons.person_add_alt_1_rounded, color: paperWhite, size: 48),
+                            child: const Icon(
+                              Icons.person_add_alt_1_rounded,
+                              color: paperWhite,
+                              size: 48,
+                            ),
                           ),
                         );
                       },
@@ -218,8 +227,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                         constraints: const BoxConstraints(maxWidth: 450),
                         padding: const EdgeInsets.all(32),
                         decoration: BoxDecoration(
-                          color: darkCardColor.withOpacity(0.95), // Matched dark card color
-                          border: Border.all(color: electricGrid.withOpacity(0.5), width: 1.5),
+                          color: darkCardColor.withOpacity(
+                            0.95,
+                          ), // Matched dark card color
+                          border: Border.all(
+                            color: electricGrid.withOpacity(0.5),
+                            width: 1.5,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                           boxShadow: [
                             BoxShadow(
@@ -254,8 +268,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                                   ),
                                 ),
                                 const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 24, horizontal: 40),
-                                  child: Divider(color: Colors.white24, thickness: 1, height: 0),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 24,
+                                    horizontal: 40,
+                                  ),
+                                  child: Divider(
+                                    color: Colors.white24,
+                                    thickness: 1,
+                                    height: 0,
+                                  ),
                                 ),
                                 const Text(
                                   "SYSTEM REGISTRATION",
@@ -277,11 +298,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                                   accentColor: electricGrid,
                                 ),
                                 const SizedBox(height: 24),
-                                
+
                                 // Organization Dropdown (Custom Styled)
                                 Consumer(
                                   builder: (context, ref, _) {
-                                    final orgsAsync = ref.watch(organizationListProvider);
+                                    final orgsAsync = ref.watch(
+                                      organizationListProvider,
+                                    );
                                     return _buildBlueprintDropdown(
                                       orgsAsync: orgsAsync,
                                       label: "ORGANIZATION UNIT",
@@ -291,14 +314,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                                   },
                                 ),
                                 const SizedBox(height: 24),
-                                
+
                                 _buildBlueprintInput(
                                   controller: _passwordController,
                                   label: "PASSWORD",
                                   icon: Icons.lock_outline,
                                   isPassword: true,
                                   obscureText: _obscurePassword,
-                                  onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+                                  onToggle: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                                   accentColor: electricGrid,
                                 ),
                                 const SizedBox(height: 24),
@@ -308,7 +333,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                                   icon: Icons.verified_user_outlined,
                                   isPassword: true,
                                   obscureText: _obscureConfirmPassword,
-                                  onToggle: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                                  onToggle: () => setState(
+                                    () => _obscureConfirmPassword =
+                                        !_obscureConfirmPassword,
+                                  ),
                                   accentColor: electricGrid,
                                 ),
 
@@ -323,11 +351,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: electricGrid,
                                       foregroundColor: deepVoidBlue,
-                                      shape: const RoundedRectangleBorder(), 
+                                      shape: const RoundedRectangleBorder(),
                                       elevation: 0,
                                     ),
                                     child: _isLoading
-                                        ? CircularProgressIndicator(color: deepVoidBlue)
+                                        ? CircularProgressIndicator(
+                                            color: deepVoidBlue,
+                                          )
                                         : const Text(
                                             "INITIATE SEQUENCE",
                                             style: TextStyle(
@@ -355,7 +385,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
                       children: [
                         const Text(
                           "ALREADY AUTHENTICATED? ",
-                          style: TextStyle(color: Colors.white60, fontFamily: 'Courier', fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.white60,
+                            fontFamily: 'Courier',
+                            fontSize: 12,
+                          ),
                         ),
                         InkWell(
                           onTap: () => context.go('/login'),
@@ -409,12 +443,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
         TextFormField(
           controller: controller,
           obscureText: obscureText,
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
           cursorColor: accentColor,
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: Colors.white70),
             filled: true,
-            fillColor: Colors.black.withOpacity(0.3), 
+            fillColor: Colors.black.withOpacity(0.3),
             enabledBorder: const OutlineInputBorder(
               borderSide: BorderSide(color: Colors.white24, width: 1.0),
               borderRadius: BorderRadius.zero,
@@ -456,7 +493,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-         Text(
+        Text(
           label,
           style: const TextStyle(
             color: Colors.white70,
@@ -469,7 +506,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
         orgsAsync.when(
           data: (orgs) => DropdownButtonFormField<String>(
             dropdownColor: const Color(0xFF0F172A), // Matches background
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
             decoration: InputDecoration(
               prefixIcon: Icon(icon, color: Colors.white70),
               filled: true,
@@ -484,19 +524,28 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> with TickerProvider
               ),
             ),
             value: _selectedOrganizationId,
-            items: orgs.map((org) => DropdownMenuItem(
-              value: org.id,
-              child: Text(org.name),
-            )).toList(),
+            items: orgs
+                .map(
+                  (org) =>
+                      DropdownMenuItem(value: org.id, child: Text(org.name)),
+                )
+                .toList(),
             onChanged: (val) => setState(() => _selectedOrganizationId = val),
             validator: (val) => val == null ? 'REQUIRED' : null,
           ),
           loading: () => Container(
-             height: 60,
-             decoration: BoxDecoration(border: Border.all(color: Colors.white54)),
-             child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+            height: 60,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white54),
+            ),
+            child: const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
           ),
-          error: (e, _) => Text('ERR: $e', style: const TextStyle(color: Colors.orangeAccent)),
+          error: (e, _) => Text(
+            'ERR: $e',
+            style: const TextStyle(color: Colors.orangeAccent),
+          ),
         ),
       ],
     );
@@ -522,11 +571,17 @@ class BlueprintGridPainter extends CustomPainter {
 
     for (double x = -gridSize; x < size.width + gridSize; x += gridSize) {
       canvas.drawLine(
-          Offset(x + shift % gridSize, 0), Offset(x + shift % gridSize, size.height), paint);
+        Offset(x + shift % gridSize, 0),
+        Offset(x + shift % gridSize, size.height),
+        paint,
+      );
     }
     for (double y = -gridSize; y < size.height + gridSize; y += gridSize) {
       canvas.drawLine(
-          Offset(0, y + shift % gridSize), Offset(size.width, y + shift % gridSize), paint);
+        Offset(0, y + shift % gridSize),
+        Offset(size.width, y + shift % gridSize),
+        paint,
+      );
     }
   }
 

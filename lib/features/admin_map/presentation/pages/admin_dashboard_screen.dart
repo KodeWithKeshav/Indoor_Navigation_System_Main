@@ -15,10 +15,12 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key, this.organizationId});
 
   @override
-  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> with SingleTickerProviderStateMixin {
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _gridScrollController;
 
   // --- THEME COLORS ---
@@ -54,10 +56,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         title: const Text(
           'CAMPUS MAP EDITOR',
           style: TextStyle(
-            fontFamily: 'Courier', 
-            fontWeight: FontWeight.bold, 
+            fontFamily: 'Courier',
+            fontWeight: FontWeight.bold,
             letterSpacing: 2,
-            fontSize: 14
+            fontSize: 14,
           ),
         ),
         centerTitle: true,
@@ -67,9 +69,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         titleTextStyle: const TextStyle(color: paperWhite),
         actions: [
           IconButton(
-             icon: const Icon(Icons.power_settings_new, color: Colors.redAccent),
+            icon: const Icon(Icons.power_settings_new, color: Colors.redAccent),
             onPressed: () {
-               ref.read(authControllerProvider.notifier).logout(context);
+              ref.read(authControllerProvider.notifier).logout(context);
             },
           ),
         ],
@@ -117,7 +119,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.business_outlined, size: 64, color: electricGrid.withOpacity(0.3)),
+                        Icon(
+                          Icons.business_outlined,
+                          size: 64,
+                          color: electricGrid.withOpacity(0.3),
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'NO STRUCTURES DETECTED',
@@ -138,12 +144,23 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                         // Global Map Option
                         if (widget.organizationId != null)
                           TextButton.icon(
-                             onPressed: () => context.push(
-                               '/admin/dashboard/${widget.organizationId}/building/campus_${widget.organizationId}/floor/ground', 
-                               extra: {'floorName': 'Campus Map (Outdoors)'}
-                             ),
-                             icon: const Icon(Icons.map_outlined, color: electricGrid),
-                             label: const Text("ACCESS GLOBAL OUTDOOR MAP", style: TextStyle(color: electricGrid, letterSpacing: 1, fontWeight: FontWeight.bold, fontFamily: 'Courier')),
+                            onPressed: () => context.push(
+                              '/admin/dashboard/${widget.organizationId}/building/campus_${widget.organizationId}/floor/ground',
+                              extra: {'floorName': 'Campus Map (Outdoors)'},
+                            ),
+                            icon: const Icon(
+                              Icons.map_outlined,
+                              color: electricGrid,
+                            ),
+                            label: const Text(
+                              "ACCESS GLOBAL OUTDOOR MAP",
+                              style: TextStyle(
+                                color: electricGrid,
+                                letterSpacing: 1,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Courier',
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -158,8 +175,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator(color: electricGrid)),
-              error: (error, _) => Center(child: Text('SYSTEM ERROR: $error', style: const TextStyle(color: Colors.redAccent))),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: electricGrid),
+              ),
+              error: (error, _) => Center(
+                child: Text(
+                  'SYSTEM ERROR: $error',
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
+              ),
             ),
           ),
         ],
@@ -168,7 +192,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-           FloatingActionButton.extended(
+          FloatingActionButton.extended(
             heroTag: 'campus',
             backgroundColor: darkCardColor,
             foregroundColor: electricGrid,
@@ -176,11 +200,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
               borderRadius: BorderRadius.circular(8),
               side: const BorderSide(color: electricGrid),
             ),
-             onPressed: () => context.push(
-               '/admin/dashboard/${widget.organizationId}/building/campus_${widget.organizationId}/floor/ground', 
-               extra: {'floorName': 'Campus Map (Outdoors)'}
+            onPressed: () => context.push(
+              '/admin/dashboard/${widget.organizationId}/building/campus_${widget.organizationId}/floor/ground',
+              extra: {'floorName': 'Campus Map (Outdoors)'},
             ),
-            label: const Text('GLOBAL MAP', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+            label: const Text(
+              'GLOBAL MAP',
+              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+            ),
             icon: const Icon(Icons.map),
           ),
           const SizedBox(height: 16),
@@ -188,9 +215,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
             heroTag: 'add_bldg',
             backgroundColor: electricGrid,
             foregroundColor: deepVoidBlue,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             onPressed: () => _showAddBuildingDialog(context, ref),
-            label: const Text('NEW BUILDING', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+            label: const Text(
+              'NEW BUILDING',
+              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+            ),
             icon: const Icon(Icons.add),
           ),
         ],
@@ -200,7 +232,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
 
   // --- WIDGETS ---
 
-  Widget _buildTechButton({required String label, required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildTechButton({
+    required String label,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: electricGrid,
@@ -210,7 +246,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       ),
       onPressed: onPressed,
       icon: Icon(icon),
-      label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+      label: Text(
+        label,
+        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+      ),
     );
   }
 
@@ -230,7 +269,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 12,
+        ),
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -253,11 +295,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           padding: EdgeInsets.only(top: 4.0),
           child: Text(
             "STATUS: ACTIVE // TAP TO MANAGE FLOORS",
-            style: TextStyle(color: Colors.white54, fontSize: 10, fontFamily: 'Courier'),
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              fontFamily: 'Courier',
+            ),
           ),
         ),
         onTap: () {
-          context.push('/admin/dashboard/${widget.organizationId}/building/${building.id}', extra: {'name': building.name});
+          context.push(
+            '/admin/dashboard/${widget.organizationId}/building/${building.id}',
+            extra: {'name': building.name},
+          );
         },
         trailing: _buildPopupMenu(building),
       ),
@@ -281,19 +330,31 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         icon: const Icon(Icons.more_vert, color: Colors.white54),
         onSelected: (value) {
           if (value == 'edit') {
-             _showEditBuildingDialog(context, ref, building);
+            _showEditBuildingDialog(context, ref, building);
           } else if (value == 'delete') {
-             _confirmDeleteBuilding(context, ref, building);
+            _confirmDeleteBuilding(context, ref, building);
           }
         },
         itemBuilder: (context) => [
           const PopupMenuItem(
             value: 'edit',
-            child: Row(children: [Icon(Icons.edit_outlined, color: electricGrid, size: 18), SizedBox(width: 12), Text('EDIT METADATA')]),
+            child: Row(
+              children: [
+                Icon(Icons.edit_outlined, color: electricGrid, size: 18),
+                SizedBox(width: 12),
+                Text('EDIT METADATA'),
+              ],
+            ),
           ),
           const PopupMenuItem(
             value: 'delete',
-            child: Row(children: [Icon(Icons.delete_outline, color: Colors.redAccent, size: 18), SizedBox(width: 12), Text('DELETE STRUCTURE')]),
+            child: Row(
+              children: [
+                Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                SizedBox(width: 12),
+                Text('DELETE STRUCTURE'),
+              ],
+            ),
           ),
         ],
       ),
@@ -319,28 +380,39 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       confirmLabel: "INITIALIZE",
       onConfirm: () async {
         Navigator.pop(context);
-        
+
         final useCase = ref.read(addBuildingUseCaseProvider);
-        final result = await useCase(AddBuildingParams(
-          nameController.text.trim(),
-          descController.text.trim(),
-          organizationId: widget.organizationId,
-        ));
-        
+        final result = await useCase(
+          AddBuildingParams(
+            nameController.text.trim(),
+            descController.text.trim(),
+            organizationId: widget.organizationId,
+          ),
+        );
+
         result.fold(
           (failure) {
-            if (context.mounted) _showSnackBar(context, 'ERROR: ${failure.message}', isError: true);
+            if (context.mounted)
+              _showSnackBar(
+                context,
+                'ERROR: ${failure.message}',
+                isError: true,
+              );
           },
           (_) {
             if (context.mounted) _showSnackBar(context, 'BUILDING INITIALIZED');
-            ref.invalidate(buildingsProvider(widget.organizationId)); 
+            ref.invalidate(buildingsProvider(widget.organizationId));
           },
         );
       },
     );
   }
 
-  void _showEditBuildingDialog(BuildContext context, WidgetRef ref, Building building) {
+  void _showEditBuildingDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Building building,
+  ) {
     final nameController = TextEditingController(text: building.name);
     final descController = TextEditingController(text: building.description);
 
@@ -359,22 +431,36 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         Navigator.pop(context);
         final useCase = ref.read(updateBuildingUseCaseProvider);
         final result = await useCase(
-            UpdateBuildingParams(building.id, nameController.text.trim(), descController.text.trim()));
-        
+          UpdateBuildingParams(
+            building.id,
+            nameController.text.trim(),
+            descController.text.trim(),
+          ),
+        );
+
         result.fold(
           (failure) {
-             if(context.mounted) _showSnackBar(context, 'UPDATE FAILED: ${failure.message}', isError: true);
+            if (context.mounted)
+              _showSnackBar(
+                context,
+                'UPDATE FAILED: ${failure.message}',
+                isError: true,
+              );
           },
           (_) {
-             if(context.mounted) _showSnackBar(context, 'METADATA UPDATED');
-             ref.invalidate(buildingsProvider);
+            if (context.mounted) _showSnackBar(context, 'METADATA UPDATED');
+            ref.invalidate(buildingsProvider);
           },
         );
       },
     );
   }
 
-  void _confirmDeleteBuilding(BuildContext context, WidgetRef ref, Building building) {
+  void _confirmDeleteBuilding(
+    BuildContext context,
+    WidgetRef ref,
+    Building building,
+  ) {
     _showTechDialog(
       title: "CONFIRM DEMOLITION",
       icon: Icons.warning_amber_rounded,
@@ -389,14 +475,19 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         Navigator.pop(context);
         final useCase = ref.read(deleteBuildingUseCaseProvider);
         final result = await useCase(building.id);
-        
+
         result.fold(
           (failure) {
-             if(context.mounted) _showSnackBar(context, 'DELETION FAILED: ${failure.message}', isError: true);
+            if (context.mounted)
+              _showSnackBar(
+                context,
+                'DELETION FAILED: ${failure.message}',
+                isError: true,
+              );
           },
           (_) {
-             if(context.mounted) _showSnackBar(context, 'STRUCTURE PURGED');
-             ref.invalidate(buildingsProvider);
+            if (context.mounted) _showSnackBar(context, 'STRUCTURE PURGED');
+            ref.invalidate(buildingsProvider);
           },
         );
       },
@@ -406,10 +497,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
   // --- HELPER FUNCTIONS ---
 
   void _showTechDialog({
-    required String title, 
-    required IconData icon, 
-    required Widget content, 
-    required String confirmLabel, 
+    required String title,
+    required IconData icon,
+    required Widget content,
+    required String confirmLabel,
     required VoidCallback onConfirm,
     bool isDanger = false,
   }) {
@@ -419,7 +510,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
         backgroundColor: darkCardColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
-          side: BorderSide(color: isDanger ? Colors.redAccent : electricGrid.withOpacity(0.5)),
+          side: BorderSide(
+            color: isDanger ? Colors.redAccent : electricGrid.withOpacity(0.5),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -432,7 +525,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                   const SizedBox(width: 12),
                   Text(
                     title,
-                    style: const TextStyle(color: paperWhite, fontFamily: 'Courier', fontWeight: FontWeight.bold, letterSpacing: 1),
+                    style: const TextStyle(
+                      color: paperWhite,
+                      fontFamily: 'Courier',
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
                   ),
                 ],
               ),
@@ -444,12 +542,17 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
-                    child: const Text("ABORT", style: TextStyle(color: Colors.white54)),
+                    child: const Text(
+                      "ABORT",
+                      style: TextStyle(color: Colors.white54),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDanger ? Colors.redAccent : electricGrid,
+                      backgroundColor: isDanger
+                          ? Colors.redAccent
+                          : electricGrid,
                       foregroundColor: isDanger ? paperWhite : deepVoidBlue,
                       shape: const RoundedRectangleBorder(),
                     ),
@@ -471,7 +574,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
       children: [
         Text(
           label,
-          style: const TextStyle(color: electricGrid, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+          style: const TextStyle(
+            color: electricGrid,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -480,7 +588,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.black.withOpacity(0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: electricGrid.withOpacity(0.3)),
               borderRadius: BorderRadius.zero,
@@ -495,12 +606,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> wit
     );
   }
 
-
-  void _showSnackBar(BuildContext context, String message, {bool isError = false}) {
+  void _showSnackBar(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     ToastService.show(context, message, isError: isError);
   }
 }
-
 
 // --- PAINTER (Standard) ---
 class BlueprintGridPainter extends CustomPainter {
@@ -509,16 +622,27 @@ class BlueprintGridPainter extends CustomPainter {
   BlueprintGridPainter({required this.scrollOffset, required this.lineColor});
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = lineColor..strokeWidth = 1;
+    final paint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 1;
     const gridSize = 40.0;
     final shift = (scrollOffset * gridSize);
     for (double x = -gridSize; x < size.width + gridSize; x += gridSize) {
-      canvas.drawLine(Offset(x + shift % gridSize, 0), Offset(x + shift % gridSize, size.height), paint);
+      canvas.drawLine(
+        Offset(x + shift % gridSize, 0),
+        Offset(x + shift % gridSize, size.height),
+        paint,
+      );
     }
     for (double y = -gridSize; y < size.height + gridSize; y += gridSize) {
-      canvas.drawLine(Offset(0, y + shift % gridSize), Offset(size.width, y + shift % gridSize), paint);
+      canvas.drawLine(
+        Offset(0, y + shift % gridSize),
+        Offset(size.width, y + shift % gridSize),
+        paint,
+      );
     }
   }
+
   @override
   bool shouldRepaint(covariant BlueprintGridPainter oldDelegate) => true;
 }

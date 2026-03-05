@@ -31,44 +31,54 @@ void main() {
 
     test('should return UserEntity when signup is successful', () async {
       // Arrange
-      when(() => mockAuthRepository.signUp(
-        email: testEmail,
-        password: testPassword,
-        organizationId: testOrgId,
-      )).thenAnswer((_) async => const Right(testUser));
+      when(
+        () => mockAuthRepository.signUp(
+          email: testEmail,
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      ).thenAnswer((_) async => const Right(testUser));
 
       // Act
-      final result = await signUpUseCase(SignUpParams(
-        email: testEmail,
-        password: testPassword,
-        organizationId: testOrgId,
-      ));
+      final result = await signUpUseCase(
+        SignUpParams(
+          email: testEmail,
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      );
 
       // Assert
       expect(result.isRight(), isTrue);
       expect(result.getOrElse((l) => throw l), testUser);
-      verify(() => mockAuthRepository.signUp(
-        email: testEmail,
-        password: testPassword,
-        organizationId: testOrgId,
-      )).called(1);
+      verify(
+        () => mockAuthRepository.signUp(
+          email: testEmail,
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      ).called(1);
     });
 
     test('should return ServerFailure when email already exists', () async {
       // Arrange
       const failure = ServerFailure('Email already in use');
-      when(() => mockAuthRepository.signUp(
-        email: testEmail,
-        password: testPassword,
-        organizationId: testOrgId,
-      )).thenAnswer((_) async => const Left(failure));
+      when(
+        () => mockAuthRepository.signUp(
+          email: testEmail,
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
-      final result = await signUpUseCase(SignUpParams(
-        email: testEmail,
-        password: testPassword,
-        organizationId: testOrgId,
-      ));
+      final result = await signUpUseCase(
+        SignUpParams(
+          email: testEmail,
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      );
 
       // Assert
       expect(result.isLeft(), isTrue);
@@ -81,18 +91,22 @@ void main() {
     test('should return failure for weak password', () async {
       // Arrange
       const failure = ServerFailure('Password is too weak');
-      when(() => mockAuthRepository.signUp(
-        email: testEmail,
-        password: '123',
-        organizationId: testOrgId,
-      )).thenAnswer((_) async => const Left(failure));
+      when(
+        () => mockAuthRepository.signUp(
+          email: testEmail,
+          password: '123',
+          organizationId: testOrgId,
+        ),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
-      final result = await signUpUseCase(SignUpParams(
-        email: testEmail,
-        password: '123',
-        organizationId: testOrgId,
-      ));
+      final result = await signUpUseCase(
+        SignUpParams(
+          email: testEmail,
+          password: '123',
+          organizationId: testOrgId,
+        ),
+      );
 
       // Assert
       expect(result.isLeft(), isTrue);
@@ -105,18 +119,22 @@ void main() {
     test('should return failure for invalid email format', () async {
       // Arrange
       const failure = ServerFailure('Invalid email format');
-      when(() => mockAuthRepository.signUp(
-        email: 'invalid-email',
-        password: testPassword,
-        organizationId: testOrgId,
-      )).thenAnswer((_) async => const Left(failure));
+      when(
+        () => mockAuthRepository.signUp(
+          email: 'invalid-email',
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      ).thenAnswer((_) async => const Left(failure));
 
       // Act
-      final result = await signUpUseCase(SignUpParams(
-        email: 'invalid-email',
-        password: testPassword,
-        organizationId: testOrgId,
-      ));
+      final result = await signUpUseCase(
+        SignUpParams(
+          email: 'invalid-email',
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      );
 
       // Assert
       expect(result.isLeft(), isTrue);
@@ -125,41 +143,53 @@ void main() {
     test('should pass organization ID correctly', () async {
       // Arrange
       const customOrgId = 'custom-organization';
-      when(() => mockAuthRepository.signUp(
-        email: any(named: 'email'),
-        password: any(named: 'password'),
-        organizationId: any(named: 'organizationId'),
-      )).thenAnswer((_) async => Right(testUser.copyWith(organizationId: customOrgId)));
+      when(
+        () => mockAuthRepository.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          organizationId: any(named: 'organizationId'),
+        ),
+      ).thenAnswer(
+        (_) async => Right(testUser.copyWith(organizationId: customOrgId)),
+      );
 
       // Act
-      await signUpUseCase(SignUpParams(
-        email: testEmail,
-        password: testPassword,
-        organizationId: customOrgId,
-      ));
+      await signUpUseCase(
+        SignUpParams(
+          email: testEmail,
+          password: testPassword,
+          organizationId: customOrgId,
+        ),
+      );
 
       // Assert
-      verify(() => mockAuthRepository.signUp(
-        email: testEmail,
-        password: testPassword,
-        organizationId: customOrgId,
-      )).called(1);
+      verify(
+        () => mockAuthRepository.signUp(
+          email: testEmail,
+          password: testPassword,
+          organizationId: customOrgId,
+        ),
+      ).called(1);
     });
 
     test('new user should have user role by default', () async {
       // Arrange
-      when(() => mockAuthRepository.signUp(
-        email: testEmail,
-        password: testPassword,
-        organizationId: testOrgId,
-      )).thenAnswer((_) async => const Right(testUser));
+      when(
+        () => mockAuthRepository.signUp(
+          email: testEmail,
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      ).thenAnswer((_) async => const Right(testUser));
 
       // Act
-      final result = await signUpUseCase(SignUpParams(
-        email: testEmail,
-        password: testPassword,
-        organizationId: testOrgId,
-      ));
+      final result = await signUpUseCase(
+        SignUpParams(
+          email: testEmail,
+          password: testPassword,
+          organizationId: testOrgId,
+        ),
+      );
 
       // Assert
       expect(result.isRight(), isTrue);
@@ -175,13 +205,13 @@ void main() {
       const email = 'test@test.com';
       const password = 'pass123';
       const orgId = 'org-1';
-      
+
       final params = SignUpParams(
-        email: email, 
+        email: email,
         password: password,
         organizationId: orgId,
       );
-      
+
       expect(params.email, email);
       expect(params.password, password);
       expect(params.organizationId, orgId);
