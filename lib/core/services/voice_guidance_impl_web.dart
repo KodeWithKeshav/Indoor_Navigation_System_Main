@@ -1,27 +1,47 @@
-// ignore_for_file: avoid_web_libraries_in_flutter
-import 'dart:js' as js;
+import 'dart:js_interop';
+
 import 'package:flutter/foundation.dart';
+
 import 'voice_guidance_service.dart';
 
 /// Creates the web-specific voice guidance implementation.
 VoiceGuidanceService createVoiceGuidanceService() => WebVoiceGuidanceService();
 
-/// Web TTS implementation using direct JavaScript interop.
-/// Uses dart:js to call the browser's native SpeechSynthesis API directly,
-/// bypassing the incomplete dart:html SpeechSynthesis wrapper.
+// ---------------------------------------------------------------------------
+// JS interop bindings (dart:js_interop — replaces deprecated dart:js)
+// ---------------------------------------------------------------------------
+
+@JS('SpeechSynthesisUtterance')
+extension type SpeechSynthesisUtterance._(JSObject _) implements JSObject {
+  external factory SpeechSynthesisUtterance(String text);
+  external set rate(double value);
+  external set volume(double value);
+  external set onstart(JSFunction? fn);
+  external set onend(JSFunction? fn);
+  external set onerror(JSFunction? fn);
+}
+
+extension type SpeechSynthesisAPI._(JSObject _) implements JSObject {
+  external void cancel();
+  external void speak(SpeechSynthesisUtterance utterance);
+}
+
+@JS('speechSynthesis')
+external SpeechSynthesisAPI get _speechSynthesisJS;
+
+// ---------------------------------------------------------------------------
+
+/// Web TTS implementation using dart:js_interop and the browser's native
+/// SpeechSynthesis API.
 class WebVoiceGuidanceService implements VoiceGuidanceService {
   bool _isSpeaking = false;
-
-  // Hold a reference to the JS utterance object to prevent garbage collection.
-  js.JsObject? _currentUtterance;
 
   @override
   bool get isSpeaking => _isSpeaking;
 
-  /// Get the speechSynthesis object from the browser window.
-  js.JsObject? get _synth {
+  SpeechSynthesisAPI? get _synth {
     try {
-      return js.context['speechSynthesis'] as js.JsObject?;
+      return _speechSynthesisJS;
     } catch (_) {
       return null;
     }
@@ -29,8 +49,8 @@ class WebVoiceGuidanceService implements VoiceGuidanceService {
 
   @override
   Future<void> speak(String text) async {
-    // Strip step numbers for cleaner speech
-    String cleanText = text.replaceFirst(RegExp(r'^\d+\.\s*'), '');
+    // Strip step numbers for cleaner speech.
+    final cleanText = text.replaceFirst(RegExp(r'^\d+\.\s*'), '');
     if (cleanText.isEmpty) return;
 
     debugPrint('🔊 TTS (web) speak: "$cleanText"');
@@ -42,46 +62,31 @@ class WebVoiceGuidanceService implements VoiceGuidanceService {
     }
 
     try {
-      // Cancel any ongoing speech only if needed
-      synth.callMethod('cancel');
+      synth.cancel();
 
-      // Create the utterance via JS constructor
-      final utterance = js.JsObject(js.context['SpeechSynthesisUtterance'], [
-        cleanText,
-      ]);
-      utterance['rate'] = 0.9;
-      utterance['volume'] = 1.0;
+      final utterance = SpeechSynthesisUtterance(cleanText);
+      utterance.rate = 0.9;
+      utterance.volume = 1.0;
 
-      // Keep strong reference to prevent GC
-      _currentUtterance = utterance;
-
-      utterance['onstart'] = js.allowInterop((_) {
+      utterance.onstart = (JSAny? _) {
         _isSpeaking = true;
         debugPrint('TTS (web) started speaking');
-      });
+      }.toJS;
 
-      utterance['onend'] = js.allowInterop((_) {
+      utterance.onend = (JSAny? _) {
         _isSpeaking = false;
-        _currentUtterance = null;
         debugPrint('TTS (web) finished speaking');
-      });
+      }.toJS;
 
-      utterance['onerror'] = js.allowInterop((event) {
+      utterance.onerror = (JSAny? _) {
         _isSpeaking = false;
-        _currentUtterance = null;
-        String errorMsg = 'unknown';
-        try {
-          final jsEvent = event as js.JsObject;
-          errorMsg = jsEvent['error']?.toString() ?? 'unknown';
-        } catch (_) {}
-        debugPrint('TTS (web) error: $errorMsg');
-      });
+        debugPrint('TTS (web) onerror fired');
+      }.toJS;
 
       _isSpeaking = true;
-      synth.callMethod('speak', [utterance]);
+      synth.speak(utterance);
     } catch (e) {
       _isSpeaking = false;
-      _currentUtterance = null;
       debugPrint('TTS (web) speak error: $e');
     }
   }
@@ -89,17 +94,15 @@ class WebVoiceGuidanceService implements VoiceGuidanceService {
   @override
   Future<void> stop() async {
     try {
-      _synth?.callMethod('cancel');
+      _synth?.cancel();
       _isSpeaking = false;
-      _currentUtterance = null;
     } catch (_) {}
   }
 
   @override
   void dispose() {
     try {
-      _synth?.callMethod('cancel');
-      _currentUtterance = null;
+      _synth?.cancel();
     } catch (_) {}
   }
 }
