@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Helper Functions ───────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwnerOrAdmin(userId) {
+      return isSignedIn() &&
+        (request.auth.uid == userId || isAdmin());
+    }
+
+    // ─── User Profiles ─────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwnerOrAdmin(userId);
+      allow delete: if isAdmin();
+    }
+
+    // ─── Organizations ─────────────────────────────────────────────
+    match /organizations/{orgId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+
+      // ─── Buildings ──────────────────────────────────────────────
+      match /buildings/{buildingId} {
+        allow read: if isSignedIn();
+        allow create, update, delete: if isAdmin();
+
+        // ─── Floors ─────────────────────────────────────────────
+        match /floors/{floorId} {
+          allow read: if isSignedIn();
+          allow create, update, delete: if isAdmin();
+
+          // ─── Rooms ──────────────────────────────────────────
+          match /rooms/{roomId} {
+            allow read: if isSignedIn();
+            allow create, update, delete: if isAdmin();
+          }
+
+          // ─── Connectors (stairs, elevators) ─────────────────
+          match /connectors/{connectorId} {
+            allow read: if isSignedIn();
+            allow create, update, delete: if isAdmin();
+          }
+        }
+      }
+    }
+
+    // ─── Catch-all: deny everything else ────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,47 @@
+name: CD — Deploy Firestore Security Rules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'firestore.rules'
+      - 'firestore.indexes.json'
+  workflow_dispatch:
+
+jobs:
+  deploy-rules:
+    name: Deploy Firestore Rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy Firestore rules
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          echo "$FIREBASE_SERVICE_ACCOUNT" > service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/service-account.json"
+          firebase deploy --only firestore:rules --project indoor-nav-system-90d8e
+
+      - name: Deploy Firestore indexes (if changed)
+        if: hashFiles('firestore.indexes.json') != ''
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/service-account.json"
+          firebase deploy --only firestore:indexes --project indoor-nav-system-90d8e
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f service-account.json

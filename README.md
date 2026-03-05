@@ -6,7 +6,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.9.0+-02569B?logo=flutter)
 ![Firebase](https://img.shields.io/badge/Firebase-Enabled-orange?logo=firebase)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)
+![CI](https://github.com/KodeWithKeshav/Indoor_Navigation_System_Main/actions/workflows/ci.yml/badge.svg)
 
 **A mobile application for indoor wayfinding in complex environments using graph-based pathfinding**
 
