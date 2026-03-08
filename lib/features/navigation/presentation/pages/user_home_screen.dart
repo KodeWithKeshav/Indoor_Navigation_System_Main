@@ -263,28 +263,33 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
         extendBodyBehindAppBar: true,
         backgroundColor: deepVoidBlue,
         appBar: AppBar(
-          title: Column(
-            children: const [
-              Text(
-                'NAVIGATOR',
-                style: TextStyle(
-                  fontFamily: 'Courier',
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                  fontSize: 12,
-                  color: electricGrid,
+          title: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text(
+                  'NAVIGATOR',
+                  style: TextStyle(
+                    fontFamily: 'Courier',
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                    fontSize: 12,
+                    color: electricGrid,
+                  ),
                 ),
-              ),
-              SizedBox(height: 2),
-              Text(
-                'STUDENT PORTAL',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                  color: paperWhite,
+                SizedBox(height: 2),
+                Text(
+                  'STUDENT PORTAL',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    color: paperWhite,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           centerTitle: true,
           backgroundColor: deepVoidBlue.withOpacity(0.8),
@@ -339,8 +344,29 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                 color: Colors.redAccent,
               ),
               tooltip: 'Logout',
-              onPressed: () =>
-                  ref.read(authControllerProvider.notifier).logout(context),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: darkCardColor,
+                    title: const Text('Confirm Logout', style: TextStyle(color: electricGrid)),
+                    content: const Text('Are you sure you want to logout?', style: TextStyle(color: paperWhite)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          ref.read(authControllerProvider.notifier).logout(context);
+                        },
+                        child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             IconButton(
               icon: const Icon(Icons.map, color: electricGrid),
@@ -724,7 +750,27 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                     style: TextStyle(color: Colors.redAccent),
                   ),
                   onTap: () {
-                    ref.read(authControllerProvider.notifier).logout(context);
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: darkCardColor,
+                        title: const Text('Confirm Logout', style: TextStyle(color: electricGrid)),
+                        content: const Text('Are you sure you want to logout?', style: TextStyle(color: paperWhite)),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              ref.read(authControllerProvider.notifier).logout(context);
+                            },
+                            child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                          ),
+                        ],
+                      ),
+                    );
                   },
                 ),
               ),
@@ -1478,22 +1524,15 @@ class _MapViewer extends ConsumerWidget {
     return roomsAsync.when(
       data: (rooms) => corridorsAsync.when(
         data: (corridors) => InteractiveViewer(
+          alignment: Alignment.topLeft,
           minScale: 0.1,
           maxScale: 4.0,
           constrained: false, // Allow canvas to exceed viewport
-          boundaryMargin: const EdgeInsets.all(5000), // Allow panning
+          boundaryMargin: const EdgeInsets.all(double.infinity), // Allow panning
           child: SizedBox(
             width: 15000,
             height: 15000,
-            child: Transform.rotate(
-              angle:
-                  -(heading * 3.14159 / 180), // Rotate map opposite to heading
-              alignment: Alignment
-                  .center, // Rotate around center of viewport? No, rotate around user?
-              // For now, simpler to just rotate the view.
-              // NOTE: Rotating the entire canvas might be disorienting if the pivot isn't the user.
-              // Ideally, we center on the user. But without user position tracking, we just rotate the map.
-              child: Stack(
+            child: Stack(
                 children: [
                   Positioned.fill(child: CustomPaint(painter: GridPainter())),
                   // Edges and Path
@@ -1810,7 +1849,6 @@ class _MapViewer extends ConsumerWidget {
                     ),
                 ],
               ),
-            ),
           ),
         ),
         loading: () =>
