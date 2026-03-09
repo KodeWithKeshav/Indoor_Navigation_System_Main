@@ -12,12 +12,14 @@ import '../widgets/ar_direction_painter.dart';
 import '../widgets/ar_compass_overlay.dart';
 import '../widgets/ar_instruction_banner.dart';
 import '../providers/ar_navigation_provider.dart';
+import '../../services/device_orientation_service.dart';
 
 /// Theme constants.
 const Color _deepVoidBlue = Color(0xFF0F172A);
 const Color _electricGrid = Color(0xFF38BDF8);
 
-/// The AR Navigation screen — camera preview with pseudo-3D arrow overlay.
+/// The AR Navigation screen — camera preview with a single 3D arrow overlay
+/// projected on the ground, plus compass, instruction banner, and controls.
 class ArNavigationScreen extends ConsumerStatefulWidget {
   const ArNavigationScreen({super.key});
 
@@ -41,7 +43,7 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     // Lock to portrait for consistent AR experience
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-    // Pulse animation for the lead arrow
+    // Pulse animation for the arrow glow
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
@@ -61,12 +63,11 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      return;
-    }
+    final ctrl = _cameraController;
+    if (ctrl == null || !ctrl.value.isInitialized) return;
 
     if (state == AppLifecycleState.inactive) {
-      _cameraController?.dispose();
+      ctrl.dispose();
       _cameraController = null;
       if (mounted) setState(() => _isCameraInitialized = false);
     } else if (state == AppLifecycleState.resumed) {
@@ -95,19 +96,30 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
         return;
       }
 
+      // Pick back camera, fallback to first available
       final backCamera = cameras.firstWhere(
         (c) => c.lensDirection == CameraLensDirection.back,
         orElse: () => cameras.first,
       );
 
+      // Use medium resolution for cross-device compatibility.
+      // High/veryHigh can fail on low-end devices.
       _cameraController = CameraController(
         backCamera,
         ResolutionPreset.medium,
         enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.jpeg,
+        imageFormatGroup: ImageFormatGroup.yuv420,
       );
 
       await _cameraController!.initialize();
+
+      // Lock auto-exposure and focus for stable AR overlay
+      try {
+        await _cameraController!.setExposureMode(ExposureMode.auto);
+        await _cameraController!.setFocusMode(FocusMode.auto);
+      } catch (_) {
+        // Some devices don't support these — safe to ignore
+      }
 
       if (mounted) {
         setState(() {
@@ -116,18 +128,24 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
           _errorMessage = null;
         });
       }
+    } on CameraException catch (e) {
+      debugPrint('AR Camera init CameraException: ${e.code} ${e.description}');
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Camera error: ${e.description ?? e.code}';
+        });
+      }
     } catch (e) {
       debugPrint('AR Camera init error: $e');
       if (mounted) {
         setState(() {
-          _errorMessage = 'Failed to initialize camera: ${e.toString()}';
+          _errorMessage = 'Failed to initialize camera.';
         });
       }
     }
   }
 
   /// Compute the AR overlay state directly from compass + navigation state.
-  /// No intermediate providers — straight data flow.
   ArNavigationState _computeArState(NavigationState navState, double heading) {
     if (!navState.isNavigating || navState.pathRooms.isEmpty) {
       return const ArNavigationState(hasData: false);
@@ -153,12 +171,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
 
     // Relative bearing = where waypoint is relative to where phone is pointing
     double relative = mapBearing - heading;
-    while (relative > 180) {
-      relative -= 360;
-    }
-    while (relative <= -180) {
-      relative += 360;
-    }
+    while (relative > 180) relative -= 360;
+    while (relative <= -180) relative += 360;
 
     // On-track status
     final absRel = relative.abs();
@@ -204,6 +218,10 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     final navState = ref.watch(navigationProvider);
     final heading = ref.watch(compassProvider) ?? 0.0;
 
+    // Read device pitch from orientation service for ground projection
+    final orientationService = ref.watch(deviceOrientationServiceProvider);
+    final pitch = orientationService.currentPitch;
+
     // Compute AR state directly — no broken provider chain
     final arState = _computeArState(navState, heading);
 
@@ -215,7 +233,7 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
           // Layer 1: Camera preview
           _buildCameraLayer(),
 
-          // Layer 2: Direction arrow overlay
+          // Layer 2: Single 3D direction arrow on the ground
           if (_isCameraInitialized)
             AnimatedBuilder(
               animation: _pulseController,
@@ -224,6 +242,7 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
                   painter: ArDirectionPainter(
                     arState: arState,
                     pulseValue: _pulseController.value,
+                    devicePitch: pitch,
                   ),
                   size: Size.infinite,
                 );
@@ -322,7 +341,7 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenAspect = constraints.maxWidth / constraints.maxHeight;
-        double scale;
+        final double scale;
         if (screenAspect > cameraAspect) {
           scale = constraints.maxWidth / (constraints.maxHeight * cameraAspect);
         } else {
