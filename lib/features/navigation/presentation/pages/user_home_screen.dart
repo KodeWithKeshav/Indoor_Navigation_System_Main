@@ -349,19 +349,33 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     backgroundColor: darkCardColor,
-                    title: const Text('Confirm Logout', style: TextStyle(color: electricGrid)),
-                    content: const Text('Are you sure you want to logout?', style: TextStyle(color: paperWhite)),
+                    title: const Text(
+                      'Confirm Logout',
+                      style: TextStyle(color: electricGrid),
+                    ),
+                    content: const Text(
+                      'Are you sure you want to logout?',
+                      style: TextStyle(color: paperWhite),
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.white54),
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.pop(ctx);
-                          ref.read(authControllerProvider.notifier).logout(context);
+                          ref
+                              .read(authControllerProvider.notifier)
+                              .logout(context);
                         },
-                        child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.redAccent),
+                        ),
                       ),
                     ],
                   ),
@@ -772,19 +786,33 @@ class _UserHomeScreenState extends ConsumerState<UserHomeScreen> {
                       context: context,
                       builder: (ctx) => AlertDialog(
                         backgroundColor: darkCardColor,
-                        title: const Text('Confirm Logout', style: TextStyle(color: electricGrid)),
-                        content: const Text('Are you sure you want to logout?', style: TextStyle(color: paperWhite)),
+                        title: const Text(
+                          'Confirm Logout',
+                          style: TextStyle(color: electricGrid),
+                        ),
+                        content: const Text(
+                          'Are you sure you want to logout?',
+                          style: TextStyle(color: paperWhite),
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(color: Colors.white54),
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
                               Navigator.pop(ctx);
-                              ref.read(authControllerProvider.notifier).logout(context);
+                              ref
+                                  .read(authControllerProvider.notifier)
+                                  .logout(context);
                             },
-                            child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                            child: const Text(
+                              'Logout',
+                              style: TextStyle(color: Colors.redAccent),
+                            ),
                           ),
                         ],
                       ),
@@ -1546,327 +1574,316 @@ class _MapViewer extends ConsumerWidget {
           minScale: 0.1,
           maxScale: 4.0,
           constrained: false, // Allow canvas to exceed viewport
-          boundaryMargin: const EdgeInsets.all(double.infinity), // Allow panning
+          boundaryMargin: const EdgeInsets.all(
+            double.infinity,
+          ), // Allow panning
           child: SizedBox(
             width: 15000,
             height: 15000,
             child: Stack(
-                children: [
-                  Positioned.fill(child: CustomPaint(painter: GridPainter())),
-                  // Edges and Path
-                  Positioned.fill(
-                    child: CustomPaint(
-                      // Always render standard edges/corridors (covers manually drawn campus paths too)
-                      painter: UserEdgePainter(
-                        rooms: rooms,
-                        corridors: corridors,
-                        pathIds: navState.pathIds, // Pass global path
-                      ),
-                      // Overlay automatic campus connections if applicable
-                      foregroundPainter: buildingId.startsWith('campus_')
-                          ? CampusEdgePainter(
-                              rooms: rooms,
-                              connections:
-                                  campusConnectionsAsync.asData?.value ?? [],
-                              pathIds: navState.pathIds,
-                            )
-                          : null,
+              children: [
+                Positioned.fill(child: CustomPaint(painter: GridPainter())),
+                // Edges and Path
+                Positioned.fill(
+                  child: CustomPaint(
+                    // Always render standard edges/corridors (covers manually drawn campus paths too)
+                    painter: UserEdgePainter(
+                      rooms: rooms,
+                      corridors: corridors,
+                      pathIds: navState.pathIds, // Pass global path
                     ),
+                    // Overlay automatic campus connections if applicable
+                    foregroundPainter: buildingId.startsWith('campus_')
+                        ? CampusEdgePainter(
+                            rooms: rooms,
+                            connections:
+                                campusConnectionsAsync.asData?.value ?? [],
+                            pathIds: navState.pathIds,
+                          )
+                        : null,
                   ),
-                  // Draw Rooms
-                  ...rooms.map((room) {
-                    final isStart = navState.startRoom?.id == room.id;
-                    final isEnd = navState.endRoom?.id == room.id;
-                    final isInPath = navState.pathIds.contains(room.id);
+                ),
+                // Draw Rooms
+                ...rooms.map((room) {
+                  final isStart = navState.startRoom?.id == room.id;
+                  final isEnd = navState.endRoom?.id == room.id;
+                  final isInPath = navState.pathIds.contains(room.id);
 
-                    // Get type-specific visuals
-                    final visuals = getRoomVisuals(room.type);
-                    Color color = visuals.color.withOpacity(0.8);
-                    if (isStart)
-                      color = Colors.green;
-                    else if (isEnd)
-                      color = Colors.red;
-                    else if (isInPath)
-                      color = Colors.amber;
+                  // Get type-specific visuals
+                  final visuals = getRoomVisuals(room.type);
+                  Color color = visuals.color.withOpacity(0.8);
+                  if (isStart)
+                    color = Colors.green;
+                  else if (isEnd)
+                    color = Colors.red;
+                  else if (isInPath)
+                    color = Colors.amber;
 
-                    // Hide hallway nodes unless they are part of the path
-                    if (room.type == RoomType.hallway && !isInPath) {
-                      return const SizedBox();
-                    }
+                  // Hide hallway nodes unless they are part of the path
+                  if (room.type == RoomType.hallway && !isInPath) {
+                    return const SizedBox();
+                  }
 
-                    final nodeSize = isInPath && room.type == RoomType.hallway
-                        ? 20.0
-                        : visuals.size.toDouble();
+                  final nodeSize = isInPath && room.type == RoomType.hallway
+                      ? 20.0
+                      : visuals.size.toDouble();
 
-                    return Positioned(
-                      left: room.x,
-                      top: room.y,
-                      child: GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => SimpleDialog(
-                              backgroundColor: darkCardColor,
-                              title: Text(
-                                room.name,
-                                style: const TextStyle(color: paperWhite),
-                              ),
-                              children: [
-                                if (buildingId.startsWith('campus_') &&
-                                    room.connectorId != null &&
-                                    onEnterBuilding != null)
-                                  SimpleDialogOption(
-                                    onPressed: () {
-                                      Navigator.pop(ctx);
-                                      onEnterBuilding!(room.connectorId!);
-                                    },
-                                    child: const Text(
-                                      'Enter Building',
-                                      style: TextStyle(
-                                        color: Colors.greenAccent,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
+                  return Positioned(
+                    left: room.x,
+                    top: room.y,
+                    child: GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => SimpleDialog(
+                            backgroundColor: darkCardColor,
+                            title: Text(
+                              room.name,
+                              style: const TextStyle(color: paperWhite),
+                            ),
+                            children: [
+                              if (buildingId.startsWith('campus_') &&
+                                  room.connectorId != null &&
+                                  onEnterBuilding != null)
                                 SimpleDialogOption(
                                   onPressed: () {
-                                    ref
-                                        .read(navigationProvider.notifier)
-                                        .setStart(room);
                                     Navigator.pop(ctx);
+                                    onEnterBuilding!(room.connectorId!);
                                   },
                                   child: const Text(
-                                    'Set as Start',
-                                    style: TextStyle(color: electricGrid),
-                                  ),
-                                ),
-                                SimpleDialogOption(
-                                  onPressed: () {
-                                    ref
-                                        .read(navigationProvider.notifier)
-                                        .setEnd(room);
-                                    Navigator.pop(ctx); // Close the popup
-
-                                    // If we have a start point, close the map dialog too so user sees instructions
-                                    if (ref
-                                            .read(navigationProvider)
-                                            .startRoom !=
-                                        null) {
-                                      if (context.mounted)
-                                        Navigator.pop(context);
-                                    }
-                                  },
-                                  child: const Text(
-                                    'Set as Destination',
-                                    style: TextStyle(color: electricGrid),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: nodeSize,
-                              height: nodeSize,
-                              decoration: BoxDecoration(
-                                color: color,
-                                borderRadius: BorderRadius.circular(
-                                  room.type == RoomType.hallway
-                                      ? nodeSize / 2
-                                      : 8,
-                                ),
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: color.withOpacity(0.4),
-                                    blurRadius: 6,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                              alignment: Alignment.center,
-                              child: room.type == RoomType.hallway
-                                  ? null
-                                  : Transform.rotate(
-                                      angle: (heading * 3.14159 / 180),
-                                      child: Icon(
-                                        isStart
-                                            ? Icons.trip_origin
-                                            : isEnd
-                                            ? Icons.flag
-                                            : visuals.icon,
-                                        size: nodeSize * 0.5,
-                                        color: Colors.white,
-                                      ),
+                                    'Enter Building',
+                                    style: TextStyle(
+                                      color: Colors.greenAccent,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                            ),
-                            // Name label for non-hallway nodes
-                            if (room.type != RoomType.hallway)
-                              Container(
-                                margin: const EdgeInsets.only(top: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  room.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 9,
                                   ),
-                                  textAlign: TextAlign.center,
-                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              SimpleDialogOption(
+                                onPressed: () {
+                                  ref
+                                      .read(navigationProvider.notifier)
+                                      .setStart(room);
+                                  Navigator.pop(ctx);
+                                },
+                                child: const Text(
+                                  'Set as Start',
+                                  style: TextStyle(color: electricGrid),
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                  // Path Continuation Banner
-                  // Detects if the navigation path continues on a different floor or building.
-                  if (navState.isNavigating && navState.pathRooms.isNotEmpty)
-                    Builder(
-                      builder: (ctx) {
-                        final graphService = ref.read(graphServiceProvider);
-                        // Find path rooms NOT on the current floor
-                        final otherFloorRooms = navState.pathRooms
-                            .where((r) => r.floorId != floorId)
-                            .toList();
-                        if (otherFloorRooms.isEmpty) return const SizedBox();
+                              SimpleDialogOption(
+                                onPressed: () {
+                                  ref
+                                      .read(navigationProvider.notifier)
+                                      .setEnd(room);
+                                  Navigator.pop(ctx); // Close the popup
 
-                        // Group by floor to find distinct "next" destinations
-                        final nextFloors =
-                            <String, String>{}; // floorId -> buildingId
-                        for (final r in otherFloorRooms) {
-                          if (!nextFloors.containsKey(r.floorId)) {
-                            final bId =
-                                graphService.getBuildingIdForFloor(r.floorId) ??
-                                buildingId;
-                            nextFloors[r.floorId] = bId;
-                          }
-                        }
-
-                        // Find the "exit" room: the last room on the current floor in the path sequence
-                        Room? exitRoom;
-                        for (
-                          int i = 0;
-                          i < navState.pathRooms.length - 1;
-                          i++
-                        ) {
-                          if (navState.pathRooms[i].floorId == floorId &&
-                              navState.pathRooms[i + 1].floorId != floorId) {
-                            exitRoom = navState.pathRooms[i];
-                            break;
-                          }
-                        }
-
-                        // Position the banner near the exit room, or at the top of the map
-                        final bannerLeft = exitRoom != null ? exitRoom.x : 50.0;
-                        final bannerTop = exitRoom != null
-                            ? exitRoom.y - 60
-                            : 20.0;
-
-                        return Positioned(
-                          left: bannerLeft.clamp(10.0, 14900.0),
-                          top: bannerTop.clamp(10.0, 14900.0),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: Container(
-                              constraints: const BoxConstraints(maxWidth: 280),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.indigo.withOpacity(0.9),
-                                    Colors.deepPurple.withOpacity(0.9),
-                                  ],
+                                  // If we have a start point, close the map dialog too so user sees instructions
+                                  if (ref.read(navigationProvider).startRoom !=
+                                      null) {
+                                    if (context.mounted) Navigator.pop(context);
+                                  }
+                                },
+                                child: const Text(
+                                  'Set as Destination',
+                                  style: TextStyle(color: electricGrid),
                                 ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black54,
-                                    blurRadius: 8,
-                                  ),
-                                ],
                               ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: nextFloors.entries.map((entry) {
-                                  final isSameBuilding =
-                                      entry.value == buildingId;
-                                  final label = isSameBuilding
-                                      ? 'Path continues → Another Floor'
-                                      : 'Path continues → Another Building';
-                                  final icon = isSameBuilding
-                                      ? Icons.layers
-                                      : Icons.public;
-
-                                  return InkWell(
-                                    onTap: () {
-                                      if (onSwitchFloor != null) {
-                                        onSwitchFloor!(entry.value, entry.key);
-                                      } else if (!isSameBuilding &&
-                                          onEnterBuilding != null) {
-                                        onEnterBuilding!(entry.value);
-                                      }
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 4,
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            icon,
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Flexible(
-                                            child: Text(
-                                              label,
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          const Icon(
-                                            Icons.arrow_forward_ios,
-                                            color: Colors.white70,
-                                            size: 12,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
+                            ],
                           ),
                         );
                       },
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: nodeSize,
+                            height: nodeSize,
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(
+                                room.type == RoomType.hallway
+                                    ? nodeSize / 2
+                                    : 8,
+                              ),
+                              border: Border.all(color: Colors.white, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: color.withOpacity(0.4),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: room.type == RoomType.hallway
+                                ? null
+                                : Transform.rotate(
+                                    angle: (heading * 3.14159 / 180),
+                                    child: Icon(
+                                      isStart
+                                          ? Icons.trip_origin
+                                          : isEnd
+                                          ? Icons.flag
+                                          : visuals.icon,
+                                      size: nodeSize * 0.5,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                          ),
+                          // Name label for non-hallway nodes
+                          if (room.type != RoomType.hallway)
+                            Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black54,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                room.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                ),
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                ],
-              ),
+                  );
+                }),
+                // Path Continuation Banner
+                // Detects if the navigation path continues on a different floor or building.
+                if (navState.isNavigating && navState.pathRooms.isNotEmpty)
+                  Builder(
+                    builder: (ctx) {
+                      final graphService = ref.read(graphServiceProvider);
+                      // Find path rooms NOT on the current floor
+                      final otherFloorRooms = navState.pathRooms
+                          .where((r) => r.floorId != floorId)
+                          .toList();
+                      if (otherFloorRooms.isEmpty) return const SizedBox();
+
+                      // Group by floor to find distinct "next" destinations
+                      final nextFloors =
+                          <String, String>{}; // floorId -> buildingId
+                      for (final r in otherFloorRooms) {
+                        if (!nextFloors.containsKey(r.floorId)) {
+                          final bId =
+                              graphService.getBuildingIdForFloor(r.floorId) ??
+                              buildingId;
+                          nextFloors[r.floorId] = bId;
+                        }
+                      }
+
+                      // Find the "exit" room: the last room on the current floor in the path sequence
+                      Room? exitRoom;
+                      for (int i = 0; i < navState.pathRooms.length - 1; i++) {
+                        if (navState.pathRooms[i].floorId == floorId &&
+                            navState.pathRooms[i + 1].floorId != floorId) {
+                          exitRoom = navState.pathRooms[i];
+                          break;
+                        }
+                      }
+
+                      // Position the banner near the exit room, or at the top of the map
+                      final bannerLeft = exitRoom != null ? exitRoom.x : 50.0;
+                      final bannerTop = exitRoom != null
+                          ? exitRoom.y - 60
+                          : 20.0;
+
+                      return Positioned(
+                        left: bannerLeft.clamp(10.0, 14900.0),
+                        top: bannerTop.clamp(10.0, 14900.0),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 280),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.indigo.withOpacity(0.9),
+                                  Colors.deepPurple.withOpacity(0.9),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white24),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black54, blurRadius: 8),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: nextFloors.entries.map((entry) {
+                                final isSameBuilding =
+                                    entry.value == buildingId;
+                                final label = isSameBuilding
+                                    ? 'Path continues → Another Floor'
+                                    : 'Path continues → Another Building';
+                                final icon = isSameBuilding
+                                    ? Icons.layers
+                                    : Icons.public;
+
+                                return InkWell(
+                                  onTap: () {
+                                    if (onSwitchFloor != null) {
+                                      onSwitchFloor!(entry.value, entry.key);
+                                    } else if (!isSameBuilding &&
+                                        onEnterBuilding != null) {
+                                      onEnterBuilding!(entry.value);
+                                    }
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4,
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          icon,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            label,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        const Icon(
+                                          Icons.arrow_forward_ios,
+                                          color: Colors.white70,
+                                          size: 12,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
           ),
         ),
         loading: () =>

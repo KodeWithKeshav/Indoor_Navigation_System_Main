@@ -88,11 +88,7 @@ class DeviceOrientationService {
               );
               _lastHeadingUpdate = now;
 
-              _smoothedHeading = _circularEma(
-                _smoothedHeading,
-                heading,
-                alpha,
-              );
+              _smoothedHeading = _circularEma(_smoothedHeading, heading, alpha);
               _emit();
             }
           } catch (e) {
@@ -114,18 +110,19 @@ class DeviceOrientationService {
       // Use userAccelerometerEvents when available (removes gravity noise),
       // fall back to raw accelerometer.
       // Sampling at 50ms (20Hz) — safe for all devices.
-      _accelSubscription = accelerometerEventStream(
-        samplingPeriod: const Duration(milliseconds: 50),
-      ).listen(
-        (event) {
-          _processAccelerometerEvent(event.x, event.y, event.z);
-        },
-        onError: (error) {
-          debugPrint('Accelerometer error: $error');
-          // Graceful degradation: pitch stays at last known value
-        },
-        cancelOnError: false,
-      );
+      _accelSubscription =
+          accelerometerEventStream(
+            samplingPeriod: const Duration(milliseconds: 50),
+          ).listen(
+            (event) {
+              _processAccelerometerEvent(event.x, event.y, event.z);
+            },
+            onError: (error) {
+              debugPrint('Accelerometer error: $error');
+              // Graceful degradation: pitch stays at last known value
+            },
+            cancelOnError: false,
+          );
     } catch (e) {
       debugPrint('Accelerometer init error: $e');
       // Device has no accelerometer — pitch stays at 0 (arrow stays at default position)
