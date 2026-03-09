@@ -68,6 +68,7 @@ class Room extends Equatable {
   final double y; // Coordinate Y
   final RoomType type;
   final String? connectorId; // For linking vertical nodes (e.g. "Stair A")
+  final bool isClosed;
 
   const Room({
     required this.id,
@@ -77,10 +78,11 @@ class Room extends Equatable {
     required this.y,
     this.type = RoomType.room,
     this.connectorId,
+    this.isClosed = false,
   });
 
   @override
-  List<Object?> get props => [id, floorId, name, x, y, type, connectorId];
+  List<Object?> get props => [id, floorId, name, x, y, type, connectorId, isClosed];
 }
 
 class Corridor extends Equatable {

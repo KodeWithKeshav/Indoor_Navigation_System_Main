@@ -226,6 +226,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
   void _addRoom() {
     final nameController = TextEditingController();
     final connectorIdController = TextEditingController();
+    bool isClosed = false;
 
     final isCampusMap = widget.buildingId.startsWith('campus_');
 
@@ -371,6 +372,14 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ],
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Closed / Out of Service', style: TextStyle(color: paperWhite)),
+                  subtitle: const Text('Hide this room from search and navigation', style: TextStyle(color: Colors.white54)),
+                  value: isClosed,
+                  onChanged: (val) => setState(() => isClosed = val),
+                  activeColor: Colors.redAccent,
+                ),
               ],
             ),
             actions: [
@@ -396,6 +405,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                       connectorId: isConnector
                           ? connectorIdController.text.trim()
                           : null,
+                      isClosed: isClosed,
                     ),
                   );
 
@@ -502,6 +512,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
       text: room.connectorId ?? '',
     );
     RoomType selectedType = room.type;
+    bool isClosed = room.isClosed;
 
     if (!mounted) return;
 
@@ -566,6 +577,14 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                     style: const TextStyle(color: paperWhite),
                   ),
                 ],
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Closed / Out of Service', style: TextStyle(color: paperWhite)),
+                  subtitle: const Text('Hide this room from search and navigation', style: TextStyle(color: Colors.white54)),
+                  value: isClosed,
+                  onChanged: (val) => setState(() => isClosed = val),
+                  activeColor: Colors.redAccent,
+                ),
               ],
             ),
             actions: [
@@ -591,6 +610,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                           (isConnector && connectorController.text.isNotEmpty)
                           ? connectorController.text
                           : null,
+                      isClosed: isClosed,
                     ),
                   );
 
@@ -1440,28 +1460,7 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
               ),
             ),
 
-          if (_isLoading)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(color: electricGrid),
-                    const SizedBox(height: 16),
-                    Text(
-                      "PROCESSING...",
-                      style: const TextStyle(
-                        color: paperWhite,
-                        fontFamily: 'Courier',
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+
         ],
       ),
       floatingActionButton: Column(

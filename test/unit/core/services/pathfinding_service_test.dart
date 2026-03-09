@@ -112,6 +112,24 @@ void main() {
         expect(path, ['A', 'B', 'C']);
       });
 
+      test('should avoid closed rooms', () {
+        final closedRooms = List<Room>.from(rooms);
+        closedRooms[1] = const Room(
+          id: 'B',
+          floorId: 'floor1',
+          name: 'Room B',
+          x: 10,
+          y: 0,
+          type: RoomType.hallway,
+          isClosed: true,
+        );
+
+        // Normal route A-B-C is blocked because B is closed. Should route A-D-E-C.
+        final path = PathfindingService.findPath('A', 'C', closedRooms, corridors);
+
+        expect(path, ['A', 'D', 'E', 'C']);
+      });
+
       test('should find path when multiple routes exist', () {
         // A -> E: A-B-C-E (30) vs A-D-E (30) - both same distance
         final path = PathfindingService.findPath('A', 'E', rooms, corridors);

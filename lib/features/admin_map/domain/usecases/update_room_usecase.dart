@@ -13,6 +13,7 @@ class UpdateRoomUseParams {
   final String? name;
   final RoomType? type;
   final String? connectorId;
+  final bool? isClosed;
 
   UpdateRoomUseParams({
     required this.buildingId,
@@ -23,6 +24,7 @@ class UpdateRoomUseParams {
     this.name,
     this.type,
     this.connectorId,
+    this.isClosed,
   });
 }
 
@@ -42,6 +44,7 @@ class UpdateRoomUseCase implements UseCase<void, UpdateRoomUseParams> {
       name: params.name,
       type: params.type,
       connectorId: params.connectorId,
+      isClosed: params.isClosed,
     );
   }
 }

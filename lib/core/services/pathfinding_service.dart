@@ -92,6 +92,9 @@ class PathfindingService {
 
         if (neighborRoom == null || currentRoom == null) continue;
 
+        // Skip closed rooms completely
+        if (neighborRoom.isClosed) continue;
+
         // Accessibility Check: Only skip Stairs if it's a VERTICAL transition
         // This allows users to walk "past" or "through" a stair node on the same floor without climbing.
         if (isAccessible) {

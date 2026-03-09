@@ -141,6 +141,10 @@ class _TripPlannerWidgetState extends ConsumerState<TripPlannerWidget>
         _showError('Start and Destination cannot be the same.');
         return;
       }
+      if (start.isClosed || end.isClosed) {
+        _showError('Cannot navigate involving closed or out-of-service rooms.');
+        return;
+      }
 
       // Trip Summary Dialog
       final confirm = await showDialog<bool>(
@@ -920,9 +924,15 @@ class _TripPlannerWidgetState extends ConsumerState<TripPlannerWidget>
                           .map(
                             (r) => DropdownMenuItem(
                               value: r,
+                              // If room is closed, we cannot select it technically, but passing value allows it to show. 
+                              // We will add validation on 'Start Navigation' button.
                               child: Text(
-                                r.name,
+                                r.isClosed ? '${r.name} (Closed)' : r.name,
                                 overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: r.isClosed ? Colors.redAccent : paperWhite,
+                                  decoration: r.isClosed ? TextDecoration.lineThrough : null,
+                                ),
                               ),
                             ),
                           )
