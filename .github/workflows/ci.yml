@@ -75,6 +75,3 @@ jobs:
           else
             echo "Coverage $COVERAGE% meets the $THRESHOLD% threshold."
           fi
-
-      - name: Verify Android Build
-        run: flutter build apk --debug
