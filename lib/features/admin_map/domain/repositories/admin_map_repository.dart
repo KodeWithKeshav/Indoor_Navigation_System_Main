@@ -57,6 +57,7 @@ abstract interface class AdminMapRepository {
     double y, {
     RoomType type = RoomType.room,
     String? connectorId,
+    bool isClosed = false,
   });
   Future<Either<Failure, List<Room>>> getRooms(
     String buildingId,
@@ -76,6 +77,7 @@ abstract interface class AdminMapRepository {
     String? name,
     RoomType? type,
     String? connectorId,
+    bool? isClosed,
   });
 
   // Corridors

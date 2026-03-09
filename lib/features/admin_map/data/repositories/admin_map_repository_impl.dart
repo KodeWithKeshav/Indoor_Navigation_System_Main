@@ -252,6 +252,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
     double y, {
     RoomType type = RoomType.room,
     String? connectorId,
+    bool isClosed = false,
   }) async {
     try {
       final docRef = firestore
@@ -270,6 +271,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
         y: y,
         type: type,
         connectorId: connectorId,
+        isClosed: isClosed,
       );
 
       await docRef.set(model.toJson());
@@ -388,6 +390,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
     String? name,
     RoomType? type,
     String? connectorId,
+    bool? isClosed,
   }) async {
     try {
       final updates = <String, dynamic>{};
@@ -396,6 +399,7 @@ class AdminMapRepositoryImpl implements AdminMapRepository {
       if (name != null) updates['name'] = name;
       if (type != null) updates['type'] = type.name;
       if (connectorId != null) updates['connectorId'] = connectorId;
+      if (isClosed != null) updates['isClosed'] = isClosed;
 
       if (updates.isEmpty) return const Right(null);
 

@@ -63,6 +63,7 @@ class RoomModel extends Room {
     required super.y,
     super.type,
     super.connectorId,
+    super.isClosed,
   });
 
   factory RoomModel.fromFirestore(DocumentSnapshot doc, String floorId) {
@@ -78,6 +79,7 @@ class RoomModel extends Room {
         orElse: () => RoomType.room,
       ),
       connectorId: data['connectorId'],
+      isClosed: data['isClosed'] ?? false,
     );
   }
 
@@ -88,6 +90,7 @@ class RoomModel extends Room {
       'y': y,
       'type': type.name,
       'connectorId': connectorId,
+      'isClosed': isClosed,
     };
   }
 }

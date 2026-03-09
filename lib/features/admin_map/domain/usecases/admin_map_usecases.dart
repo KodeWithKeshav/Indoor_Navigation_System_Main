@@ -84,6 +84,7 @@ class AddRoomParams {
   final double y;
   final RoomType type;
   final String? connectorId;
+  final bool isClosed;
 
   AddRoomParams({
     required this.buildingId,
@@ -93,6 +94,7 @@ class AddRoomParams {
     required this.y,
     this.type = RoomType.room,
     this.connectorId,
+    this.isClosed = false,
   });
 }
 
@@ -110,6 +112,7 @@ class AddRoomUseCase implements UseCase<void, AddRoomParams> {
       params.y,
       type: params.type,
       connectorId: params.connectorId,
+      isClosed: params.isClosed,
     );
   }
 }
