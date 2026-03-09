@@ -8,13 +8,14 @@ import '../providers/ar_navigation_provider.dart';
 ///
 /// The arrow:
 /// - Appears to lie flat on the ground, pointing toward the next waypoint
-/// - Rotates horizontally based on relative bearing
+/// - Rotates based on the instruction's relative bearing (left/right/straight)
 /// - Uses perspective foreshortening (trapezoid shape) for 3D depth
 /// - Changes color: green (on-track), yellow (slight turn), red (off-track)
 /// - Pulses with a glow animation
-/// - Uses device pitch to adjust vertical position (ground projection)
-///
-/// Nothing else is drawn — no trail chevrons, no labels, no compass.
+/// - Uses device pitch to anchor to the ground plane:
+///   * Camera at sky → arrow at very bottom (ground is below)
+///   * Camera horizontal → arrow in lower third
+///   * Camera at floor → arrow moves toward center (looking at ground)
 class ArDirectionPainter extends CustomPainter {
   final ArNavigationState arState;
   final double pulseValue; // 0.0..1.0 animation value
@@ -33,19 +34,28 @@ class ArDirectionPainter extends CustomPainter {
     final bearing = arState.relativeBearing; // -180..180
 
     // --- Ground plane projection ---
-    // The arrow should appear to be on the floor ahead of the user.
-    // When the phone is tilted down (pitch < 0), the ground is more visible,
-    // so the arrow moves up. When held more vertically, it moves down.
+    // DeviceOrientationService pitch values (after atan2 + clamp):
+    //   +90° = phone vertical (camera looks forward/horizontal)
+    //   +45° = phone tilted slightly toward floor
+    //     0° = phone at ~45° from vertical
+    //   -90° = phone flat face-up (camera at ceiling) or looking at ground
     //
-    // Pitch mapping: -90 (face-down) → arrow near center
-    //                  0 (vertical)   → arrow near bottom
-    //                 +45 (tilted up) → arrow at very bottom edge
+    // For AR ground projection:
+    //   Phone vertical (+90): arrow in lower third (user looking ahead)
+    //   Phone tilted down (+45): arrow moves up (ground is more visible)
+    //   Phone flat (0 or below): arrow near center (looking straight at floor)
 
-    // Normalize pitch to a 0..1 range for vertical placement
-    // pitch ~-45 to ~+30 is the typical holding range
-    final pitchFactor = ((devicePitch + 45) / 75.0).clamp(0.0, 1.0);
-    // Map to screen Y: 0.55 (higher, phone tilted down) to 0.82 (lower, phone vertical/up)
-    final groundY = size.height * (0.82 - pitchFactor * 0.27);
+    // Map pitch from [-90, +90] to arrow Y position
+    // Higher pitch (vertical) → lower on screen (ground is in lower view)
+    // Lower pitch (tilted down) → higher on screen (ground fills more view)
+    final pitchNorm = ((devicePitch + 90.0) / 180.0).clamp(0.0, 1.0);
+    // pitchNorm: 0.0 = phone flat (-90°), 0.5 = 45° angle, 1.0 = vertical (+90°)
+
+    // Y position: center (0.45) when looking at floor → lower-third (0.72) when vertical
+    final groundY = size.height * (0.45 + pitchNorm * 0.27);
+
+    // Don't paint if arrow is completely off-screen
+    if (groundY > size.height * 1.1 || groundY < 0) return;
 
     // Horizontal offset based on bearing (-90..+90 maps to screen edges)
     final bearingNorm = (bearing / 90.0).clamp(-1.0, 1.0);
@@ -72,21 +82,22 @@ class ArDirectionPainter extends CustomPainter {
     canvas.save();
     canvas.translate(groundX, groundY);
 
-    // Rotate arrow to point in bearing direction
-    final rotationRad = bearingNorm * (pi / 3); // max ±60° visual rotation
+    // Rotate arrow to point in the instruction direction.
+    // bearing: -90 = left, 0 = forward, +90 = right, ±180 = behind
+    final rotationRad = bearing * (pi / 180.0);
     canvas.rotate(rotationRad);
 
     // --- 3D Perspective transform ---
-    // Apply a perspective skew to make the arrow look like it's flat on the ground.
-    // This simulates a camera looking down at an arrow on the floor.
-    //
-    // The transform foreshortens the top (far edge) and widens the bottom (near edge),
-    // creating a trapezoid shape that reads as "lying flat on the ground".
-    final perspectiveStrength = 0.6 + pitchFactor * 0.25; // More extreme when looking down
+    // Simulates the arrow lying flat on the ground plane.
+    // When phone is vertical (looking ahead): stronger perspective (pitchNorm=1)
+    // When phone is flat looking at floor: zero tilt, arrow drawn flat (pitchNorm=0)
+    final perspectiveStrength = 0.5 + pitchNorm * 0.4;
 
     final Matrix4 perspective = Matrix4.identity()
       ..setEntry(3, 2, 0.003 * perspectiveStrength) // Z-perspective
-      ..rotateX(0.8 + pitchFactor * 0.4); // Tilt the arrow plane to match ground
+      ..rotateX(
+        pitchNorm * 1.2,
+      ); // TILT: 0.0 when looking down, 1.2rad (70deg) when vertical
 
     canvas.transform(perspective.storage);
 
@@ -115,11 +126,6 @@ class ArDirectionPainter extends CustomPainter {
 
     // Main arrow body — gradient fill for 3D depth
     final arrowPath = _buildArrowPath(halfW, halfL);
-    final gradientRect = Rect.fromCenter(
-      center: Offset.zero,
-      width: arrowWidth,
-      height: arrowLength,
-    );
 
     final bodyPaint = Paint()
       ..shader = ui.Gradient.linear(
@@ -193,6 +199,7 @@ class ArDirectionPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ArDirectionPainter oldDelegate) {
+    // ArNavigationState now has proper == override, so this works correctly.
     return oldDelegate.arState != arState ||
         oldDelegate.pulseValue != pulseValue ||
         (oldDelegate.devicePitch - devicePitch).abs() > 0.5;

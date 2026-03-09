@@ -32,6 +32,11 @@ jobs:
       - name: Run code generation (Riverpod)
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Verify Generated Files are Committed
+        run: |
+          # If this step fails, it means someone updated a provider but forgot to commit the updated .g.dart file.
+          git diff --quiet || (echo "::error::Uncommitted generated files detected. Please run build_runner locally and commit the changes." && exit 1)
+
       - name: Run tests with coverage
         run: flutter test --coverage
 
@@ -70,3 +75,6 @@ jobs:
           else
             echo "Coverage $COVERAGE% meets the $THRESHOLD% threshold."
           fi
+
+      - name: Verify Android Build
+        run: flutter build apk --debug

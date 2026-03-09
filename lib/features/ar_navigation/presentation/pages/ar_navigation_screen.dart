@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:indoor_navigation_system/features/navigation/presentation/providers/navigation_provider.dart';
-import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
 import 'package:indoor_navigation_system/core/services/compass_service.dart';
 import '../widgets/ar_direction_painter.dart';
 import '../widgets/ar_compass_overlay.dart';
@@ -31,9 +30,14 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
+  bool _isCameraInitializing = false; // Guard against double-init race
   bool _isPermissionDenied = false;
   String? _errorMessage;
   late AnimationController _pulseController;
+
+  // User-defined map coordinate calibration. Fixes indoor maps not perfectly
+  // aligned to true North. Swiping left/right changes this offset.
+  double _compassCalibration = 0.0;
 
   @override
   void initState() {
@@ -76,6 +80,10 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
   }
 
   Future<void> _initializeCamera() async {
+    // Prevent double-initialization race condition
+    if (_isCameraInitializing) return;
+    _isCameraInitializing = true;
+
     try {
       final status = await Permission.camera.request();
       if (!status.isGranted) {
@@ -103,7 +111,6 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
       );
 
       // Use medium resolution for cross-device compatibility.
-      // High/veryHigh can fail on low-end devices.
       _cameraController = CameraController(
         backCamera,
         ResolutionPreset.medium,
@@ -142,75 +149,9 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
           _errorMessage = 'Failed to initialize camera.';
         });
       }
+    } finally {
+      _isCameraInitializing = false;
     }
-  }
-
-  /// Compute the AR overlay state directly from compass + navigation state.
-  ArNavigationState _computeArState(NavigationState navState, double heading) {
-    if (!navState.isNavigating || navState.pathRooms.isEmpty) {
-      return const ArNavigationState(hasData: false);
-    }
-
-    final pathRooms = navState.pathRooms;
-    final currentIdx = navState.currentInstructionIndex.clamp(
-      0,
-      pathRooms.length - 1,
-    );
-    final targetIdx = (navState.currentInstructionIndex + 1).clamp(
-      0,
-      pathRooms.length - 1,
-    );
-
-    final currentRoom = pathRooms[currentIdx];
-    final targetRoom = pathRooms[targetIdx];
-
-    // Bearing from current room to target in map coordinates (0 = map-up)
-    final dx = targetRoom.x - currentRoom.x;
-    final dy = -(targetRoom.y - currentRoom.y); // Screen Y is inverted
-    final mapBearing = (math.atan2(dx, dy) * 180 / math.pi + 360) % 360;
-
-    // Relative bearing = where waypoint is relative to where phone is pointing
-    double relative = mapBearing - heading;
-    while (relative > 180) relative -= 360;
-    while (relative <= -180) relative += 360;
-
-    // On-track status
-    final absRel = relative.abs();
-    OnTrackStatus status;
-    if (absRel < 20) {
-      status = OnTrackStatus.onTrack;
-    } else if (absRel < 60) {
-      status = OnTrackStatus.slightTurn;
-    } else {
-      status = OnTrackStatus.offTrack;
-    }
-
-    // Distance (euclidean map units)
-    final dist = math.sqrt(
-      (dx * dx) +
-          (currentRoom.y - targetRoom.y) * (currentRoom.y - targetRoom.y),
-    );
-
-    // Next landmark (first non-hallway room ahead)
-    String? landmark;
-    for (int i = targetIdx; i < pathRooms.length; i++) {
-      final room = pathRooms[i];
-      if (room.type != RoomType.hallway) {
-        landmark = room.name;
-        break;
-      }
-    }
-
-    final remaining = pathRooms.length - currentIdx;
-
-    return ArNavigationState(
-      relativeBearing: relative,
-      onTrackStatus: status,
-      nextLandmarkName: landmark,
-      distanceToNext: dist,
-      trailCount: remaining.clamp(2, 5),
-      hasData: true,
-    );
   }
 
   @override
@@ -222,90 +163,144 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     final orientationService = ref.watch(deviceOrientationServiceProvider);
     final pitch = orientationService.currentPitch;
 
-    // Compute AR state directly — no broken provider chain
-    final arState = _computeArState(navState, heading);
+    // Compute AR state dynamically factoring in map bearing, live compass, and user calibration
+    final arState = computeArState(
+      navState,
+      heading,
+      compassOffset: _compassCalibration,
+    );
 
     return Scaffold(
       backgroundColor: _deepVoidBlue,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Layer 1: Camera preview
-          _buildCameraLayer(),
+      body: GestureDetector(
+        onPanUpdate: (details) {
+          // Allow user to calibrate the map North offset by swiping horizontally
+          setState(() {
+            _compassCalibration += details.delta.dx * 0.5;
+            // keep it 0..360
+            _compassCalibration = (_compassCalibration % 360 + 360) % 360;
+          });
+        },
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Layer 1: Camera preview
+            _buildCameraLayer(),
 
-          // Layer 2: Single 3D direction arrow on the ground
-          if (_isCameraInitialized)
-            AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, _) {
-                return CustomPaint(
-                  painter: ArDirectionPainter(
-                    arState: arState,
-                    pulseValue: _pulseController.value,
-                    devicePitch: pitch,
-                  ),
-                  size: Size.infinite,
-                );
-              },
-            ),
-
-          // Layer 3: Top bar (back button + compass)
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Back button
-                  _buildCircleButton(
-                    icon: Icons.arrow_back_rounded,
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
-
-                  // Mini compass — always visible when camera is running
-                  if (_isCameraInitialized)
-                    ArCompassOverlay(
-                      currentHeading: heading,
-                      targetBearing: _computeTargetBearing(navState),
+            // Layer 2: Single 3D direction arrow on the ground
+            if (_isCameraInitialized)
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: ArDirectionPainter(
+                      arState: arState,
+                      pulseValue: _pulseController.value,
+                      devicePitch: pitch,
                     ),
-                ],
+                    size: Size.infinite,
+                  );
+                },
               ),
-            ),
-          ),
 
-          // Layer 4: Map switch button (below compass)
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topRight,
+            // Layer 3: Top bar (back button + compass)
+            SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(top: 88, right: 12),
-                child: _buildCircleButton(
-                  icon: Icons.map_rounded,
-                  onTap: () => Navigator.of(context).pop(),
-                  tooltip: 'Switch to Map',
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Back button
+                    _buildCircleButton(
+                      icon: Icons.arrow_back_rounded,
+                      onTap: () => Navigator.of(context).pop(),
+                    ),
+
+                    // Mini compass — always visible when camera is running
+                    if (_isCameraInitialized)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          ArCompassOverlay(
+                            currentHeading: heading,
+                            targetBearing:
+                                _computeTargetBearing(navState) +
+                                _compassCalibration,
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _deepVoidBlue.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.swipe_outlined,
+                                  color: _electricGrid,
+                                  size: 12,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "Swipe to orient",
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
               ),
             ),
-          ),
 
-          // Layer 5: Instruction banner (bottom)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SafeArea(
-              child: const ArInstructionBanner()
-                  .animate()
-                  .fadeIn(duration: 400.ms)
-                  .slideY(begin: 0.3, end: 0, duration: 400.ms),
+            // Layer 4: Map switch button (below compass)
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 88, right: 12),
+                  child: _buildCircleButton(
+                    icon: Icons.map_rounded,
+                    onTap: () => Navigator.of(context).pop(),
+                    tooltip: 'Switch to Map',
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
+
+            // Layer 5: Instruction banner (bottom)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SafeArea(
+                child: const ArInstructionBanner()
+                    .animate()
+                    .fadeIn(duration: 400.ms)
+                    .slideY(begin: 0.3, end: 0, duration: 400.ms),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  /// Target bearing for the compass widget — uses map coordinates.
   double _computeTargetBearing(NavigationState navState) {
     if (navState.pathRooms.length <= 1) return 0;
     final idx = navState.currentInstructionIndex.clamp(
