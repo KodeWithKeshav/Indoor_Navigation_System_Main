@@ -125,7 +125,12 @@ void main() {
         );
 
         // Normal route A-B-C is blocked because B is closed. Should route A-D-E-C.
-        final path = PathfindingService.findPath('A', 'C', closedRooms, corridors);
+        final path = PathfindingService.findPath(
+          'A',
+          'C',
+          closedRooms,
+          corridors,
+        );
 
         expect(path, ['A', 'D', 'E', 'C']);
       });

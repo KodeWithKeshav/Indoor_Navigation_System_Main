@@ -924,14 +924,18 @@ class _TripPlannerWidgetState extends ConsumerState<TripPlannerWidget>
                           .map(
                             (r) => DropdownMenuItem(
                               value: r,
-                              // If room is closed, we cannot select it technically, but passing value allows it to show. 
+                              // If room is closed, we cannot select it technically, but passing value allows it to show.
                               // We will add validation on 'Start Navigation' button.
                               child: Text(
                                 r.isClosed ? '${r.name} (Closed)' : r.name,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  color: r.isClosed ? Colors.redAccent : paperWhite,
-                                  decoration: r.isClosed ? TextDecoration.lineThrough : null,
+                                  color: r.isClosed
+                                      ? Colors.redAccent
+                                      : paperWhite,
+                                  decoration: r.isClosed
+                                      ? TextDecoration.lineThrough
+                                      : null,
                                 ),
                               ),
                             ),

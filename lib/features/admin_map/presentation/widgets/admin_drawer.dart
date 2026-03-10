@@ -192,19 +192,33 @@ class AdminDrawer extends ConsumerWidget {
                   context: context,
                   builder: (ctx) => AlertDialog(
                     backgroundColor: darkCardColor,
-                    title: const Text('Confirm Logout', style: TextStyle(color: electricGrid)),
-                    content: const Text('Are you sure you want to terminate your session?', style: TextStyle(color: paperWhite)),
+                    title: const Text(
+                      'Confirm Logout',
+                      style: TextStyle(color: electricGrid),
+                    ),
+                    content: const Text(
+                      'Are you sure you want to terminate your session?',
+                      style: TextStyle(color: paperWhite),
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.white54),
+                        ),
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.pop(ctx);
-                          ref.read(authControllerProvider.notifier).logout(context);
+                          ref
+                              .read(authControllerProvider.notifier)
+                              .logout(context);
                         },
-                        child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                        child: const Text(
+                          'Logout',
+                          style: TextStyle(color: Colors.redAccent),
+                        ),
                       ),
                     ],
                   ),

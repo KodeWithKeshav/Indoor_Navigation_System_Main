@@ -374,8 +374,14 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                 ],
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Closed / Out of Service', style: TextStyle(color: paperWhite)),
-                  subtitle: const Text('Hide this room from search and navigation', style: TextStyle(color: Colors.white54)),
+                  title: const Text(
+                    'Closed / Out of Service',
+                    style: TextStyle(color: paperWhite),
+                  ),
+                  subtitle: const Text(
+                    'Hide this room from search and navigation',
+                    style: TextStyle(color: Colors.white54),
+                  ),
                   value: isClosed,
                   onChanged: (val) => setState(() => isClosed = val),
                   activeColor: Colors.redAccent,
@@ -579,8 +585,14 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                 ],
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Closed / Out of Service', style: TextStyle(color: paperWhite)),
-                  subtitle: const Text('Hide this room from search and navigation', style: TextStyle(color: Colors.white54)),
+                  title: const Text(
+                    'Closed / Out of Service',
+                    style: TextStyle(color: paperWhite),
+                  ),
+                  subtitle: const Text(
+                    'Hide this room from search and navigation',
+                    style: TextStyle(color: Colors.white54),
+                  ),
                   value: isClosed,
                   onChanged: (val) => setState(() => isClosed = val),
                   activeColor: Colors.redAccent,
@@ -1459,8 +1471,6 @@ class _FloorDetailScreenState extends ConsumerState<FloorDetailScreen> {
                 },
               ),
             ),
-
-
         ],
       ),
       floatingActionButton: Column(

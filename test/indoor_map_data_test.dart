@@ -204,6 +204,7 @@ class FakeAdminMapRepository implements AdminMapRepository {
     double y, {
     RoomType type = RoomType.room,
     String? connectorId,
+    bool isClosed = false,
   }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
@@ -217,6 +218,7 @@ class FakeAdminMapRepository implements AdminMapRepository {
         y: y,
         type: type,
         connectorId: connectorId,
+        isClosed: isClosed,
       ),
     );
     return const Right(null);
@@ -254,6 +256,7 @@ class FakeAdminMapRepository implements AdminMapRepository {
     String? name,
     RoomType? type,
     String? connectorId,
+    bool? isClosed,
   }) async {
     if (shouldFail) return Left(ServerFailure(failureMessage));
     final key = '$buildingId-$floorId';
@@ -270,6 +273,7 @@ class FakeAdminMapRepository implements AdminMapRepository {
           y: y ?? old.y,
           type: type ?? old.type,
           connectorId: connectorId ?? old.connectorId,
+          isClosed: isClosed ?? old.isClosed,
         );
       }
     }
