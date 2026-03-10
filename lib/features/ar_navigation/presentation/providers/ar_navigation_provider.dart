@@ -140,8 +140,10 @@ ArNavigationState computeArState(NavigationState navState) {
   // instruction count differs from path room count.
   String? landmark;
   if (instruction.icon != 'finish' && navState.pathRooms.isNotEmpty) {
-    final searchStart =
-        (instruction.roomIndex + 1).clamp(0, navState.pathRooms.length - 1);
+    final searchStart = (instruction.roomIndex + 1).clamp(
+      0,
+      navState.pathRooms.length - 1,
+    );
     for (int i = searchStart; i < navState.pathRooms.length; i++) {
       if (navState.pathRooms[i].type != RoomType.hallway) {
         landmark = navState.pathRooms[i].name;

@@ -80,10 +80,7 @@ class _CompassPainter extends CustomPainter {
   final double rotationAngle; // Radians to rotate compass (cumulative)
   final double targetBearing;
 
-  _CompassPainter({
-    required this.rotationAngle,
-    required this.targetBearing,
-  });
+  _CompassPainter({required this.rotationAngle, required this.targetBearing});
 
   @override
   void paint(Canvas canvas, Size size) {

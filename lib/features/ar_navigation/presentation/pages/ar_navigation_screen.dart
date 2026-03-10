@@ -33,6 +33,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
   bool _isPermissionDenied = false;
   String? _errorMessage;
   late AnimationController _pulseController;
+  int? _turnReferenceInstructionIndex;
+  double? _turnReferenceHeading;
 
   @override
   void initState() {
@@ -155,10 +157,12 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
         ref.watch(compassProvider) ?? 0.0; // Kept for ArCompassOverlay
 
     // Read device pitch reactively — rebuilds on every sensor update
-    final pitch = ref.watch(devicePitchProvider).valueOrNull ?? 0.0;
+    final pitch = ref
+        .watch(devicePitchProvider)
+        .maybeWhen(data: (value) => value, orElse: () => 0.0);
 
     // Compute AR state dynamically from instruction semantics
-    final arState = computeArState(navState);
+    final arState = _computeCameraRelativeArState(navState, heading);
 
     return Scaffold(
       backgroundColor: _deepVoidBlue,
@@ -206,7 +210,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
                   if (_isCameraInitialized)
                     ArCompassOverlay(
                       currentHeading: heading,
-                      targetBearing: (heading + arState.relativeBearing + 360) % 360,
+                      targetBearing:
+                          (heading + arState.relativeBearing + 360) % 360,
                     ),
                 ],
               ),
@@ -243,6 +248,70 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
         ],
       ),
     );
+  }
+
+  /// Makes turn instructions camera-relative so the arrow converges to center
+  /// as the user physically rotates in the required direction.
+  ArNavigationState _computeCameraRelativeArState(
+    NavigationState navState,
+    double heading,
+  ) {
+    final baseState = computeArState(navState);
+    if (!baseState.hasData || navState.instructions.isEmpty) return baseState;
+
+    final idx = navState.currentInstructionIndex.clamp(
+      0,
+      navState.instructions.length - 1,
+    );
+    final icon = navState.instructions[idx].icon;
+
+    if (!_isTurnIcon(icon)) {
+      _turnReferenceInstructionIndex = null;
+      _turnReferenceHeading = null;
+      return baseState;
+    }
+
+    // Capture heading once when entering a turn step.
+    if (_turnReferenceInstructionIndex != idx ||
+        _turnReferenceHeading == null) {
+      _turnReferenceInstructionIndex = idx;
+      _turnReferenceHeading = heading;
+    }
+
+    final baseline = _turnReferenceHeading ?? heading;
+    final turnedDelta = _normalizeAngle180(heading - baseline);
+    final targetDelta = instructionIconToBearing(icon);
+    final remaining = _normalizeAngle180(targetDelta - turnedDelta);
+
+    final remainingAbs = remaining.abs();
+    final dynamicStatus = remainingAbs <= 20
+        ? OnTrackStatus.onTrack
+        : (remainingAbs <= 60
+              ? OnTrackStatus.slightTurn
+              : OnTrackStatus.offTrack);
+
+    return ArNavigationState(
+      relativeBearing: remaining,
+      onTrackStatus: dynamicStatus,
+      nextLandmarkName: baseState.nextLandmarkName,
+      distanceToNext: baseState.distanceToNext,
+      hasData: baseState.hasData,
+    );
+  }
+
+  bool _isTurnIcon(String icon) {
+    return icon == 'left' ||
+        icon == 'right' ||
+        icon == 'sharp_left' ||
+        icon == 'sharp_right' ||
+        icon == 'uturn';
+  }
+
+  double _normalizeAngle180(double angle) {
+    var normalized = angle;
+    while (normalized > 180) normalized -= 360;
+    while (normalized <= -180) normalized += 360;
+    return normalized;
   }
 
   /// Accessibility label describing the current AR arrow direction.
