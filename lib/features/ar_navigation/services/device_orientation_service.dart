@@ -132,10 +132,8 @@ class DeviceOrientationService {
 
   /// Process raw accelerometer data into pitch angle.
   ///
-  /// Handles different device orientations robustly:
-  /// - Portrait up: y ≈ -9.8, z ≈ 0 → pitch ≈ 0°
-  /// - Flat face-up: y ≈ 0, z ≈ -9.8 → pitch ≈ -90°
-  /// - Tilted ~45°: y ≈ -6.9, z ≈ -6.9 → pitch ≈ -45°
+  /// Output range: -90° (phone flat) to +90° (phone vertical), 0° at 45° tilt.
+  /// Uses absolute values of y and z axes — sign-convention-agnostic.
   void _processAccelerometerEvent(double x, double y, double z) {
     // Guard against NaN or infinity from faulty sensors
     if (!x.isFinite || !y.isFinite || !z.isFinite) return;
@@ -144,13 +142,11 @@ class DeviceOrientationService {
     final magnitude = sqrt(x * x + y * y + z * z);
     if (magnitude < 1.0) return; // Too weak — unreliable data
 
-    // Pitch = angle of phone tilt from vertical position.
-    // atan2(z, y) gives the angle between the phone's Y axis (up in portrait)
-    // and the Z axis (out of screen).
-    //
-    // Vertical phone: y ≈ -g, z ≈ 0 → atan2(0, -g) ≈ 180° → rawPitch ≈ 0°
-    // Flat phone:     y ≈ 0, z ≈ -g → atan2(-g, 0) ≈ -90° → rawPitch ≈ -90°
-    final rawPitch = atan2(z, -y.abs()) * (180 / pi);
+    // Angle of phone tilt from flat (0° = flat, 90° = vertical).
+    // Using abs() makes it work regardless of accelerometer sign convention.
+    final tiltFromFlat = atan2(y.abs(), z.abs()) * (180.0 / pi);
+    // Map to desired range: -90° (flat) to +90° (vertical), 0° at 45° tilt.
+    final rawPitch = (tiltFromFlat - 45.0) * 2.0;
 
     if (!rawPitch.isFinite) return;
 
@@ -202,7 +198,8 @@ class DeviceOrientationService {
     while (diff > 180) diff -= 360;
     while (diff <= -180) diff += 360;
 
-    final result = (current + alpha * diff) % 360;
+    final raw = (current + alpha * diff) % 360;
+    final result = raw < 0 ? raw + 360 : raw;
     return result.isFinite ? result : current; // Guard against NaN
   }
 

@@ -404,10 +404,13 @@ class NavigationInstructionService {
     // 30° threshold — catches real turns while filtering only tiny bends
     if (degrees > -30 && degrees < 30) return 'straight';
 
-    // Slight turns (30° – 60°): still turns, but gentle
-    // Standard turns (60° – 150°)
-    if (degrees >= 30 && degrees < 150) return 'right';
-    if (degrees <= -30 && degrees > -150) return 'left';
+    // Normal turns (30° – 90°)
+    if (degrees >= 30 && degrees < 90) return 'right';
+    if (degrees <= -30 && degrees > -90) return 'left';
+
+    // Sharp turns (90° – 150°)
+    if (degrees >= 90 && degrees < 150) return 'sharp_right';
+    if (degrees <= -90 && degrees > -150) return 'sharp_left';
 
     // U-turn range (150°+)
     if (degrees >= 150) return 'uturn';

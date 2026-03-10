@@ -7,9 +7,9 @@ import 'package:flutter/material.dart';
 /// - A cyan needle pointing to the target bearing (next waypoint direction)
 /// - A white tick marking current device heading
 /// - N/E/S/W labels
-class ArCompassOverlay extends StatelessWidget {
+class ArCompassOverlay extends StatefulWidget {
   final double? currentHeading; // 0..360
-  final double targetBearing; // 0..360 (absolute map bearing to next waypoint)
+  final double targetBearing; // 0..360 (absolute bearing to next waypoint)
 
   const ArCompassOverlay({
     super.key,
@@ -18,37 +18,67 @@ class ArCompassOverlay extends StatelessWidget {
   });
 
   @override
+  State<ArCompassOverlay> createState() => _ArCompassOverlayState();
+}
+
+class _ArCompassOverlayState extends State<ArCompassOverlay> {
+  double _cumulativeRotation = 0.0;
+  double _previousHeading = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    final heading = widget.currentHeading ?? 0;
+    _cumulativeRotation = -heading * (pi / 180);
+    _previousHeading = heading;
+  }
+
+  @override
+  void didUpdateWidget(ArCompassOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newHeading = widget.currentHeading ?? 0;
+
+    // Shortest-path delta to avoid 360° wrapping spin
+    var delta = newHeading - _previousHeading;
+    while (delta > 180) delta -= 360;
+    while (delta < -180) delta += 360;
+
+    _cumulativeRotation -= delta * (pi / 180);
+    _previousHeading = newHeading;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 72,
-      height: 72,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(end: -(currentHeading ?? 0) * (pi / 180)),
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        builder: (context, rotationAngle, _) {
-          return CustomPaint(
-            painter: _CompassPainter(
-              rotationAngle: rotationAngle,
-              targetBearing: targetBearing,
-              currentHeading: currentHeading ?? 0,
-            ),
-          );
-        },
+    return Semantics(
+      label: 'Navigation compass',
+      child: SizedBox(
+        width: 72,
+        height: 72,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(end: _cumulativeRotation),
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          builder: (context, rotationAngle, _) {
+            return CustomPaint(
+              painter: _CompassPainter(
+                rotationAngle: rotationAngle,
+                targetBearing: widget.targetBearing,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 }
 
 class _CompassPainter extends CustomPainter {
-  final double rotationAngle; // Radians to rotate compass (negative heading)
+  final double rotationAngle; // Radians to rotate compass (cumulative)
   final double targetBearing;
-  final double currentHeading;
 
   _CompassPainter({
     required this.rotationAngle,
     required this.targetBearing,
-    required this.currentHeading,
   });
 
   @override

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:indoor_navigation_system/features/navigation/presentation/providers/navigation_provider.dart';
-import 'package:indoor_navigation_system/core/services/compass_service.dart';
 import '../providers/ar_navigation_provider.dart';
 
 /// Theme constants (matching UserHomeScreen Deep Void theme).
@@ -30,8 +29,7 @@ class ArInstructionBanner extends ConsumerWidget {
     }
 
     // Use the same instruction-based AR state computation as the arrow
-    final heading = ref.watch(compassProvider) ?? 0.0;
-    final arState = computeArState(navState, heading);
+    final arState = computeArState(navState);
 
     final instruction =
         navState.instructions[navState.currentInstructionIndex.clamp(

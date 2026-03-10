@@ -82,10 +82,9 @@ class ArDirectionPainter extends CustomPainter {
     canvas.save();
     canvas.translate(groundX, groundY);
 
-    // Rotate arrow to point in the instruction direction.
-    // bearing: -90 = left, 0 = forward, +90 = right, ±180 = behind
-    final rotationRad = bearing * (pi / 180.0);
-    canvas.rotate(rotationRad);
+    // Clamp rendering bearing so arrow stays visible even for u-turns
+    final renderBearing = bearing.clamp(-120.0, 120.0);
+    final rotationRad = renderBearing * (pi / 180.0);
 
     // --- 3D Perspective transform ---
     // Simulates the arrow lying flat on the ground plane.
@@ -93,13 +92,18 @@ class ArDirectionPainter extends CustomPainter {
     // When phone is flat looking at floor: zero tilt, arrow drawn flat (pitchNorm=0)
     final perspectiveStrength = 0.5 + pitchNorm * 0.4;
 
-    final Matrix4 perspective = Matrix4.identity()
+    // The order of operations in Matrix4 is extremely important.
+    // ..rotateX() tilts the ground plane into perspective from the user's camera
+    // ..rotateZ() then rotates the arrow *along* that newly flat ground plane.
+    // If we rotateZ before rotateX, left/right arrows would tilt sideways into the floor!
+    final Matrix4 transform = Matrix4.identity()
       ..setEntry(3, 2, 0.003 * perspectiveStrength) // Z-perspective
       ..rotateX(
         pitchNorm * 1.2,
-      ); // TILT: 0.0 when looking down, 1.2rad (70deg) when vertical
+      ) // TILT: 0.0 when looking down, 1.2rad (70deg) when vertical
+      ..rotateZ(rotationRad);
 
-    canvas.transform(perspective.storage);
+    canvas.transform(transform.storage);
 
     // --- Draw the 3D arrow shape ---
     final halfW = arrowWidth / 2;

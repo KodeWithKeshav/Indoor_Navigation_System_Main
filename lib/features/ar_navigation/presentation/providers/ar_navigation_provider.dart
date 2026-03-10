@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:indoor_navigation_system/features/navigation/presentation/providers/navigation_provider.dart';
 import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
 
@@ -117,19 +116,10 @@ OnTrackStatus instructionIconToStatus(String icon) {
 
 /// Computes the AR overlay state from the current navigation state.
 ///
-/// Uses map coordinates and phone heading to keep the arrow anchored
-/// to the real world when the user rotates their phone.
-/// [compassOffset] is used to calibrate any map-north misalignment.
-ArNavigationState computeArState(
-  NavigationState navState,
-  double heading, {
-  double compassOffset = 0.0,
-}) {
+/// This is a pure function — no compass, no map coordinates.
+/// The arrow direction comes entirely from what the instruction says.
+ArNavigationState computeArState(NavigationState navState) {
   if (!navState.isNavigating || navState.instructions.isEmpty) {
-    return const ArNavigationState(hasData: false);
-  }
-
-  if (navState.pathRooms.isEmpty) {
     return const ArNavigationState(hasData: false);
   }
 
@@ -139,55 +129,29 @@ ArNavigationState computeArState(
   );
   final instruction = navState.instructions[idx];
 
-  // On the finish step, show forward arrow
-  if (instruction.icon == 'finish') {
-    return ArNavigationState(
-      relativeBearing: 0,
-      onTrackStatus: OnTrackStatus.onTrack,
-      nextLandmarkName: null,
-      distanceToNext: 0,
-      hasData: true,
-    );
-  }
-
-  // Find the exact path segment for the current room
-  final roomIdx = idx.clamp(0, navState.pathRooms.length - 1);
-  final nextRoomIdx = (roomIdx + 1).clamp(0, navState.pathRooms.length - 1);
-
-  final currentRoom = navState.pathRooms[roomIdx];
-  final targetRoom = navState.pathRooms[nextRoomIdx];
-
-  // Map bearing (where 0 is up/north on the building image)
-  final dx = targetRoom.x - currentRoom.x;
-  final dy =
-      -(targetRoom.y -
-          currentRoom.y); // Negative because UI Y increases downwards
-
-  double mapBearing = 0;
-  if (dx != 0 || dy != 0) {
-    mapBearing = (math.atan2(dx, dy) * 180 / math.pi + 360) % 360;
-  }
-
-  // Compute final screen bearing anchored to the physical world
-  double relativeBearing = mapBearing + compassOffset - heading;
-  while (relativeBearing > 180) relativeBearing -= 360;
-  while (relativeBearing <= -180) relativeBearing += 360;
-
-  // On-track status comes from the instruction semantic (not the angle)
+  final bearing = instructionIconToBearing(instruction.icon);
   final status = instructionIconToStatus(instruction.icon);
 
   // Find next landmark (first non-hallway room ahead)
   String? landmark;
-  for (int i = roomIdx + 1; i < navState.pathRooms.length; i++) {
-    final room = navState.pathRooms[i];
-    if (room.type != RoomType.hallway) {
-      landmark = room.name;
-      break;
+  if (instruction.icon != 'finish') {
+    final targetRoom = navState.currentTargetRoom;
+    if (targetRoom != null && targetRoom.type != RoomType.hallway) {
+      landmark = targetRoom.name;
+    } else if (navState.pathRooms.isNotEmpty) {
+      final searchStart = (navState.currentInstructionIndex + 1)
+          .clamp(0, navState.pathRooms.length - 1);
+      for (int i = searchStart; i < navState.pathRooms.length; i++) {
+        if (navState.pathRooms[i].type != RoomType.hallway) {
+          landmark = navState.pathRooms[i].name;
+          break;
+        }
+      }
     }
   }
 
   return ArNavigationState(
-    relativeBearing: relativeBearing,
+    relativeBearing: bearing,
     onTrackStatus: status,
     nextLandmarkName: landmark,
     distanceToNext: instruction.distance,

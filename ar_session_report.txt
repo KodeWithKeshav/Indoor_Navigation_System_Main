@@ -52,3 +52,11 @@ Identified 16 issues across 4 severity levels, including:
 -------------------------------------------------------
 OUTCOME: 
 All critical AR tracking logic has been rewritten to be semantic rather than relying on map coordinate math. The arrow is fixed to the ground projection plane and visually points in the direction required by the current navigation step. The release APK has been built and tested via the local CI runner.
+
+6. SECONDARY REFINEMENTS & CODE REVIEW INCORPORATION
+-------------------------------------------------------
+- AR Camera Resolution increased from medium to high for clearer graphics.
+- Removed Swipe-to-Calibrate feature per user direction.
+- Fixed Matrix4 logic where `rotateX` and `rotateZ` were out of order, causing arrows to tilt into the floor instead of sitting flat on it.
+- Added safety check to `ar_navigation_provider.dart` to prevent array out-of-bounds on `pathRooms` if instructions don't correctly map 1:1 with rooms.
+- Added visual clamp in `ar_direction_painter.dart` to hide arrows pointing > 120 degrees to prevent backward arrows floating over the screen.
