@@ -127,14 +127,27 @@ class _LocationSearchDialogState extends ConsumerState<LocationSearchDialog> {
             ),
           ),
           subtitle: Text(
-            room.isClosed ? 'Currently Out of Service' : 'Floor: ${room.floorId}',
-            style: TextStyle(color: room.isClosed ? Colors.redAccent : Colors.white.withOpacity(0.6)),
+            room.isClosed
+                ? 'Currently Out of Service'
+                : 'Floor: ${room.floorId}',
+            style: TextStyle(
+              color: room.isClosed
+                  ? Colors.redAccent
+                  : Colors.white.withOpacity(0.6),
+            ),
           ),
-          onTap: room.isClosed ? () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${room.name} is currently out of service.'), backgroundColor: Colors.redAccent),
-            );
-          } : () => Navigator.pop(context, room),
+          onTap: room.isClosed
+              ? () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '${room.name} is currently out of service.',
+                      ),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                }
+              : () => Navigator.pop(context, room),
         );
       },
     );
@@ -277,22 +290,33 @@ class _FloorExpansionTile extends ConsumerWidget {
               (room) => ListTile(
                 leading: Icon(
                   Icons.meeting_room,
-                  color: room.isClosed ? Colors.redAccent.withOpacity(0.5) : Colors.white54,
+                  color: room.isClosed
+                      ? Colors.redAccent.withOpacity(0.5)
+                      : Colors.white54,
                   size: 18,
                 ),
                 title: Text(
                   room.isClosed ? '${room.name} (Closed)' : room.name,
                   style: TextStyle(
                     color: room.isClosed ? Colors.grey : Colors.white60,
-                    decoration: room.isClosed ? TextDecoration.lineThrough : null,
+                    decoration: room.isClosed
+                        ? TextDecoration.lineThrough
+                        : null,
                   ),
                 ),
                 dense: true,
-                onTap: room.isClosed ? () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${room.name} is currently out of service.'), backgroundColor: Colors.redAccent),
-                  );
-                } : () => Navigator.pop(context, room),
+                onTap: room.isClosed
+                    ? () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${room.name} is currently out of service.',
+                            ),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      }
+                    : () => Navigator.pop(context, room),
               ),
             ),
         ],

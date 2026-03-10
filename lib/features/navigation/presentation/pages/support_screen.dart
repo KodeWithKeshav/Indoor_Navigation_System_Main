@@ -157,7 +157,14 @@ class SupportScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: electricGrid.withOpacity(0.5)),
         ),
-        title: const Text('Report a Problem', style: TextStyle(color: electricGrid, fontFamily: 'Courier', fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Report a Problem',
+          style: TextStyle(
+            color: electricGrid,
+            fontFamily: 'Courier',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -186,7 +193,10 @@ class SupportScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white54),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -197,12 +207,17 @@ class SupportScreen extends StatelessWidget {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Thank you! Your bug report has been submitted to IT Support.'),
+                  content: Text(
+                    'Thank you! Your bug report has been submitted to IT Support.',
+                  ),
                   backgroundColor: Colors.green,
                 ),
               );
             },
-            child: const Text('Submit', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Submit',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -218,7 +233,14 @@ class SupportScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: electricGrid.withOpacity(0.5)),
         ),
-        title: const Text('Contact Administration', style: TextStyle(color: electricGrid, fontFamily: 'Courier', fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Contact Administration',
+          style: TextStyle(
+            color: electricGrid,
+            fontFamily: 'Courier',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,9 +249,17 @@ class SupportScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _buildContactRow(Icons.phone, 'Phone', '+1 (555) 0198-442'),
             const SizedBox(height: 12),
-            _buildContactRow(Icons.location_on, 'Office', 'Building A, Room 101'),
+            _buildContactRow(
+              Icons.location_on,
+              'Office',
+              'Building A, Room 101',
+            ),
             const SizedBox(height: 12),
-            _buildContactRow(Icons.access_time, 'Hours', 'Mon-Fri, 9:00 AM - 5:00 PM'),
+            _buildContactRow(
+              Icons.access_time,
+              'Hours',
+              'Mon-Fri, 9:00 AM - 5:00 PM',
+            ),
           ],
         ),
         actions: [
@@ -250,8 +280,21 @@ class SupportScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: TextStyle(color: paperWhite.withOpacity(0.5), fontSize: 12)),
-            Text(value, style: const TextStyle(color: paperWhite, fontSize: 14, fontWeight: FontWeight.w600)),
+            Text(
+              title,
+              style: TextStyle(
+                color: paperWhite.withOpacity(0.5),
+                fontSize: 12,
+              ),
+            ),
+            Text(
+              value,
+              style: const TextStyle(
+                color: paperWhite,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ],
@@ -267,7 +310,14 @@ class SupportScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: electricGrid.withOpacity(0.5)),
         ),
-        title: const Text('Frequently Asked Questions', style: TextStyle(color: electricGrid, fontFamily: 'Courier', fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Frequently Asked Questions',
+          style: TextStyle(
+            color: electricGrid,
+            fontFamily: 'Courier',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
         content: SizedBox(
           width: double.maxFinite,
@@ -275,11 +325,26 @@ class SupportScreen extends StatelessWidget {
           child: ListView(
             shrinkWrap: true,
             children: [
-              _buildFaqItem('How do I find a room?', 'Use the Search bar on the home screen or tap directly on the map to select a destination room. Then press Start Navigation.'),
-              _buildFaqItem('Is there an accessible route option?', 'Yes! When planning a trip, toggle the "Accessible Route" switch to prioritize elevators over stairs.'),
-              _buildFaqItem('Why is my location not updating?', 'Ensure that Location Services and Bluetooth are enabled on your device. The app relies on internal beacons and pedometer data.'),
-              _buildFaqItem('How does Voice Guidance work?', 'Voice guidance uses your device text-to-speech to read out directional instructions. You can toggle it off in the Sidebar Settings.'),
-              _buildFaqItem('Can I use the app offline?', 'The map assets are cached locally, but live routing requires an active campus network connection.'),
+              _buildFaqItem(
+                'How do I find a room?',
+                'Use the Search bar on the home screen or tap directly on the map to select a destination room. Then press Start Navigation.',
+              ),
+              _buildFaqItem(
+                'Is there an accessible route option?',
+                'Yes! When planning a trip, toggle the "Accessible Route" switch to prioritize elevators over stairs.',
+              ),
+              _buildFaqItem(
+                'Why is my location not updating?',
+                'Ensure that Location Services and Bluetooth are enabled on your device. The app relies on internal beacons and pedometer data.',
+              ),
+              _buildFaqItem(
+                'How does Voice Guidance work?',
+                'Voice guidance uses your device text-to-speech to read out directional instructions. You can toggle it off in the Sidebar Settings.',
+              ),
+              _buildFaqItem(
+                'Can I use the app offline?',
+                'The map assets are cached locally, but live routing requires an active campus network connection.',
+              ),
             ],
           ),
         ),
@@ -303,7 +368,11 @@ class SupportScreen extends StatelessWidget {
       child: ExpansionTile(
         title: Text(
           question,
-          style: const TextStyle(color: paperWhite, fontWeight: FontWeight.w600, fontSize: 14),
+          style: const TextStyle(
+            color: paperWhite,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
         ),
         iconColor: electricGrid,
         collapsedIconColor: electricGrid.withOpacity(0.7),
@@ -311,7 +380,11 @@ class SupportScreen extends StatelessWidget {
         children: [
           Text(
             answer,
-            style: TextStyle(color: paperWhite.withOpacity(0.7), height: 1.4, fontSize: 13),
+            style: TextStyle(
+              color: paperWhite.withOpacity(0.7),
+              height: 1.4,
+              fontSize: 13,
+            ),
           ),
         ],
       ),

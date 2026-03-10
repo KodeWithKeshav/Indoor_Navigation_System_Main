@@ -82,7 +82,16 @@ class Room extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, floorId, name, x, y, type, connectorId, isClosed];
+  List<Object?> get props => [
+    id,
+    floorId,
+    name,
+    x,
+    y,
+    type,
+    connectorId,
+    isClosed,
+  ];
 }
 
 class Corridor extends Equatable {

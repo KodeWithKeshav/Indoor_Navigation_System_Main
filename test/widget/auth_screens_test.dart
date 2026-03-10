@@ -142,6 +142,7 @@ class _NoopRepo implements AdminMapRepository {
     double y, {
     RoomType type = RoomType.room,
     String? connectorId,
+    bool isClosed = false,
   }) async => const Right(null);
   @override
   Future<Either<Failure, List<Room>>> getRooms(
@@ -164,6 +165,7 @@ class _NoopRepo implements AdminMapRepository {
     String? name,
     RoomType? type,
     String? connectorId,
+    bool? isClosed,
   }) async => const Right(null);
   @override
   Future<Either<Failure, void>> addCorridor(
