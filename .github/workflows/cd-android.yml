@@ -2,8 +2,10 @@ name: CD — Build & Release Android
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*.*.*'
+      - 'v*.*'
   workflow_dispatch:
 
 permissions:
