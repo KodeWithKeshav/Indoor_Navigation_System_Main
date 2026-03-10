@@ -53,7 +53,7 @@ dependencies:
   go_router: ^17.0.1
   get_it: ^9.2.0
   equatable: ^2.0.8
-  google_fonts: ^7.0.2
+  google_fonts: ^8.0.2
   uuid: ^4.5.2
   fpdart: ^1.2.0
   json_annotation: ^4.9.0
