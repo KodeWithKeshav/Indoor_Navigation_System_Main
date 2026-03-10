@@ -1,0 +1,62 @@
+=======================================================
+AR Navigation Refactoring & Bug Fixing - Session Report
+Date: March 9, 2026
+Project: Indoor Navigation System
+=======================================================
+
+1. DEEP CODE REVIEW OF AR FEATURE
+-------------------------------------------------------
+Reviewed all 6 AR navigation files + Navigation Provider.
+Identified 16 issues across 4 severity levels, including:
+- CRITICAL: Missing `==` / `hashCode` in `ArNavigationState` causing 20 rebuilds per second.
+- CRITICAL: Arrow frozen on final navigation step.
+- CRITICAL: Camera initialization race condition upon app resume.
+- LOGIC: Triplicated, conflicting logic for finding bearings and on-track status.
+- LOGIC: Broken compass vs map-pixel subtraction causing arrows to point randomly.
+- LOGIC: Misunderstood pitch values from accelerometer causing arrows to go off-screen.
+
+2. ANDROID SDK FIXES & BUILD SUCCESS
+-------------------------------------------------------
+- Diagnosed missing Android API 34 SDK platform preventing APK builds.
+- Used command-line `sdkmanager` to install `platforms;android-34` and accept licenses.
+- Permanently configured Windows Environment Variables `ANDROID_HOME` and `ANDROID_SDK_ROOT`.
+- Successfully validated build process (`flutter build apk --release`).
+
+3. DIRECTION ALGORITHM REWRITE
+-------------------------------------------------------
+- Removed fundamentally flawed math that subtracted 2D floor plan pixel angles from 3D geographic compass headings.
+- Implemented icon-to-bearing semantic mapping in `ar_navigation_provider.dart`:
+  * 'straight', 'finish', 'stairs' -> 0°
+  * 'left' -> -90°
+  * 'right' -> +90°
+  * 'uturn' -> 180°
+- Centralized the `computeArState()` logic, removing redundant and conflicting math scattered across `ar_navigation_screen.dart` and `ar_instruction_banner.dart`.
+
+4. GROUND PLANE PROJECTION & PITCH HOTFIX
+-------------------------------------------------------
+- Fixed the previous painter implementation which barely moved the arrow's Y position.
+- Mapped true accelerometer pitch values (`+90°` = vertical phone, `-90°` = looking at floor) to the screen's Y-axis relative to the camera frame.
+- Arrow is now correctly anchored:
+  * Phone Vertical: Arrow sits anchored in the lower-third (Y≈72%).
+  * Phone Angled Down: Arrow moves up toward center (Y≈58%).
+  * Phone Floor-Facing: Arrow is centered (Y≈45%).
+- Adjusted the 3D affine matrix perspective transform to correctly apply foreshortening based on the look angle.
+
+5. PERFORMANCE & MEMORY FIXES
+-------------------------------------------------------
+- Added equality overrides to `ArNavigationState`.
+- `shouldRepaint` in `ArDirectionPainter` now works properly and ignores 20Hz sensor ticks if the state hasn't meaningfully changed.
+- Removed unused and dead Riverpod providers (`ArNavigationNotifier`).
+- Guarded camera controller against initialization race conditions during AppLifecycleState changes.
+
+-------------------------------------------------------
+OUTCOME: 
+All critical AR tracking logic has been rewritten to be semantic rather than relying on map coordinate math. The arrow is fixed to the ground projection plane and visually points in the direction required by the current navigation step. The release APK has been built and tested via the local CI runner.
+
+6. SECONDARY REFINEMENTS & CODE REVIEW INCORPORATION
+-------------------------------------------------------
+- AR Camera Resolution increased from medium to high for clearer graphics.
+- Removed Swipe-to-Calibrate feature per user direction.
+- Fixed Matrix4 logic where `rotateX` and `rotateZ` were out of order, causing arrows to tilt into the floor instead of sitting flat on it.
+- Added safety check to `ar_navigation_provider.dart` to prevent array out-of-bounds on `pathRooms` if instructions don't correctly map 1:1 with rooms.
+- Added visual clamp in `ar_direction_painter.dart` to hide arrows pointing > 120 degrees to prevent backward arrows floating over the screen.

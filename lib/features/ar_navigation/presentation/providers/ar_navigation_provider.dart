@@ -1,20 +1,19 @@
-import 'dart:async';
-import 'dart:math';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:indoor_navigation_system/features/navigation/presentation/providers/navigation_provider.dart';
 import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
-import 'package:indoor_navigation_system/features/ar_navigation/services/device_orientation_service.dart';
 
-/// On-track status relative to the next waypoint direction.
+/// Instruction category — indicates what the current step asks of the user.
+/// Note: this reflects the instruction type, not live compass deviation.
 enum OnTrackStatus { onTrack, slightTurn, offTrack }
 
 /// AR navigation state for the overlay rendering.
 class ArNavigationState {
-  final double relativeBearing; // -180..180 relative to device heading
+  /// Relative bearing for the arrow: the direction the arrow should point,
+  /// derived from the current navigation instruction (not compass).
+  /// -180..180 where 0 = forward, -90 = left, +90 = right, ±180 = behind.
+  final double relativeBearing;
   final OnTrackStatus onTrackStatus;
   final String? nextLandmarkName;
-  final double distanceToNext; // meters (euclidean in map units)
-  final int trailCount; // number of trail chevrons to draw
+  final double distanceToNext; // meters (from instruction)
   final bool hasData;
 
   const ArNavigationState({
@@ -22,139 +21,142 @@ class ArNavigationState {
     this.onTrackStatus = OnTrackStatus.offTrack,
     this.nextLandmarkName,
     this.distanceToNext = 0,
-    this.trailCount = 4,
     this.hasData = false,
   });
-}
-
-/// Provider that computes AR overlay data from existing navigation state
-/// and fused device orientation.
-///
-/// Uses `ref.listen` (not `ref.watch`) for navigation state changes
-/// so that `build()` does NOT reset the state each time the step advances.
-class ArNavigationNotifier extends Notifier<ArNavigationState> {
-  StreamSubscription? _orientationSubscription;
-  double _lastHeading = 0;
-  double _lastPitch = 0;
 
   @override
-  ArNavigationState build() {
-    ref.onDispose(() {
-      _orientationSubscription?.cancel();
-    });
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ArNavigationState &&
+          runtimeType == other.runtimeType &&
+          relativeBearing == other.relativeBearing &&
+          onTrackStatus == other.onTrackStatus &&
+          nextLandmarkName == other.nextLandmarkName &&
+          distanceToNext == other.distanceToNext &&
+          hasData == other.hasData;
 
-    // Listen (NOT watch) to navigation state so step changes trigger
-    // a recompute without resetting state.
-    ref.listen(navigationProvider, (_, __) {
-      _recompute(_lastHeading, _lastPitch);
-    });
+  @override
+  int get hashCode => Object.hash(
+    relativeBearing,
+    onTrackStatus,
+    nextLandmarkName,
+    distanceToNext,
+    hasData,
+  );
+}
 
-    // Start listening to orientation sensor stream
-    _startListening();
+/// Maps a navigation instruction icon to the relative bearing angle
+/// that the AR arrow should point toward.
+///
+/// This is the core fix: instead of computing map-pixel-bearing minus
+/// compass-heading (which are in different reference frames and give
+/// wrong directions), we use the instruction's own semantics.
+///
+/// The navigation instruction service already correctly computes turn
+/// directions from the path geometry. We just translate those to angles.
+double instructionIconToBearing(String icon) {
+  switch (icon) {
+    case 'straight':
+    case 'start':
+    case 'enter':
+    case 'exit':
+    case 'finish':
+    case 'stairs':
+    case 'stairs_up':
+    case 'stairs_down':
+    case 'elevator':
+    case 'elevator_up':
+    case 'elevator_down':
+      return 0.0; // Arrow points forward
+    case 'left':
+      return -90.0;
+    case 'right':
+      return 90.0;
+    case 'sharp_left':
+      return -135.0;
+    case 'sharp_right':
+      return 135.0;
+    case 'uturn':
+      return 180.0;
+    default:
+      return 0.0; // Default: forward
+  }
+}
 
-    // Return initial state — will be replaced on first sensor event
-    return const ArNavigationState();
+/// Determines instruction category from the icon.
+///
+/// - Forward-facing instructions (straight, start, stairs, etc.) → onTrack
+/// - Turns (left, right) → slightTurn (user will need to turn)
+/// - U-turns, sharp turns → offTrack (large direction change needed)
+///
+/// This is NOT live compass-based deviation detection.
+OnTrackStatus instructionIconToStatus(String icon) {
+  switch (icon) {
+    case 'straight':
+    case 'start':
+    case 'enter':
+    case 'exit':
+    case 'stairs':
+    case 'stairs_up':
+    case 'stairs_down':
+    case 'elevator':
+    case 'elevator_up':
+    case 'elevator_down':
+      return OnTrackStatus.onTrack;
+    case 'left':
+    case 'right':
+      return OnTrackStatus.slightTurn;
+    case 'sharp_left':
+    case 'sharp_right':
+    case 'uturn':
+      return OnTrackStatus.offTrack;
+    case 'finish':
+      return OnTrackStatus.onTrack;
+    default:
+      return OnTrackStatus.onTrack;
+  }
+}
+
+/// Computes the AR overlay state from the current navigation state.
+///
+/// This is a pure function — no compass, no map coordinates.
+/// The arrow direction comes entirely from what the instruction says.
+ArNavigationState computeArState(NavigationState navState) {
+  if (!navState.isNavigating || navState.instructions.isEmpty) {
+    return const ArNavigationState(hasData: false);
   }
 
-  void _startListening() {
-    final orientationService = ref.read(deviceOrientationServiceProvider);
+  final idx = navState.currentInstructionIndex.clamp(
+    0,
+    navState.instructions.length - 1,
+  );
+  final instruction = navState.instructions[idx];
 
-    _orientationSubscription?.cancel();
-    _orientationSubscription = orientationService.orientationStream.listen((
-      data,
-    ) {
-      _lastHeading = data.heading;
-      _lastPitch = data.pitch;
-      _recompute(data.heading, data.pitch);
-    });
-  }
+  final bearing = instructionIconToBearing(instruction.icon);
+  final status = instructionIconToStatus(instruction.icon);
 
-  void _recompute(double deviceHeading, double pitch) {
-    final navState = ref.read(navigationProvider);
-    if (!navState.isNavigating || navState.pathRooms.isEmpty) {
-      if (state.hasData) {
-        state = const ArNavigationState(hasData: false);
-      }
-      return;
-    }
-
-    final currentIndex = navState.currentInstructionIndex;
-    final pathRooms = navState.pathRooms;
-
-    // Current room (where user is) and target room (where user is heading)
-    final currentRoomIdx = currentIndex.clamp(0, pathRooms.length - 1);
-    final targetRoomIdx = (currentIndex + 1).clamp(0, pathRooms.length - 1);
-
-    final currentRoom = pathRooms[currentRoomIdx];
-    final targetRoom = pathRooms[targetRoomIdx];
-
-    // Bearing from current room to target room in map coordinates
-    final mapBearing = _bearingBetween(currentRoom, targetRoom);
-
-    // Relative bearing = map bearing - device heading (normalized to -180..180)
-    double relative = mapBearing - deviceHeading;
-    while (relative > 180) {
-      relative -= 360;
-    }
-    while (relative <= -180) {
-      relative += 360;
-    }
-
-    // On-track status
-    final absRelative = relative.abs();
-    OnTrackStatus status;
-    if (absRelative < 20) {
-      status = OnTrackStatus.onTrack;
-    } else if (absRelative < 60) {
-      status = OnTrackStatus.slightTurn;
-    } else {
-      status = OnTrackStatus.offTrack;
-    }
-
-    // Distance to next waypoint
-    final dist = _euclideanDist(currentRoom, targetRoom);
-
-    // Next landmark name — find the first non-hallway room ahead
-    String? landmark;
-    for (int i = targetRoomIdx; i < pathRooms.length; i++) {
-      if (pathRooms[i].type != RoomType.hallway) {
-        landmark = pathRooms[i].name;
+  // Find next landmark (first non-hallway room ahead of this instruction's
+  // room position). Uses roomIndex so the lookup is accurate even when
+  // instruction count differs from path room count.
+  String? landmark;
+  if (instruction.icon != 'finish' && navState.pathRooms.isNotEmpty) {
+    final searchStart = (instruction.roomIndex + 1).clamp(
+      0,
+      navState.pathRooms.length - 1,
+    );
+    for (int i = searchStart; i < navState.pathRooms.length; i++) {
+      if (navState.pathRooms[i].type != RoomType.hallway) {
+        landmark = navState.pathRooms[i].name;
         break;
       }
     }
-
-    // Trail count based on remaining path
-    final remaining = pathRooms.length - currentRoomIdx;
-    final trailCount = remaining.clamp(2, 5);
-
-    state = ArNavigationState(
-      relativeBearing: relative,
-      onTrackStatus: status,
-      nextLandmarkName: landmark,
-      distanceToNext: dist,
-      trailCount: trailCount,
-      hasData: true,
-    );
   }
 
-  /// Calculate bearing from room A to room B using map pixel coordinates.
-  /// Returns degrees 0..360 (0 = map-up).
-  double _bearingBetween(Room a, Room b) {
-    final dx = b.x - a.x;
-    final dy = -(b.y - a.y); // Negate Y because screen Y is inverted
-    final angle = atan2(dx, dy) * (180 / pi);
-    return (angle + 360) % 360;
-  }
-
-  /// Euclidean distance between two rooms (in map units, treated as meters).
-  double _euclideanDist(Room a, Room b) {
-    final dx = b.x - a.x;
-    final dy = b.y - a.y;
-    return sqrt(dx * dx + dy * dy);
-  }
+  return ArNavigationState(
+    relativeBearing: bearing,
+    onTrackStatus: status,
+    nextLandmarkName: landmark,
+    distanceToNext: instruction.distance,
+    hasData: true,
+  );
 }
-
-final arNavigationProvider =
-    NotifierProvider<ArNavigationNotifier, ArNavigationState>(
-      ArNavigationNotifier.new,
-    );

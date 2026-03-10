@@ -1,10 +1,8 @@
-import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:indoor_navigation_system/features/navigation/presentation/providers/navigation_provider.dart';
-import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
-import 'package:indoor_navigation_system/core/services/compass_service.dart';
+import '../providers/ar_navigation_provider.dart';
 
 /// Theme constants (matching UserHomeScreen Deep Void theme).
 const Color _deepVoidBlue = Color(0xFF0F172A);
@@ -12,73 +10,26 @@ const Color _electricGrid = Color(0xFF38BDF8);
 const Color _darkCardColor = Color(0xFF1E293B);
 const Color _paperWhite = Color(0xFFE2E8F0);
 
-/// Computes on-track status directly from compass + navigation state.
-/// This avoids dependence on the ArNavigationNotifier provider chain.
-enum _OnTrackStatus { onTrack, slightTurn, offTrack }
-
-_OnTrackStatus _computeOnTrackStatus(NavigationState navState, double heading) {
-  if (!navState.isNavigating || navState.pathRooms.length <= 1) {
-    return _OnTrackStatus.offTrack;
-  }
-
-  final idx = navState.currentInstructionIndex.clamp(
-    0,
-    navState.pathRooms.length - 1,
-  );
-  final nextIdx = (idx + 1).clamp(0, navState.pathRooms.length - 1);
-  final current = navState.pathRooms[idx];
-  final target = navState.pathRooms[nextIdx];
-
-  final dx = target.x - current.x;
-  final dy = -(target.y - current.y);
-  final mapBearing = (math.atan2(dx, dy) * 180 / math.pi + 360) % 360;
-
-  double relative = mapBearing - heading;
-  while (relative > 180) {
-    relative -= 360;
-  }
-  while (relative <= -180) {
-    relative += 360;
-  }
-
-  final abs = relative.abs();
-  if (abs < 20) return _OnTrackStatus.onTrack;
-  if (abs < 60) return _OnTrackStatus.slightTurn;
-  return _OnTrackStatus.offTrack;
-}
-
-String? _findNextLandmark(NavigationState navState) {
-  if (!navState.isNavigating || navState.pathRooms.isEmpty) return null;
-  final targetIdx = (navState.currentInstructionIndex + 1).clamp(
-    0,
-    navState.pathRooms.length - 1,
-  );
-  for (int i = targetIdx; i < navState.pathRooms.length; i++) {
-    if (navState.pathRooms[i].type != RoomType.hallway) {
-      return navState.pathRooms[i].name;
-    }
-  }
-  return null;
-}
-
 /// A frosted glass instruction banner for the AR navigation screen.
 ///
 /// Shows the current step icon, message, distance, progress bar,
 /// walk distance, and prev/next controls.
+///
+/// On-track status and next landmark are computed from the instruction icon,
+/// consistent with the AR arrow direction logic.
 class ArInstructionBanner extends ConsumerWidget {
   const ArInstructionBanner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navState = ref.watch(navigationProvider);
-    final heading = ref.watch(compassProvider) ?? 0.0;
 
     if (!navState.isNavigating || navState.instructions.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final onTrack = _computeOnTrackStatus(navState, heading);
-    final landmark = _findNextLandmark(navState);
+    // Use the same instruction-based AR state computation as the arrow
+    final arState = computeArState(navState);
 
     final instruction =
         navState.instructions[navState.currentInstructionIndex.clamp(
@@ -109,7 +60,7 @@ class ArInstructionBanner extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // On-track indicator strip
-                _buildOnTrackStrip(onTrack),
+                _buildOnTrackStrip(arState.onTrackStatus),
                 const SizedBox(height: 10),
 
                 // Main instruction row
@@ -150,11 +101,11 @@ class ArInstructionBanner extends ConsumerWidget {
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                if (landmark != null) ...[
+                                if (arState.nextLandmarkName != null) ...[
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      '→ $landmark',
+                                      '→ ${arState.nextLandmarkName}',
                                       style: TextStyle(
                                         color: _paperWhite.withValues(
                                           alpha: 0.6,
@@ -284,23 +235,23 @@ class ArInstructionBanner extends ConsumerWidget {
     );
   }
 
-  Widget _buildOnTrackStrip(_OnTrackStatus status) {
+  Widget _buildOnTrackStrip(OnTrackStatus status) {
     Color color;
     String text;
     IconData icon;
 
     switch (status) {
-      case _OnTrackStatus.onTrack:
+      case OnTrackStatus.onTrack:
         color = const Color(0xFF22C55E);
-        text = 'On Track';
+        text = 'Ahead';
         icon = Icons.check_circle_outline_rounded;
         break;
-      case _OnTrackStatus.slightTurn:
+      case OnTrackStatus.slightTurn:
         color = const Color(0xFFFBBF24);
-        text = 'Adjust Direction';
+        text = 'Turn Ahead';
         icon = Icons.turn_slight_right_rounded;
         break;
-      case _OnTrackStatus.offTrack:
+      case OnTrackStatus.offTrack:
         color = const Color(0xFFEF4444);
         text = 'Turn Around';
         icon = Icons.u_turn_right_rounded;
@@ -346,9 +297,13 @@ class ArInstructionBanner extends ConsumerWidget {
         iconData = Icons.arrow_upward_rounded;
         break;
       case 'stairs':
+      case 'stairs_up':
+      case 'stairs_down':
         iconData = Icons.stairs_rounded;
         break;
       case 'elevator':
+      case 'elevator_up':
+      case 'elevator_down':
         iconData = Icons.elevator_rounded;
         break;
       case 'finish':

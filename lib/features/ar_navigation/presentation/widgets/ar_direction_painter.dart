@@ -3,23 +3,29 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import '../providers/ar_navigation_provider.dart';
 
-/// CustomPainter that renders a large directional arrow at screen center
-/// with trailing chevrons creating a pseudo-3D "path ahead" effect.
+/// CustomPainter that renders a single 3D perspective-projected arrow
+/// on the ground plane of the camera feed.
 ///
-/// The lead arrow:
-/// - Is always visible and large (not based on waypoint projection)
-/// - Rotates based on relative bearing to next waypoint
+/// The arrow:
+/// - Appears to lie flat on the ground, pointing toward the next waypoint
+/// - Rotates based on the instruction's relative bearing (left/right/straight)
+/// - Uses perspective foreshortening (trapezoid shape) for 3D depth
 /// - Changes color: green (on-track), yellow (slight turn), red (off-track)
 /// - Pulses with a glow animation
-///
-/// Trail chevrons:
-/// - Drawn behind the lead arrow, progressively smaller and more transparent
-/// - Create the illusion of a path stretching into the distance
+/// - Uses device pitch to anchor to the ground plane:
+///   * Camera at sky → arrow at very bottom (ground is below)
+///   * Camera horizontal → arrow in lower third
+///   * Camera at floor → arrow moves toward center (looking at ground)
 class ArDirectionPainter extends CustomPainter {
   final ArNavigationState arState;
-  final double pulseValue; // 0.0..1.0 animation value for lead arrow pulse
+  final double pulseValue; // 0.0..1.0 animation value
+  final double devicePitch; // -90..90 degrees (phone tilt)
 
-  ArDirectionPainter({required this.arState, this.pulseValue = 0.5});
+  ArDirectionPainter({
+    required this.arState,
+    this.pulseValue = 0.5,
+    this.devicePitch = 0.0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -27,18 +33,40 @@ class ArDirectionPainter extends CustomPainter {
 
     final bearing = arState.relativeBearing; // -180..180
 
-    // === LEAD ARROW ===
-    // Position: center of screen, shifted horizontally by bearing
-    // When bearing is 0, arrow is dead center. At ±90°, it's at the edges.
-    final centerX =
-        size.width / 2 +
-        (bearing / 90.0).clamp(-1.0, 1.0) * (size.width * 0.35);
-    final centerY = size.height * 0.45; // Slightly above center
+    // --- Ground plane projection ---
+    // DeviceOrientationService pitch values (after atan2 + clamp):
+    //   +90° = phone vertical (camera looks forward/horizontal)
+    //   +45° = phone tilted slightly toward floor
+    //     0° = phone at ~45° from vertical
+    //   -90° = phone flat face-up (camera at ceiling) or looking at ground
+    //
+    // For AR ground projection:
+    //   Phone vertical (+90): arrow in lower third (user looking ahead)
+    //   Phone tilted down (+45): arrow moves up (ground is more visible)
+    //   Phone flat (0 or below): arrow near center (looking straight at floor)
 
-    final leadSize = 60.0 + pulseValue * 8.0; // Pulsing size
+    // Map pitch from [-90, +90] to arrow Y position
+    // Higher pitch (vertical) → lower on screen (ground is in lower view)
+    // Lower pitch (tilted down) → higher on screen (ground fills more view)
+    final pitchNorm = ((devicePitch + 90.0) / 180.0).clamp(0.0, 1.0);
+    // pitchNorm: 0.0 = phone flat (-90°), 0.5 = 45° angle, 1.0 = vertical (+90°)
+
+    // Y position: center (0.45) when looking at floor → lower-third (0.72) when vertical
+    final groundY = size.height * (0.45 + pitchNorm * 0.27);
+
+    // Don't paint if arrow is completely off-screen
+    if (groundY > size.height * 1.1 || groundY < 0) return;
+
+    // Horizontal offset based on bearing (-90..+90 maps to screen edges)
+    final bearingNorm = (bearing / 90.0).clamp(-1.0, 1.0);
+    final groundX = size.width / 2 + bearingNorm * (size.width * 0.35);
+
+    // Arrow size — large enough to be clearly visible
+    final arrowLength = size.width * 0.28 + pulseValue * 8.0;
+    final arrowWidth = arrowLength * 0.55;
 
     // Arrow color from on-track status
-    Color arrowColor;
+    final Color arrowColor;
     switch (arState.onTrackStatus) {
       case OnTrackStatus.onTrack:
         arrowColor = const Color(0xFF22C55E); // Green
@@ -51,187 +79,133 @@ class ArDirectionPainter extends CustomPainter {
         break;
     }
 
-    // Glow effect
+    canvas.save();
+    canvas.translate(groundX, groundY);
+
+    // Clamp rendering bearing so arrow stays visible even for u-turns
+    final renderBearing = bearing.clamp(-120.0, 120.0);
+    final rotationRad = renderBearing * (pi / 180.0);
+
+    // --- 3D Perspective transform ---
+    // Simulates the arrow lying flat on the ground plane.
+    // When phone is vertical (looking ahead): stronger perspective (pitchNorm=1)
+    // When phone is flat looking at floor: zero tilt, arrow drawn flat (pitchNorm=0)
+    final perspectiveStrength = 0.5 + pitchNorm * 0.4;
+
+    // The order of operations in Matrix4 is extremely important.
+    // ..rotateX() tilts the ground plane into perspective from the user's camera
+    // ..rotateZ() then rotates the arrow *along* that newly flat ground plane.
+    // If we rotateZ before rotateX, left/right arrows would tilt sideways into the floor!
+    final Matrix4 transform = Matrix4.identity()
+      ..setEntry(3, 2, 0.003 * perspectiveStrength) // Z-perspective
+      ..rotateX(
+        pitchNorm * 1.2,
+      ) // TILT: 0.0 when looking down, 1.2rad (70deg) when vertical
+      ..rotateZ(rotationRad);
+
+    canvas.transform(transform.storage);
+
+    // --- Draw the 3D arrow shape ---
+    final halfW = arrowWidth / 2;
+    final halfL = arrowLength / 2;
+
+    // Ground shadow (soft, below the arrow)
+    final shadowPath = _buildArrowPath(halfW * 1.08, halfL * 1.05);
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.35 + pulseValue * 0.1)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18)
+      ..style = PaintingStyle.fill;
+    canvas.save();
+    canvas.translate(2, 4); // Shadow offset
+    canvas.drawPath(shadowPath, shadowPaint);
+    canvas.restore();
+
+    // Outer glow
+    final glowPath = _buildArrowPath(halfW * 1.15, halfL * 1.1);
     final glowPaint = Paint()
-      ..color = arrowColor.withValues(alpha: 0.25 + pulseValue * 0.15)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28)
+      ..color = arrowColor.withValues(alpha: 0.2 + pulseValue * 0.15)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 24)
       ..style = PaintingStyle.fill;
-    _drawArrow(canvas, centerX, centerY, leadSize * 1.4, bearing, glowPaint);
+    canvas.drawPath(glowPath, glowPaint);
 
-    // Filled arrow
-    final fillPaint = Paint()
-      ..color = arrowColor.withValues(alpha: 0.85 + pulseValue * 0.15)
+    // Main arrow body — gradient fill for 3D depth
+    final arrowPath = _buildArrowPath(halfW, halfL);
+
+    final bodyPaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(0, -halfL), // tip (far, darker)
+        Offset(0, halfL), // base (near, brighter)
+        [
+          arrowColor.withValues(alpha: 0.6),
+          arrowColor.withValues(alpha: 0.95 + pulseValue * 0.05),
+        ],
+      )
       ..style = PaintingStyle.fill;
-    _drawArrow(canvas, centerX, centerY, leadSize, bearing, fillPaint);
+    canvas.drawPath(arrowPath, bodyPaint);
 
-    // White outline
+    // Bright edge highlight (top surface simulation)
+    final highlightPaint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(-halfW * 0.3, -halfL),
+        Offset(halfW * 0.3, halfL * 0.5),
+        [
+          Colors.white.withValues(alpha: 0.35),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+      )
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(arrowPath, highlightPaint);
+
+    // White outline for definition
     final outlinePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.9)
-      ..strokeWidth = 3.0
+      ..color = Colors.white.withValues(alpha: 0.8)
+      ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-    _drawArrow(canvas, centerX, centerY, leadSize, bearing, outlinePaint);
+    canvas.drawPath(arrowPath, outlinePaint);
 
-    // === TRAIL CHEVRONS ===
-    for (int i = 1; i <= arState.trailCount; i++) {
-      final depthScale = 1.0 / (1.0 + i * 0.5);
-      final trailSize = 35.0 * depthScale;
-      final opacity = (0.6 * depthScale).clamp(0.1, 0.5);
+    // Inner center line (adds 3D depth cue)
+    final centerLinePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.3 + pulseValue * 0.1)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(0, -halfL * 0.3),
+      Offset(0, halfL * 0.5),
+      centerLinePaint,
+    );
 
-      // Trail chevrons extend "into the distance" — same X direction, moving toward center Y
-      final trailX =
-          size.width / 2 +
-          (bearing / 90.0).clamp(-1.0, 1.0) * (size.width * 0.35) * depthScale;
-      final trailY =
-          centerY - (i * 45.0 * depthScale); // Stack upward toward "horizon"
-
-      // Trail uses electric blue
-      final trailPaint = Paint()
-        ..color = const Color(0xFF38BDF8).withValues(alpha: opacity)
-        ..style = PaintingStyle.fill;
-      _drawChevron(canvas, trailX, trailY, trailSize, trailPaint);
-
-      // Thin outline
-      final trailOutline = Paint()
-        ..color = Colors.white.withValues(alpha: opacity * 0.6)
-        ..strokeWidth = 1.5
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
-      _drawChevron(canvas, trailX, trailY, trailSize, trailOutline);
-    }
-
-    // === NEXT LANDMARK LABEL ===
-    if (arState.nextLandmarkName != null &&
-        arState.nextLandmarkName!.isNotEmpty) {
-      _drawLandmarkLabel(
-        canvas,
-        size,
-        centerX,
-        centerY - leadSize - 20,
-        arState.nextLandmarkName!,
-      );
-    }
-  }
-
-  /// Draws a directional arrow rotated by bearing angle.
-  void _drawArrow(
-    Canvas canvas,
-    double cx,
-    double cy,
-    double size,
-    double bearing,
-    Paint paint,
-  ) {
-    canvas.save();
-    canvas.translate(cx, cy);
-
-    // Rotate arrow: 0° = pointing up, positive = clockwise
-    // But we clamp rotation to avoid the arrow spinning wildly
-    final rotationDeg = bearing.clamp(-90.0, 90.0);
-    canvas.rotate(rotationDeg * pi / 180);
-
-    final path = Path();
-    // Upward-pointing arrow
-    path.moveTo(0, -size * 0.5); // Top tip
-    path.lineTo(size * 0.35, size * 0.2); // Bottom right
-    path.lineTo(size * 0.12, size * 0.05); // Inner right
-    path.lineTo(0, -size * 0.15); // Inner top
-    path.lineTo(-size * 0.12, size * 0.05); // Inner left
-    path.lineTo(-size * 0.35, size * 0.2); // Bottom left
-    path.close();
-
-    canvas.drawPath(path, paint);
     canvas.restore();
   }
 
-  /// Draws a simple upward-pointing chevron (no rotation).
-  void _drawChevron(
-    Canvas canvas,
-    double cx,
-    double cy,
-    double size,
-    Paint paint,
-  ) {
+  /// Builds a chunky arrow path centered at origin, pointing upward (negative Y).
+  Path _buildArrowPath(double halfWidth, double halfLength) {
     final path = Path();
-    path.moveTo(cx, cy - size * 0.4);
-    path.lineTo(cx + size * 0.35, cy + size * 0.15);
-    path.lineTo(cx + size * 0.15, cy + size * 0.0);
-    path.lineTo(cx, cy - size * 0.1);
-    path.lineTo(cx - size * 0.15, cy + size * 0.0);
-    path.lineTo(cx - size * 0.35, cy + size * 0.15);
+    // Arrow tip (pointing forward / up)
+    path.moveTo(0, -halfLength);
+    // Right wing
+    path.lineTo(halfWidth, -halfLength * 0.15);
+    // Right notch (creates the arrow cutout)
+    path.lineTo(halfWidth * 0.35, halfLength * 0.05);
+    // Right tail
+    path.lineTo(halfWidth * 0.35, halfLength);
+    // Left tail
+    path.lineTo(-halfWidth * 0.35, halfLength);
+    // Left notch
+    path.lineTo(-halfWidth * 0.35, halfLength * 0.05);
+    // Left wing
+    path.lineTo(-halfWidth, -halfLength * 0.15);
     path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  /// Draws a floating label pill above the lead arrow.
-  void _drawLandmarkLabel(
-    Canvas canvas,
-    Size canvasSize,
-    double cx,
-    double labelY,
-    String text,
-  ) {
-    final textStyle = ui.TextStyle(
-      color: Colors.white,
-      fontSize: 13,
-      fontWeight: FontWeight.w600,
-    );
-
-    final paragraphStyle = ui.ParagraphStyle(
-      textAlign: TextAlign.center,
-      maxLines: 1,
-      ellipsis: '...',
-    );
-
-    final paragraphBuilder = ui.ParagraphBuilder(paragraphStyle)
-      ..pushStyle(textStyle)
-      ..addText(text);
-
-    final paragraph = paragraphBuilder.build()
-      ..layout(ui.ParagraphConstraints(width: canvasSize.width * 0.5));
-
-    final textWidth = paragraph.longestLine;
-    final textHeight = paragraph.height;
-
-    // Clamp label position within screen bounds
-    final clampedX = cx.clamp(
-      textWidth / 2 + 16,
-      canvasSize.width - textWidth / 2 - 16,
-    );
-    final clampedY = labelY.clamp(40.0, canvasSize.height - 200);
-
-    // Background pill
-    final bgRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(
-        center: Offset(clampedX, clampedY),
-        width: textWidth + 24,
-        height: textHeight + 12,
-      ),
-      const Radius.circular(12),
-    );
-
-    final bgPaint = Paint()
-      ..color = const Color(0xFF0F172A).withValues(alpha: 0.8);
-    canvas.drawRRect(bgRect, bgPaint);
-
-    // Cyan border
-    final borderPaint = Paint()
-      ..color = const Color(0xFF38BDF8).withValues(alpha: 0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    canvas.drawRRect(bgRect, borderPaint);
-
-    canvas.drawParagraph(
-      paragraph,
-      Offset(clampedX - textWidth / 2, clampedY - textHeight / 2),
-    );
+    return path;
   }
 
   @override
   bool shouldRepaint(covariant ArDirectionPainter oldDelegate) {
+    // ArNavigationState now has proper == override, so this works correctly.
     return oldDelegate.arState != arState ||
-        oldDelegate.pulseValue != pulseValue;
+        oldDelegate.pulseValue != pulseValue ||
+        (oldDelegate.devicePitch - devicePitch).abs() > 0.5;
   }
 }
