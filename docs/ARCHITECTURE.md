@@ -41,9 +41,11 @@ The heart of the navigation system is the `PathfindingService`, which implements
 
 - **Algorithm**: A* with Euclidean distance heuristic.
 - **Graph Structure**: 
-  - Nodes: Rooms, Connectors (Stairs, Elevators).
-  - Edges: Corridors with weights representing distance.
+  - Nodes: Rooms, Connectors (Stairs, Elevators). Excludes rooms marked "Out of Service".
+  - Edges: Corridors with weights representing physical distance.
+- **Campus Connectivity**: Supports inter-building routing using "virtual edges" with applied penalties.
 - **Optimization**: Supports multi-floor routing by connecting floor graphs via vertical connectors.
+- **Multi-Stop Errand Optimizer**: Employs a nearest-neighbor Traveling Salesperson Problem (TSP) algorithm to find the most efficient route across multiple waypoints before reaching a final destination.
 
 ### Admin Map Management
 Handles the creation and maintenance of the digital map.
