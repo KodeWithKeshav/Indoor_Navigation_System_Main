@@ -728,6 +728,5 @@ Copyright (c) 2026 Indoor Navigation System Team
 
 **[⬆ Back to Top](#indoor-navigation-system)**
 
-Made with ❤️ by the Indoor Navigation System Team
 
 </div>
