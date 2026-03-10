@@ -221,3 +221,11 @@ final deviceOrientationServiceProvider =
       ref.onDispose(() => service.dispose());
       return service;
     });
+
+/// Reactive provider for the current device pitch (-90..+90°).
+/// Rebuilds consumers on every sensor update, unlike reading
+/// `DeviceOrientationService.currentPitch` which is a snapshot.
+final devicePitchProvider = StreamProvider.autoDispose<double>((ref) {
+  final service = ref.watch(deviceOrientationServiceProvider);
+  return service.orientationStream.map((data) => data.pitch);
+});

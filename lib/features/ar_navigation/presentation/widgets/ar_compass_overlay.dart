@@ -9,7 +9,11 @@ import 'package:flutter/material.dart';
 /// - N/E/S/W labels
 class ArCompassOverlay extends StatefulWidget {
   final double? currentHeading; // 0..360
-  final double targetBearing; // 0..360 (absolute bearing to next waypoint)
+  /// The absolute world bearing the user should walk toward (0..360).
+  /// Computed as (currentHeading + instructionRelativeBearing) by the caller.
+  /// The compass ring rotates by -currentHeading, so the needle appears at
+  /// the correct *relative* screen position automatically.
+  final double targetBearing;
 
   const ArCompassOverlay({
     super.key,

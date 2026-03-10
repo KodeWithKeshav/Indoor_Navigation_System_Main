@@ -243,7 +243,7 @@ class ArInstructionBanner extends ConsumerWidget {
     switch (status) {
       case OnTrackStatus.onTrack:
         color = const Color(0xFF22C55E);
-        text = 'On Track';
+        text = 'Ahead';
         icon = Icons.check_circle_outline_rounded;
         break;
       case OnTrackStatus.slightTurn:

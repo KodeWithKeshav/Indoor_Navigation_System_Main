@@ -1,7 +1,8 @@
 import 'package:indoor_navigation_system/features/navigation/presentation/providers/navigation_provider.dart';
 import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
 
-/// On-track status relative to the next waypoint direction.
+/// Instruction category — indicates what the current step asks of the user.
+/// Note: this reflects the instruction type, not live compass deviation.
 enum OnTrackStatus { onTrack, slightTurn, offTrack }
 
 /// AR navigation state for the overlay rendering.
@@ -82,11 +83,13 @@ double instructionIconToBearing(String icon) {
   }
 }
 
-/// Determines on-track status from the instruction's direction.
+/// Determines instruction category from the icon.
 ///
-/// - Forward-facing instructions (straight, start, stairs, etc.) → on-track
-/// - Turns (left, right) → slight turn (user needs to turn)
-/// - U-turns, sharp turns → off-track (user is facing the wrong way)
+/// - Forward-facing instructions (straight, start, stairs, etc.) → onTrack
+/// - Turns (left, right) → slightTurn (user will need to turn)
+/// - U-turns, sharp turns → offTrack (large direction change needed)
+///
+/// This is NOT live compass-based deviation detection.
 OnTrackStatus instructionIconToStatus(String icon) {
   switch (icon) {
     case 'straight':
@@ -132,20 +135,17 @@ ArNavigationState computeArState(NavigationState navState) {
   final bearing = instructionIconToBearing(instruction.icon);
   final status = instructionIconToStatus(instruction.icon);
 
-  // Find next landmark (first non-hallway room ahead)
+  // Find next landmark (first non-hallway room ahead of this instruction's
+  // room position). Uses roomIndex so the lookup is accurate even when
+  // instruction count differs from path room count.
   String? landmark;
-  if (instruction.icon != 'finish') {
-    final targetRoom = navState.currentTargetRoom;
-    if (targetRoom != null && targetRoom.type != RoomType.hallway) {
-      landmark = targetRoom.name;
-    } else if (navState.pathRooms.isNotEmpty) {
-      final searchStart = (navState.currentInstructionIndex + 1)
-          .clamp(0, navState.pathRooms.length - 1);
-      for (int i = searchStart; i < navState.pathRooms.length; i++) {
-        if (navState.pathRooms[i].type != RoomType.hallway) {
-          landmark = navState.pathRooms[i].name;
-          break;
-        }
+  if (instruction.icon != 'finish' && navState.pathRooms.isNotEmpty) {
+    final searchStart =
+        (instruction.roomIndex + 1).clamp(0, navState.pathRooms.length - 1);
+    for (int i = searchStart; i < navState.pathRooms.length; i++) {
+      if (navState.pathRooms[i].type != RoomType.hallway) {
+        landmark = navState.pathRooms[i].name;
+        break;
       }
     }
   }

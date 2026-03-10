@@ -13,10 +13,15 @@ class NavigationInstruction {
   final String
   icon; // 'straight', 'left', 'right', 'stairs_up', 'stairs_down', 'elevator_up', 'elevator_down', 'finish', 'start', 'enter', 'exit', 'uturn', 'sharp_left', 'sharp_right'
 
+  /// Index into the path rooms list that this instruction relates to.
+  /// Used by AR landmark lookup to find the correct nearby room.
+  final int roomIndex;
+
   NavigationInstruction({
     required this.message,
     required this.distance,
     required this.icon,
+    this.roomIndex = 0,
   });
 }
 
@@ -66,6 +71,7 @@ class NavigationInstructionService {
         message: "Start at ${path.first.name}",
         distance: 0,
         icon: 'start',
+        roomIndex: 0,
       ),
     );
 
@@ -86,6 +92,7 @@ class NavigationInstructionService {
             icon: isElevator
                 ? (isUp ? 'elevator_up' : 'elevator_down')
                 : (isUp ? 'stairs_up' : 'stairs_down'),
+            roomIndex: i,
           ),
         );
         lastWasTransition = true;
@@ -104,15 +111,18 @@ class NavigationInstructionService {
               message: "Enter building",
               distance: 0,
               icon: 'enter',
+              roomIndex: i,
             ),
           );
         } else if (!currentOutdoor && nextOutdoor) {
           // Indoor → Outdoor = Exit building
+          // roomIndex set below
           instructions.add(
             NavigationInstruction(
               message: "Exit building",
               distance: 0,
               icon: 'exit',
+              roomIndex: i,
             ),
           );
         } else if (next.type == RoomType.entrance ||
@@ -123,6 +133,7 @@ class NavigationInstructionService {
               message: "Pass through entrance",
               distance: 0,
               icon: 'enter',
+              roomIndex: i,
             ),
           );
         }
@@ -166,6 +177,7 @@ class NavigationInstructionService {
                     "Exit ${isElevator ? 'elevator' : 'stairs'} and walk forward",
                 distance: segmentDist,
                 icon: 'straight',
+                roomIndex: i,
               ),
             );
           } else {
@@ -176,6 +188,7 @@ class NavigationInstructionService {
                   message: "Walk straight",
                   distance: segmentDist,
                   icon: 'straight',
+                  roomIndex: i,
                 ),
               );
             }
@@ -194,6 +207,7 @@ class NavigationInstructionService {
                 message: turnMessage,
                 distance: 0,
                 icon: turn,
+                roomIndex: i,
               ),
             );
           }
@@ -206,6 +220,7 @@ class NavigationInstructionService {
                 message: "Walk straight",
                 distance: segmentDist,
                 icon: 'straight',
+                roomIndex: i,
               ),
             );
           }
@@ -219,6 +234,7 @@ class NavigationInstructionService {
         message: "Arrive at ${path.last.name}",
         distance: 0,
         icon: 'finish',
+        roomIndex: path.length - 1,
       ),
     );
 
@@ -269,6 +285,7 @@ class NavigationInstructionService {
               message: "Turn around towards $destinationName",
               distance: 0,
               icon: "uturn",
+              roomIndex: i,
             ),
           );
         } else if (turnAngle > 0) {
@@ -277,6 +294,7 @@ class NavigationInstructionService {
               message: "Turn Right towards $destinationName",
               distance: 0,
               icon: "right",
+              roomIndex: i,
             ),
           );
         } else {
@@ -285,6 +303,7 @@ class NavigationInstructionService {
               message: "Turn Left towards $destinationName",
               distance: 0,
               icon: "left",
+              roomIndex: i,
             ),
           );
         }
@@ -295,6 +314,7 @@ class NavigationInstructionService {
             message: "Head towards $destinationName",
             distance: 0,
             icon: "straight",
+            roomIndex: i,
           ),
         );
       }
@@ -306,6 +326,7 @@ class NavigationInstructionService {
             message: "Head towards $destinationName",
             distance: 0,
             icon: "straight",
+            roomIndex: i,
           ),
         );
       }
@@ -318,6 +339,7 @@ class NavigationInstructionService {
           message: "Walk straight",
           distance: segmentDist,
           icon: 'straight',
+          roomIndex: i,
         ),
       );
     }
@@ -352,6 +374,7 @@ class NavigationInstructionService {
           message: current.message,
           distance: current.distance + next.distance,
           icon: current.icon,
+          roomIndex: current.roomIndex,
         );
         continue;
       }
@@ -376,6 +399,7 @@ class NavigationInstructionService {
         message: "$idx. ${inst.message}",
         distance: inst.distance,
         icon: inst.icon,
+        roomIndex: inst.roomIndex,
       );
     }).toList();
   }

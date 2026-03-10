@@ -85,7 +85,6 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
         if (mounted) {
           setState(() {
             _isPermissionDenied = true;
-            _errorMessage = 'Camera permission is required for AR navigation.';
           });
         }
         return;
@@ -155,9 +154,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     final heading =
         ref.watch(compassProvider) ?? 0.0; // Kept for ArCompassOverlay
 
-    // Read device pitch from orientation service for ground projection
-    final orientationService = ref.watch(deviceOrientationServiceProvider);
-    final pitch = orientationService.currentPitch;
+    // Read device pitch reactively — rebuilds on every sensor update
+    final pitch = ref.watch(devicePitchProvider).valueOrNull ?? 0.0;
 
     // Compute AR state dynamically from instruction semantics
     final arState = computeArState(navState);
@@ -265,8 +263,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
   }
 
   Widget _buildCameraLayer() {
-    if (_errorMessage != null) return _buildErrorState(_errorMessage!);
     if (_isPermissionDenied) return _buildPermissionDeniedState();
+    if (_errorMessage != null) return _buildErrorState(_errorMessage!);
     if (!_isCameraInitialized || _cameraController == null) {
       return const Center(
         child: CircularProgressIndicator(color: _electricGrid),
