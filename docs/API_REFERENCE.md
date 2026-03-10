@@ -13,18 +13,45 @@ The `PathfindingService` is responsible for calculating the shortest path betwee
 Calculates the optimal route between a start and end node.
 
 ```dart
-Future<Either<Failure, RoutePath>> findPath({
-  required String startNodeId,
-  required String endNodeId,
-  bool accessible = false, // Avoid stairs if true
+List<String> findPath(
+  String startRoomId,
+  String endRoomId,
+  List<Room> rooms,
+  List<Corridor> corridors, {
+  bool isAccessible = false,
 })
 ```
 
 - **Parameters**: 
-  - `startNodeId`: Unique identifier of the starting room/node.
-  - `endNodeId`: Unique identifier of the destination room/node.
-  - `accessible`: Boolean flag to enable wheelchair-accessible routing.
-- **Returns**: `Right(RoutePath)` on success, or `Left(Failure)` if no path is found.
+  - `startRoomId`: Unique identifier of the starting room.
+  - `endRoomId`: Unique identifier of the destination room.
+  - `rooms`: Complete list of available rooms (nodes).
+  - `corridors`: Complete list of corridors/connections (edges).
+  - `isAccessible`: Boolean flag to enable wheelchair-accessible routing (avoids stairs).
+- **Returns**: A list of room IDs forming the shortest path. Empty if unreachable.
+
+#### `findTSPPath`
+
+Calculates the optimal order to visit multiple waypoints before reaching the destination (Traveling Salesperson Problem).
+
+```dart
+List<String> findTSPPath(
+  String startId,
+  List<String> waypoints,
+  String endId,
+  List<Room> rooms,
+  List<Corridor> corridors, {
+  bool isAccessible = false,
+})
+```
+
+- **Parameters**: 
+  - `startId`: The starting room.
+  - `waypoints`: List of intermediate room IDs to visit.
+  - `endId`: The final destination room.
+  - `rooms` & `corridors`: Map data.
+  - `isAccessible`: Accessibility constraint.
+- **Returns**: An ordered list of room IDs forming the most efficient multi-stop route.
 
 ### GraphService
 
@@ -38,7 +65,7 @@ Fetches all map data and constructs the weighted graph.
 Future<void> buildGraph();
 ```
 
-- **Description**: Loads buildings, floors, rooms, and connections to build the in-memory graph used by `PathfindingService`. Should be called on app startup or when map data changes.
+- **Description**: Loads buildings, floors, rooms, and campus connections to build the in-memory graph used by `PathfindingService`. Should be called on app startup or when map data changes. Handles virtual edge creation for multi-building routes.
 
 #### `getGraph`
 
@@ -58,6 +85,14 @@ Handles data operations for buildings.
 - `addBuilding(building)`: Create a new building.
 - `updateBuilding(building)`: Update existing building details.
 - `deleteBuilding(buildingId)`: Remove a building and its floors.
+
+### CampusConnectionRepository
+
+Handles connections between distinct buildings.
+
+- `getCampusConnections()`: Fetch all cross-building virtual edges.
+- `addCampusConnection(connection)`: Create a path between two buildings.
+- `deleteCampusConnection(connectionId)`: Remove a building link.
 
 ### RoomRepository
 
@@ -83,16 +118,28 @@ class RoutePath {
 }
 ```
 
-### GraphNode
+```dart
+class Room {
+  final String id;
+  final String floorId;
+  final String name;
+  final RoomType type; // room, corridor, stair, elevator, entrance
+  final double x;
+  final double y;
+  final bool isClosed; // True if Out of Service (excluded from pathfinding)
+}
+```
 
-Represents a point on the map.
+### CampusConnection
+
+Represents a routable connection between two different buildings.
 
 ```dart
-class GraphNode {
+class CampusConnection {
   final String id;
-  final String name;
-  final NodeType type; // room, corridor, stair, elevator
-  final Coordinates position;
+  final String fromBuildingId;
+  final String toBuildingId;
+  final double distance; // Base penalty added when generating virtual edge
 }
 ```
 

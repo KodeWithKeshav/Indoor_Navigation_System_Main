@@ -78,6 +78,9 @@ Inspired by **Don Norman's "The Design of Everyday Things"**, the UI emphasizes:
 - **Accessibility Mode**: Avoid stairs and prioritize elevators for users with mobility needs
 - **Real-Time Recalculation**: Instant route updates when start/end points change
 - **Disconnected Path Detection**: Graceful handling of unreachable destinations
+- **Multi-Stop Errand Optimizer**: TSP-based nearest-neighbor routing for efficient multi-waypoint trips
+- **Campus Connections**: Cross-building navigation using virtual edges and physical corridors
+- **Out-of-Service Handling**: Dynamic exclusion of closed rooms and corridors from route generation
 
 ### 👤 User-Friendly Navigation
 - **Trip Planner**: Select start and end locations with intuitive search and browse modes
@@ -91,6 +94,7 @@ Inspired by **Don Norman's "The Design of Everyday Things"**, the UI emphasizes:
 - **Role-Based Access**: Admin, Student, and Guest user roles
 - **Firebase Authentication**: Secure login with email/password
 - **Protected Admin Features**: Map management restricted to authorized users
+- **Admin Session Safety**: Logout confirmation dialogs to prevent accidental session termination
 
 ### 🎨 Modern UI/UX
 - **Glassmorphism Design**: Modern aesthetic with purple/pink gradient themes
@@ -610,6 +614,8 @@ test/
 | PathfindingService | 5 tests | 95% |
 | GraphService | 3 tests | 90% |
 | TripPlannerWidget | Widget tests | 85% |
+| **Integration Suite** | 66 tests | 90% |
+| **Total Test Suite** | 250 passed | 100% pass rate |
 
 For detailed testing documentation, see [docs/testing_documentation.md](docs/testing_documentation.md).
 
@@ -623,6 +629,10 @@ For detailed testing documentation, see [docs/testing_documentation.md](docs/tes
 - Basic user navigation
 - Authentication system
 - Trip planner UI
+- Multi-destination routing (Errand Optimizer)
+- Comprehensive Integration Testing
+- Cross-building campus connections
+- Admin UI Logout Safety
 
 ### 🚧 In Progress
 - Voice-guided navigation
@@ -636,7 +646,6 @@ For detailed testing documentation, see [docs/testing_documentation.md](docs/tes
   - High-contrast mode toggle
 
 - **Advanced Navigation** (v1.2.0)
-  - Multi-destination routing
   - Points of interest (POI) integration
   - Crowdsourced path optimization
 

@@ -8,7 +8,7 @@ Welcome to the **Indoor Navigation System**! This manual will guide you through 
 - **Launch the App**: You will see the login screen.
 - **Student/Staff**: Enter your university email and password.
 - **Guest**: Tap "Continue as Guest" for limited access (navigation only).
-- **Admin**: Login with administrator credentials to access map management tools.
+- **Admin**: Login with administrator credentials to access map management tools. (Logout prompts a confirmation dialog to prevent accidental session loss).
 
 ### 2. Home Screen
 - **Search Bar**: Tap to find a room quickly.
@@ -23,6 +23,7 @@ Welcome to the **Indoor Navigation System**! This manual will guide you through 
 2. **Select Start Location**: Defaults to "Current Location" (if available), or type a room name (e.g., "Library").
 3. **Select Destination**: Type the room name or number (e.g., "Lab 301").
 4. **Browse Mode**: Tap the folder icon to browse by Building > Floor > Room.
+5. **Add Waypoints (Errands)**: Tap "**Add Stop**" below the destination to add multiple locations to your trip. The system will automatically optimize the visit order to minimize total travel time!
 
 ### Customize Route
 - **Accessible Route**: Toggle the wheelchair icon ♿ to avoid stairs and use elevators.
@@ -51,6 +52,7 @@ Access the **Admin Panel** from the side drawer.
 1. Select a building > Select a floor.
 2. **Add Room**: Tap a location on the grid/map. Enter room details.
 3. **Add Connection**: Select "Corridor", "Stair", or "Elevator" tool. Draw connections between rooms.
+4. **Toggle Out-of-Service**: Edit an existing room to mark it "Out of Service". It will immediately turn red on the grid and be excluded from all user navigation routes.
 
 ## ❓ FAQ
 
