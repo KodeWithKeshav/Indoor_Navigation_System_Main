@@ -538,7 +538,7 @@ For detailed architecture documentation, see [docs/ARCHITECTURE.md](docs/ARCHITE
 
 ### System Architecture
 
-![System Architecture](docs/diagrams/architecture.png)
+![System Architecture](docs/diagrams/archi.jpeg)
 
 The architecture diagram illustrates the high-level interaction between the Presentation, Domain, and Data layers, as well as the integration with Firebase and external services.
 
