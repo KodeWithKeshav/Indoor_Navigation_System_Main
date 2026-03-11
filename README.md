@@ -553,6 +553,13 @@ The schema represents the NoSQL structure used in Firestore, highlighting the re
 #### Use Case Diagram
 ![Use Case Diagram](docs/diagrams/usecase.jpg)
 
+#### Data Flow Diagram
+![Level 0](docs/diagrams/level0.jpeg)
+
+![Level 1](docs/diagrams/levle1.jpeg)
+
+![Level 2](docs/diagrams/level2.jpeg)
+
 #### Sequence Diagrams
 
 **Login Flow**
