@@ -705,13 +705,13 @@ Copyright (c) 2026 Indoor Navigation System Team
 
 ### Development Team
 
-| Name | Role | Roll Number |
-|------|------|-------------|
-| **Keshav S** | Lead Developer | CB.SC.U4CSE23222 |
-| **Abinaya S** | Backend Developer | CB.SC.U4CSE23237 |
-| **Suhitha S** | UI/UX Designer | CB.SC.U4CSE23244 |
-| **Jayaram S** | Pathfinding Engineer | CB.SC.U4CSE23255 |
-| **Prithiv** | Quality Assurance | CB.SC.U4CSE23260 |
+| Name | Roll Number |
+|------|-------------|
+| **Keshav S** | CB.SC.U4CSE23222 |
+| **Abinaya S** | CB.SC.U4CSE23237 |
+| **Suhitha S** | CB.SC.U4CSE23244 |
+| **Jayaram S** | CB.SC.U4CSE23255 |
+| **Prithiv** | CB.SC.U4CSE23260 |
 
 ### Contact
 
