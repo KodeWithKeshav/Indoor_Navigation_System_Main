@@ -538,7 +538,7 @@ For detailed architecture documentation, see [docs/ARCHITECTURE.md](docs/ARCHITE
 
 ### System Architecture
 
-![System Architecture](docs/diagrams/architecture.png)
+![System Architecture](docs/diagrams/archi.jpeg)
 
 The architecture diagram illustrates the high-level interaction between the Presentation, Domain, and Data layers, as well as the integration with Firebase and external services.
 
@@ -552,6 +552,13 @@ The schema represents the NoSQL structure used in Firestore, highlighting the re
 
 #### Use Case Diagram
 ![Use Case Diagram](docs/diagrams/usecase.jpg)
+
+#### Data Flow Diagram
+![Level 0](docs/diagrams/level0.jpeg)
+
+![Level 1](docs/diagrams/levle1.jpeg)
+
+![Level 2](docs/diagrams/level2.jpeg)
 
 #### Sequence Diagrams
 
@@ -698,13 +705,13 @@ Copyright (c) 2026 Indoor Navigation System Team
 
 ### Development Team
 
-| Name | Role | Roll Number |
-|------|------|-------------|
-| **Keshav S** | Lead Developer | CB.SC.U4CSE23222 |
-| **Abinaya S** | Backend Developer | CB.SC.U4CSE23237 |
-| **Suhitha S** | UI/UX Designer | CB.SC.U4CSE23244 |
-| **Jayaram S** | Pathfinding Engineer | CB.SC.U4CSE23255 |
-| **Prithiv** | Quality Assurance | CB.SC.U4CSE23260 |
+| Name | Roll Number |
+|------|-------------|
+| **Keshav S** | CB.SC.U4CSE23222 |
+| **Abinaya S** | CB.SC.U4CSE23237 |
+| **Suhitha S** | CB.SC.U4CSE23244 |
+| **Jayaram S** | CB.SC.U4CSE23255 |
+| **Prithiv** | CB.SC.U4CSE23260 |
 
 ### Contact
 
@@ -728,6 +735,5 @@ Copyright (c) 2026 Indoor Navigation System Team
 
 **[⬆ Back to Top](#indoor-navigation-system)**
 
-Made with ❤️ by the Indoor Navigation System Team
 
 </div>
