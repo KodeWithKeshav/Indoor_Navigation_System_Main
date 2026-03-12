@@ -206,8 +206,7 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     final navState = ref.watch(navigationProvider);
 
     // Watch compass heading for the compass overlay widget
-    final heading =
-        ref.watch(compassProvider) ?? 0.0;
+    final heading = ref.watch(compassProvider) ?? 0.0;
 
     // Watch device pitch reactively — rebuilds on every sensor update so
     // the 3D arrow tracks the phone's physical tilt in real time
@@ -238,9 +237,9 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
                 builder: (context, _) {
                   return CustomPaint(
                     painter: ArDirectionPainter(
-                      arState: arState,         // Direction + on-track status
+                      arState: arState, // Direction + on-track status
                       pulseValue: _pulseController.value, // Glow intensity
-                      devicePitch: pitch,       // Phone tilt for ground anchoring
+                      devicePitch: pitch, // Phone tilt for ground anchoring
                     ),
                     size: Size.infinite,
                   );

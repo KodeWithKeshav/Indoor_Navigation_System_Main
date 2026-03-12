@@ -84,8 +84,8 @@ class _ArCompassOverlayState extends State<ArCompassOverlay> {
         width: 72,
         height: 72,
         // Wrap in TweenAnimationBuilder for smooth interpolation between
-      // heading changes (200ms ease-out, matching typical compass update rate)
-      child: TweenAnimationBuilder<double>(
+        // heading changes (200ms ease-out, matching typical compass update rate)
+        child: TweenAnimationBuilder<double>(
           tween: Tween(end: _cumulativeRotation),
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
