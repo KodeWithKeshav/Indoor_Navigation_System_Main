@@ -1,3 +1,27 @@
+// =============================================================================
+// ar_navigation_screen.dart
+//
+// The main AR navigation experience. This screen composites five visual layers
+// onto the device's live camera feed:
+//
+//   1. Camera preview (full-screen, aspect-ratio-correct)
+//   2. 3D direction arrow (painted by ArDirectionPainter, anchored to ground)
+//   3. Top bar with back button and live compass overlay
+//   4. Map-switch button (quick escape back to 2D map view)
+//   5. Instruction banner at the bottom (frosted glass, animated entry)
+//
+// The screen also performs camera-relative turn tracking: when the current
+// instruction is a turn (left/right/u-turn), the arrow dynamically adjusts
+// as the user physically rotates, converging to center when the turn is
+// complete. This uses a "reference heading" captured at the moment the user
+// enters a turn step.
+//
+// Lifecycle:
+//   - Camera is initialized on mount, paused on app-inactive, resumed on
+//     app-resumed. Orientation is locked to portrait for consistent AR.
+//   - Handles permission denied and missing-camera edge cases gracefully.
+// =============================================================================
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,13 +51,30 @@ class ArNavigationScreen extends ConsumerStatefulWidget {
 
 class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
+  /// Controller for the device's camera hardware.
   CameraController? _cameraController;
+
+  /// True once the camera has been successfully initialized and is streaming.
   bool _isCameraInitialized = false;
-  bool _isCameraInitializing = false; // Guard against double-init race
+
+  /// Guard flag to prevent double-initialization races (e.g. rapid lifecycle events).
+  bool _isCameraInitializing = false;
+
+  /// True when the user has denied camera permission.
   bool _isPermissionDenied = false;
+
+  /// Non-null when a camera error occurs, displayed in the error state UI.
   String? _errorMessage;
+
+  /// Animation controller driving the arrow's pulsing glow effect.
   late AnimationController _pulseController;
+
+  /// The instruction index at which the current turn reference was captured.
+  /// Used to detect when the user advances to a new turn step.
   int? _turnReferenceInstructionIndex;
+
+  /// The compass heading captured when the user first arrives at a turn step.
+  /// The remaining turn angle is computed as the delta from this baseline.
   double? _turnReferenceHeading;
 
   @override
@@ -76,6 +117,12 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     }
   }
 
+  /// Requests camera permission, selects the back camera, and initializes
+  /// the [CameraController] at medium resolution.
+  ///
+  /// Guards against double-invocation with [_isCameraInitializing].
+  /// On success, locks auto-exposure and focus for a stable AR feed.
+  /// On failure, sets appropriate error/permission-denied state for the UI.
   Future<void> _initializeCamera() async {
     // Prevent double-initialization race condition
     if (_isCameraInitializing) return;
@@ -150,18 +197,27 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     }
   }
 
+  /// Builds the main AR view with five composited layers (see file header).
+  /// Watches navigation state and compass heading reactively so the overlay
+  /// updates on every frame.
   @override
   Widget build(BuildContext context) {
+    // Watch the navigation state for current instruction, path progress, etc.
     final navState = ref.watch(navigationProvider);
-    final heading =
-        ref.watch(compassProvider) ?? 0.0; // Kept for ArCompassOverlay
 
-    // Read device pitch reactively — rebuilds on every sensor update
+    // Watch compass heading for the compass overlay widget
+    final heading =
+        ref.watch(compassProvider) ?? 0.0;
+
+    // Watch device pitch reactively — rebuilds on every sensor update so
+    // the 3D arrow tracks the phone's physical tilt in real time
     final pitch = ref
         .watch(devicePitchProvider)
         .maybeWhen(data: (value) => value, orElse: () => 0.0);
 
-    // Compute AR state dynamically from instruction semantics
+    // Compute the camera-relative AR state: for turn instructions this
+    // adjusts the arrow bearing based on how far the user has physically
+    // rotated since entering the turn step
     final arState = _computeCameraRelativeArState(navState, heading);
 
     return Scaffold(
@@ -169,21 +225,22 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Layer 1: Camera preview
+          // Layer 1: Camera preview (full-screen with aspect-ratio fill)
           _buildCameraLayer(),
 
-          // Layer 2: Single 3D direction arrow on the ground
+          // Layer 2: 3D direction arrow painted on the "ground plane"
+          // Only rendered when camera is live to avoid floating arrow on error screens
           if (_isCameraInitialized)
             Semantics(
-              label: _arDirectionLabel(arState),
+              label: _arDirectionLabel(arState), // Accessibility description
               child: AnimatedBuilder(
-                animation: _pulseController,
+                animation: _pulseController, // Rebuilds each pulse tick
                 builder: (context, _) {
                   return CustomPaint(
                     painter: ArDirectionPainter(
-                      arState: arState,
-                      pulseValue: _pulseController.value,
-                      devicePitch: pitch,
+                      arState: arState,         // Direction + on-track status
+                      pulseValue: _pulseController.value, // Glow intensity
+                      devicePitch: pitch,       // Phone tilt for ground anchoring
                     ),
                     size: Size.infinite,
                   );
@@ -191,7 +248,7 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
               ),
             ),
 
-          // Layer 3: Top bar (back button + compass)
+          // Layer 3: Top bar — back button (left) and compass (right)
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -206,7 +263,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
                     tooltip: 'Go back',
                   ),
 
-                  // Mini compass — always visible when camera is running
+                  // Compass overlay showing target bearing vs current heading.
+                  // Converts relative bearing to absolute world bearing for display.
                   if (_isCameraInitialized)
                     ArCompassOverlay(
                       currentHeading: heading,
@@ -233,7 +291,7 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
             ),
           ),
 
-          // Layer 5: Instruction banner (bottom)
+          // Layer 5: Instruction banner (bottom, animated slide-up on appear)
           Positioned(
             left: 0,
             right: 0,
@@ -250,8 +308,23 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     );
   }
 
-  /// Makes turn instructions camera-relative so the arrow converges to center
-  /// as the user physically rotates in the required direction.
+  /// Converts the static instruction-based AR state into a camera-relative
+  /// state for turn instructions.
+  ///
+  /// For non-turn instructions (straight, stairs, etc.) the base state is
+  /// returned unmodified.
+  ///
+  /// For turns, this method:
+  ///   1. Captures a "reference heading" the first time the user reaches
+  ///      a turn instruction step.
+  ///   2. Computes how many degrees the user has physically rotated since
+  ///      that reference.
+  ///   3. Returns the *remaining* turn angle as [relativeBearing], so the
+  ///      arrow converges toward center (0°) as the user completes the turn.
+  ///   4. Updates [onTrackStatus] dynamically:
+  ///        ≤ 20° remaining → onTrack (green)
+  ///        ≤ 60° remaining → slightTurn (yellow)
+  ///        > 60° remaining → offTrack (red)
   ArNavigationState _computeCameraRelativeArState(
     NavigationState navState,
     double heading,
@@ -299,6 +372,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     );
   }
 
+  /// Returns true if the instruction icon represents a turn that should
+  /// use camera-relative heading tracking.
   bool _isTurnIcon(String icon) {
     return icon == 'left' ||
         icon == 'right' ||
@@ -307,6 +382,7 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
         icon == 'uturn';
   }
 
+  /// Normalizes an angle to the range (-180, +180] for shortest-path delta calculations.
   double _normalizeAngle180(double angle) {
     var normalized = angle;
     while (normalized > 180) normalized -= 360;
@@ -331,6 +407,13 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     return '$status$distance$landmark';
   }
 
+  /// Builds the camera preview layer, handling three error states:
+  ///   - Permission denied → settings prompt
+  ///   - Camera error → error message with return-to-map button
+  ///   - Not yet initialized → loading spinner
+  ///
+  /// When initialized, the preview is scaled to fill the screen (cover mode)
+  /// regardless of the camera's native aspect ratio.
   Widget _buildCameraLayer() {
     if (_isPermissionDenied) return _buildPermissionDeniedState();
     if (_errorMessage != null) return _buildErrorState(_errorMessage!);
@@ -375,6 +458,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     );
   }
 
+  /// Builds the "Camera Permission Required" state with a button
+  /// that opens the system app settings for the user to grant access.
   Widget _buildPermissionDeniedState() {
     return Center(
       child: Padding(
@@ -437,6 +522,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     );
   }
 
+  /// Builds a generic error state displaying [message] with a
+  /// "Return to Map" button to navigate back.
   Widget _buildErrorState(String message) {
     return Center(
       child: Padding(
@@ -469,6 +556,8 @@ class _ArNavigationScreenState extends ConsumerState<ArNavigationScreen>
     );
   }
 
+  /// Builds a circular semi-transparent button used for the back and
+  /// map-switch controls in the AR overlay.
   Widget _buildCircleButton({
     required IconData icon,
     required VoidCallback onTap,

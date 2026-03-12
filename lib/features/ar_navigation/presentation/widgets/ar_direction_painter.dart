@@ -1,3 +1,26 @@
+// =============================================================================
+// ar_direction_painter.dart
+//
+// CustomPainter that renders the primary AR navigation visual: a 3D
+// perspective-projected arrow that appears to lie flat on the ground plane
+// of the camera feed.
+//
+// Rendering pipeline:
+//   1. Compute ground-plane Y position from device pitch (phone tilt)
+//   2. Compute horizontal offset from instruction bearing (left/right/forward)
+//   3. Apply 3D perspective transform (rotateX for depth, rotateZ for direction)
+//   4. Draw layered arrow: shadow → glow → gradient body → highlight → outline
+//   5. Add center depth-cue line and pulse animation
+//
+// The arrow color indicates navigation status:
+//   - Green  = on-track (straight ahead)
+//   - Yellow = slight turn needed
+//   - Red    = off-track / u-turn required
+//
+// The arrow smoothly responds to device tilt via [devicePitch] from the
+// DeviceOrientationService, creating a convincing ground-anchored effect.
+// =============================================================================
+
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -17,9 +40,18 @@ import '../providers/ar_navigation_provider.dart';
 ///   * Camera horizontal → arrow in lower third
 ///   * Camera at floor → arrow moves toward center (looking at ground)
 class ArDirectionPainter extends CustomPainter {
+  /// Current AR navigation state containing bearing, on-track status, etc.
   final ArNavigationState arState;
-  final double pulseValue; // 0.0..1.0 animation value
-  final double devicePitch; // -90..90 degrees (phone tilt)
+
+  /// Pulse animation value (0.0..1.0) used for glow intensity and size oscillation.
+  final double pulseValue;
+
+  /// Device pitch from accelerometer (-90..+90°).
+  /// Controls the vertical position of the arrow on screen:
+  ///   +90° (phone vertical, camera forward) → arrow in lower third
+  ///   0°   (phone at 45° tilt)               → arrow in middle area
+  ///   -90° (phone flat, camera at ceiling)    → arrow near center
+  final double devicePitch;
 
   ArDirectionPainter({
     required this.arState,
@@ -29,9 +61,12 @@ class ArDirectionPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Don't render if there's no active navigation data
     if (!arState.hasData) return;
 
-    final bearing = arState.relativeBearing; // -180..180
+    // Relative bearing from the current instruction: 0° = forward,
+    // negative = left, positive = right
+    final bearing = arState.relativeBearing;
 
     // --- Ground plane projection ---
     // DeviceOrientationService pitch values (after atan2 + clamp):
@@ -45,27 +80,30 @@ class ArDirectionPainter extends CustomPainter {
     //   Phone tilted down (+45): arrow moves up (ground is more visible)
     //   Phone flat (0 or below): arrow near center (looking straight at floor)
 
-    // Map pitch from [-90, +90] to arrow Y position
-    // Higher pitch (vertical) → lower on screen (ground is in lower view)
-    // Lower pitch (tilted down) → higher on screen (ground fills more view)
+    // --- Ground plane Y-position from device pitch ---
+    // Normalize pitch from [-90, +90] to [0.0, 1.0]
+    // 0.0 = phone flat face-up, 0.5 = 45° tilt, 1.0 = phone vertical
     final pitchNorm = ((devicePitch + 90.0) / 180.0).clamp(0.0, 1.0);
-    // pitchNorm: 0.0 = phone flat (-90°), 0.5 = 45° angle, 1.0 = vertical (+90°)
 
-    // Y position: center (0.45) when looking at floor → lower-third (0.72) when vertical
+    // Map pitch to screen Y: when looking at floor (low pitch) the arrow
+    // sits higher on screen (0.45); when holding phone vertical (high pitch)
+    // the arrow drops to the lower third (0.72) where the real ground is
     final groundY = size.height * (0.45 + pitchNorm * 0.27);
 
-    // Don't paint if arrow is completely off-screen
+    // Don't paint if the computed position is off-screen
     if (groundY > size.height * 1.1 || groundY < 0) return;
 
-    // Horizontal offset based on bearing (-90..+90 maps to screen edges)
+    // --- Horizontal offset from bearing ---
+    // Bearing is clamped to [-90, +90] for screen mapping; beyond that
+    // the arrow would exit the visible area
     final bearingNorm = (bearing / 90.0).clamp(-1.0, 1.0);
     final groundX = size.width / 2 + bearingNorm * (size.width * 0.35);
 
-    // Arrow size — large enough to be clearly visible
+    // Arrow dimensions — sized relative to screen width with pulse oscillation
     final arrowLength = size.width * 0.28 + pulseValue * 8.0;
     final arrowWidth = arrowLength * 0.55;
 
-    // Arrow color from on-track status
+    // Arrow color encodes the on-track status from the navigation state
     final Color arrowColor;
     switch (arState.onTrackStatus) {
       case OnTrackStatus.onTrack:
@@ -79,23 +117,28 @@ class ArDirectionPainter extends CustomPainter {
         break;
     }
 
+    // Move canvas origin to the arrow's ground-plane position
     canvas.save();
     canvas.translate(groundX, groundY);
 
-    // Clamp rendering bearing so arrow stays visible even for u-turns
+    // Clamp the rendering bearing to ±120° so the arrow stays partially
+    // visible even for u-turn instructions (180° would point it backward
+    // and off-screen)
     final renderBearing = bearing.clamp(-120.0, 120.0);
     final rotationRad = renderBearing * (pi / 180.0);
 
     // --- 3D Perspective transform ---
-    // Simulates the arrow lying flat on the ground plane.
-    // When phone is vertical (looking ahead): stronger perspective (pitchNorm=1)
-    // When phone is flat looking at floor: zero tilt, arrow drawn flat (pitchNorm=0)
+    // This creates the illusion of the arrow lying flat on the ground.
+    // Perspective strength varies with pitch: stronger when phone is vertical
+    // (user looking ahead), weaker when phone is tilted down (looking at floor).
     final perspectiveStrength = 0.5 + pitchNorm * 0.4;
 
-    // The order of operations in Matrix4 is extremely important.
-    // ..rotateX() tilts the ground plane into perspective from the user's camera
-    // ..rotateZ() then rotates the arrow *along* that newly flat ground plane.
-    // If we rotateZ before rotateX, left/right arrows would tilt sideways into the floor!
+    // Transform order matters critically:
+    //   1. setEntry(3,2) adds Z-perspective (vanishing point)
+    //   2. rotateX tilts the arrow into the ground plane
+    //   3. rotateZ rotates the arrow left/right along that ground plane
+    // Reversing rotateX and rotateZ would cause left/right arrows to tilt
+    // sideways into the floor instead of rotating along it.
     final Matrix4 transform = Matrix4.identity()
       ..setEntry(3, 2, 0.003 * perspectiveStrength) // Z-perspective
       ..rotateX(
@@ -105,11 +148,18 @@ class ArDirectionPainter extends CustomPainter {
 
     canvas.transform(transform.storage);
 
-    // --- Draw the 3D arrow shape ---
+    // --- Draw the multi-layered 3D arrow ---
+    // Each layer contributes to the 3D illusion:
+    //   1. Shadow   — soft black blur offset below, grounds the arrow
+    //   2. Glow     — colored blur halo, pulses with animation
+    //   3. Body     — gradient fill (darker at tip, brighter at base) for depth
+    //   4. Highlight — white gradient simulating light reflection on top surface
+    //   5. Outline  — white stroke for crisp edges
+    //   6. Center line — subtle depth cue running along the arrow's spine
     final halfW = arrowWidth / 2;
     final halfL = arrowLength / 2;
 
-    // Ground shadow (soft, below the arrow)
+    // Layer 1: Ground shadow (slightly larger, offset downward, blurred)
     final shadowPath = _buildArrowPath(halfW * 1.08, halfL * 1.05);
     final shadowPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.35 + pulseValue * 0.1)
@@ -120,7 +170,7 @@ class ArDirectionPainter extends CustomPainter {
     canvas.drawPath(shadowPath, shadowPaint);
     canvas.restore();
 
-    // Outer glow
+    // Layer 2: Outer glow (color-matched, blurred, pulses with animation)
     final glowPath = _buildArrowPath(halfW * 1.15, halfL * 1.1);
     final glowPaint = Paint()
       ..color = arrowColor.withValues(alpha: 0.2 + pulseValue * 0.15)
@@ -128,7 +178,8 @@ class ArDirectionPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawPath(glowPath, glowPaint);
 
-    // Main arrow body — gradient fill for 3D depth
+    // Layer 3: Main arrow body — linear gradient from tip (darker) to
+    // base (brighter) simulating depth/distance
     final arrowPath = _buildArrowPath(halfW, halfL);
 
     final bodyPaint = Paint()
@@ -143,7 +194,8 @@ class ArDirectionPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawPath(arrowPath, bodyPaint);
 
-    // Bright edge highlight (top surface simulation)
+    // Layer 4: Highlight — white-to-transparent gradient simulating light
+    // reflecting off the arrow's top surface
     final highlightPaint = Paint()
       ..shader = ui.Gradient.linear(
         Offset(-halfW * 0.3, -halfL),
@@ -156,7 +208,7 @@ class ArDirectionPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     canvas.drawPath(arrowPath, highlightPaint);
 
-    // White outline for definition
+    // Layer 5: White outline for crisp definition against any background
     final outlinePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.8)
       ..strokeWidth = 2.5
@@ -165,7 +217,8 @@ class ArDirectionPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
     canvas.drawPath(arrowPath, outlinePaint);
 
-    // Inner center line (adds 3D depth cue)
+    // Layer 6: Inner center line — a subtle vertical stroke that reinforces
+    // the 3D depth illusion by implying a central ridge on the arrow
     final centerLinePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.3 + pulseValue * 0.1)
       ..strokeWidth = 2.0
@@ -180,7 +233,19 @@ class ArDirectionPainter extends CustomPainter {
     canvas.restore();
   }
 
-  /// Builds a chunky arrow path centered at origin, pointing upward (negative Y).
+  /// Builds a chunky arrow [Path] centered at origin, pointing upward (-Y).
+  ///
+  /// Shape: pointed tip at top, symmetric wings, notched cutout at the
+  /// wing-to-tail junction, and a rectangular tail. The notch creates the
+  /// classic "chevron" arrow look.
+  ///
+  ///       ▲  (tip)
+  ///      / \
+  ///     /   \
+  ///    /     \ (wings)
+  ///    \   /
+  ///     | |    (tail)
+  ///     |_|
   Path _buildArrowPath(double halfWidth, double halfLength) {
     final path = Path();
     // Arrow tip (pointing forward / up)
@@ -201,6 +266,9 @@ class ArDirectionPainter extends CustomPainter {
     return path;
   }
 
+  /// Only repaint when the navigation state, pulse animation value, or
+  /// device pitch changes meaningfully (pitch threshold: 0.5° to avoid
+  /// unnecessary repaints from sensor noise).
   @override
   bool shouldRepaint(covariant ArDirectionPainter oldDelegate) {
     // ArNavigationState now has proper == override, so this works correctly.

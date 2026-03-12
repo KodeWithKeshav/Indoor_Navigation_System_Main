@@ -1,3 +1,22 @@
+// =============================================================================
+// device_orientation_service.dart
+//
+// Provides fused device orientation data (heading + pitch) by combining
+// compass and accelerometer sensor streams. This service is the sensor
+// backbone for the AR navigation overlay — it feeds the ArDirectionPainter
+// with smooth, cross-device-compatible orientation data so the 3D arrow
+// stays anchored to the real-world ground plane.
+//
+// Key design decisions:
+//   - Exponential Moving Average (EMA) smoothing removes sensor jitter
+//     while keeping response fast enough for real-time AR.
+//   - Adaptive alpha adjusts smoothing strength based on actual sensor
+//     event frequency, handling devices with inconsistent rates.
+//   - Circular EMA handles the 359°→1° heading wraparound correctly.
+//   - Graceful degradation: if compass or accelerometer is unavailable,
+//     the service falls back to sensible defaults instead of crashing.
+// =============================================================================
+
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -23,12 +42,19 @@ class DeviceOrientationData {
 /// - Accelerometer-based pitch with proper axis handling for all orientations
 /// - Compass polling rate that works across device capabilities
 class DeviceOrientationService {
+  /// Riverpod [Ref] used to read the compass provider.
   final Ref ref;
 
+  /// Subscription handle for accelerometer events.
   StreamSubscription? _accelSubscription;
+
+  /// Subscription handle for compass polling timer events.
   StreamSubscription? _compassSubscription;
 
+  /// Smoothed heading value (0–360°), updated via circular EMA on each compass read.
   double _smoothedHeading = 0.0;
+
+  /// Smoothed pitch value (-90..+90°), updated via linear EMA on each accelerometer event.
   double _smoothedPitch = 0.0;
 
   /// Timestamp tracking for adaptive smoothing.
@@ -55,19 +81,26 @@ class DeviceOrientationService {
   /// Current pitch (most recent value).
   double get currentPitch => _smoothedPitch;
 
+  /// Creates a [DeviceOrientationService] bound to the given Riverpod [Ref].
+  /// Call [start] after construction to begin sensor listening.
   DeviceOrientationService(this.ref);
 
   /// Start listening to compass and accelerometer sensors.
+  /// Both listeners run independently and emit fused [DeviceOrientationData]
+  /// through [orientationStream] whenever either sensor updates.
   void start() {
     _startCompassListening();
     _startAccelerometerListening();
   }
 
+  /// Starts polling the compass at ~20 Hz via a periodic stream.
+  /// Each reading is smoothed with circular EMA to prevent jitter.
+  /// Falls back to heading 0° on non-mobile platforms.
   void _startCompassListening() {
     _compassSubscription?.cancel();
 
     if (!isMobilePlatform) {
-      // Desktop/web: no compass, default heading to 0
+      // Desktop/web: no compass hardware, default heading to 0
       _smoothedHeading = 0.0;
       return;
     }
@@ -98,10 +131,14 @@ class DeviceOrientationService {
         });
   }
 
+  /// Starts listening to accelerometer events at ~20 Hz.
+  /// Raw (x, y, z) readings are converted to a pitch angle and
+  /// smoothed with linear EMA. Falls back to pitch 0° on non-mobile.
   void _startAccelerometerListening() {
     _accelSubscription?.cancel();
 
     if (!isMobilePlatform) {
+      // No accelerometer on desktop/web — pitch stays neutral
       _smoothedPitch = 0.0;
       return;
     }
@@ -159,6 +196,8 @@ class DeviceOrientationService {
     _emit();
   }
 
+  /// Pushes the current smoothed heading + pitch to all stream listeners.
+  /// Called after every successful sensor update from either source.
   void _emit() {
     if (!_controller.isClosed) {
       _controller.add(
@@ -213,7 +252,8 @@ class DeviceOrientationService {
   }
 }
 
-/// Provider for DeviceOrientationService — auto-disposed when no longer used.
+/// Provider for [DeviceOrientationService] — auto-disposed when the AR screen
+/// is no longer in the widget tree, which stops sensor polling and frees resources.
 final deviceOrientationServiceProvider =
     Provider.autoDispose<DeviceOrientationService>((ref) {
       final service = DeviceOrientationService(ref);
@@ -223,8 +263,9 @@ final deviceOrientationServiceProvider =
     });
 
 /// Reactive provider for the current device pitch (-90..+90°).
-/// Rebuilds consumers on every sensor update, unlike reading
-/// `DeviceOrientationService.currentPitch` which is a snapshot.
+/// Consumers (e.g. [ArDirectionPainter]) rebuild on every sensor update,
+/// unlike reading `DeviceOrientationService.currentPitch` which is a one-shot snapshot.
+/// This is what makes the 3D arrow respond smoothly to phone tilting.
 final devicePitchProvider = StreamProvider.autoDispose<double>((ref) {
   final service = ref.watch(deviceOrientationServiceProvider);
   return service.orientationStream.map((data) => data.pitch);

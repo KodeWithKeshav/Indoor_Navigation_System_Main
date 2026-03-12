@@ -1,3 +1,22 @@
+// =============================================================================
+// ar_compass_overlay.dart
+//
+// A compact, semi-transparent compass widget rendered in the corner of the AR
+// navigation screen. It provides a constant directional reference so the user
+// can orient themselves relative to the target waypoint without leaving the
+// AR view.
+//
+// The compass ring rotates to match the device's physical heading (via
+// compass provider), while a cyan needle always points toward the target
+// bearing. This makes it visually obvious which direction the user should
+// walk: when the needle points straight up, the user is facing the target.
+//
+// Anti-spin logic: heading changes are tracked cumulatively using
+// shortest-path deltas to avoid the visual "spinning" artifact that occurs
+// when heading crosses the 0°/360° boundary (e.g. 359° → 1° would
+// otherwise cause a full 358° counter-rotation).
+// =============================================================================
+
 import 'dart:math';
 import 'package:flutter/material.dart';
 
@@ -26,7 +45,12 @@ class ArCompassOverlay extends StatefulWidget {
 }
 
 class _ArCompassOverlayState extends State<ArCompassOverlay> {
+  /// Accumulated rotation in radians. Instead of setting rotation directly
+  /// from heading (which causes wrap-around spins), we add shortest-path
+  /// deltas so TweenAnimationBuilder always animates the short way.
   double _cumulativeRotation = 0.0;
+
+  /// Previous heading in degrees, used to compute deltas.
   double _previousHeading = 0.0;
 
   @override
@@ -42,7 +66,8 @@ class _ArCompassOverlayState extends State<ArCompassOverlay> {
     super.didUpdateWidget(oldWidget);
     final newHeading = widget.currentHeading ?? 0;
 
-    // Shortest-path delta to avoid 360° wrapping spin
+    // Compute shortest-path delta to prevent 360° wrapping spin.
+    // E.g. going from 350° to 10° yields delta +20°, not -340°.
     var delta = newHeading - _previousHeading;
     while (delta > 180) delta -= 360;
     while (delta < -180) delta += 360;
@@ -58,7 +83,9 @@ class _ArCompassOverlayState extends State<ArCompassOverlay> {
       child: SizedBox(
         width: 72,
         height: 72,
-        child: TweenAnimationBuilder<double>(
+        // Wrap in TweenAnimationBuilder for smooth interpolation between
+      // heading changes (200ms ease-out, matching typical compass update rate)
+      child: TweenAnimationBuilder<double>(
           tween: Tween(end: _cumulativeRotation),
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
@@ -76,8 +103,17 @@ class _ArCompassOverlayState extends State<ArCompassOverlay> {
   }
 }
 
+/// Custom painter that draws the compass ring, cardinal labels, and
+/// target-bearing needle.
+///
+/// The entire compass is rotated by [rotationAngle] (derived from device
+/// heading), so cardinal labels stay world-aligned. The target needle is
+/// drawn at [targetBearing] degrees within the rotated frame.
 class _CompassPainter extends CustomPainter {
-  final double rotationAngle; // Radians to rotate compass (cumulative)
+  /// Current cumulative rotation in radians (negative heading, accumulated).
+  final double rotationAngle;
+
+  /// Absolute world bearing to the target waypoint (0–360°).
   final double targetBearing;
 
   _CompassPainter({required this.rotationAngle, required this.targetBearing});
@@ -87,24 +123,27 @@ class _CompassPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 - 4;
 
-    // Ring background
+    // Semi-transparent filled circle as the compass background
     final ringPaint = Paint()
       ..color = const Color(0xFF0F172A).withValues(alpha: 0.6)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius, ringPaint);
 
-    // Ring border
+    // Cyan ring border for visual definition against dark backgrounds
     final borderPaint = Paint()
       ..color = const Color(0xFF38BDF8).withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
     canvas.drawCircle(center, radius, borderPaint);
 
+    // Rotate the canvas so the compass ring aligns with the real world.
+    // All subsequent drawing (ticks, labels, needle) is in world-space.
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotationAngle);
 
-    // Cardinal direction ticks + labels
+    // Draw cardinal direction ticks (N/E/S/W) and their labels.
+    // 'N' is highlighted in red for quick north identification.
     final tickPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.6)
       ..strokeWidth = 1.5
@@ -146,7 +185,8 @@ class _CompassPainter extends CustomPainter {
       );
     }
 
-    // Target bearing needle
+    // Target bearing needle — a cyan line from center pointing toward
+    // the next waypoint's absolute world direction.
     final targetAngle = targetBearing * (pi / 180) - pi / 2;
     final needlePaint = Paint()
       ..color = const Color(0xFF38BDF8)
@@ -159,15 +199,16 @@ class _CompassPainter extends CustomPainter {
     );
     canvas.drawLine(Offset.zero, needleEnd, needlePaint);
 
-    // Needle dot at tip
+    // Small cyan dot at the needle tip for emphasis
     canvas.drawCircle(needleEnd, 3, Paint()..color = const Color(0xFF38BDF8));
 
-    // Center dot
+    // White dot at center representing the user's position
     canvas.drawCircle(Offset.zero, 3, Paint()..color = Colors.white);
 
     canvas.restore();
   }
 
+  /// Only repaint when heading rotation or target bearing actually changes.
   @override
   bool shouldRepaint(covariant _CompassPainter oldDelegate) {
     return oldDelegate.rotationAngle != rotationAngle ||

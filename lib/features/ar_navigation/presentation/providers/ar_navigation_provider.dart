@@ -1,19 +1,58 @@
+// =============================================================================
+// ar_navigation_provider.dart
+//
+// Pure-function state computation for the AR navigation overlay. This file
+// translates navigation instructions into arrow direction, color, and
+// contextual data without any dependency on compass heading or map
+// coordinates.
+//
+// Architecture rationale:
+//   The navigation instruction service already computes correct turn
+//   directions from path geometry (left, right, straight, etc.). Rather
+//   than re-deriving bearing from map-pixel coordinates minus compass
+//   heading (which mixes incompatible reference frames), we map
+//   instruction icons directly to arrow angles. This is simpler, more
+//   reliable, and works identically on all devices regardless of compass
+//   accuracy.
+//
+// Consumed by:
+//   - ArDirectionPainter (arrow bearing + color)
+//   - ArInstructionBanner (on-track status + next landmark)
+//   - ArNavigationScreen (camera-relative turn adjustment)
+// =============================================================================
+
 import 'package:indoor_navigation_system/features/navigation/presentation/providers/navigation_provider.dart';
 import 'package:indoor_navigation_system/features/admin_map/domain/entities/map_entities.dart';
 
 /// Instruction category — indicates what the current step asks of the user.
-/// Note: this reflects the instruction type, not live compass deviation.
+///
+/// Important: this reflects the *instruction type* (semantic), NOT live
+/// compass-based deviation detection. A "left" turn instruction always
+/// produces [slightTurn], regardless of which way the user is actually facing.
 enum OnTrackStatus { onTrack, slightTurn, offTrack }
 
-/// AR navigation state for the overlay rendering.
+/// Immutable snapshot of the AR overlay state for a single render frame.
+///
+/// This is the single source of truth consumed by [ArDirectionPainter],
+/// [ArCompassOverlay], and [ArInstructionBanner] to render the AR UI.
 class ArNavigationState {
-  /// Relative bearing for the arrow: the direction the arrow should point,
+  /// Relative bearing for the 3D arrow: the direction the arrow should point,
   /// derived from the current navigation instruction (not compass).
-  /// -180..180 where 0 = forward, -90 = left, +90 = right, ±180 = behind.
+  /// Range: -180..+180 where 0 = forward, -90 = left, +90 = right, ±180 = behind.
   final double relativeBearing;
+
+  /// The instruction-based on-track category (see [OnTrackStatus] docs).
   final OnTrackStatus onTrackStatus;
+
+  /// Name of the next non-hallway room ahead on the path, if any.
+  /// Displayed in the instruction banner as "-> Room Name".
   final String? nextLandmarkName;
-  final double distanceToNext; // meters (from instruction)
+
+  /// Distance in meters to the next waypoint, from the current instruction.
+  final double distanceToNext;
+
+  /// False when navigation is inactive or there are no instructions.
+  /// Painters check this before rendering.
   final bool hasData;
 
   const ArNavigationState({
@@ -24,6 +63,8 @@ class ArNavigationState {
     this.hasData = false,
   });
 
+  /// Value equality — used by ArDirectionPainter.shouldRepaint to skip
+  /// unnecessary repaints when the state hasn't actually changed.
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -45,15 +86,17 @@ class ArNavigationState {
   );
 }
 
-/// Maps a navigation instruction icon to the relative bearing angle
-/// that the AR arrow should point toward.
+/// Maps a navigation instruction icon string to the relative bearing angle
+/// (in degrees) that the AR arrow should point toward.
 ///
-/// This is the core fix: instead of computing map-pixel-bearing minus
-/// compass-heading (which are in different reference frames and give
-/// wrong directions), we use the instruction's own semantics.
+/// Angle convention:
+///   -  0°  = straight ahead (forward)
+///   - -90° = left
+///   - +90° = right
+///   - ±180° = u-turn (behind)
 ///
-/// The navigation instruction service already correctly computes turn
-/// directions from the path geometry. We just translate those to angles.
+/// Forward-ish instructions (stairs, elevator, start, finish, etc.) all
+/// map to 0° because the user should continue in their current direction.
 double instructionIconToBearing(String icon) {
   switch (icon) {
     case 'straight':
@@ -83,13 +126,14 @@ double instructionIconToBearing(String icon) {
   }
 }
 
-/// Determines instruction category from the icon.
+/// Determines the on-track status category from an instruction icon.
 ///
-/// - Forward-facing instructions (straight, start, stairs, etc.) → onTrack
-/// - Turns (left, right) → slightTurn (user will need to turn)
-/// - U-turns, sharp turns → offTrack (large direction change needed)
+/// Categories:
+///   - [OnTrackStatus.onTrack]:    Forward movement (straight, start, stairs, etc.)
+///   - [OnTrackStatus.slightTurn]: Normal turns (left, right)
+///   - [OnTrackStatus.offTrack]:   Major direction changes (sharp turns, u-turns)
 ///
-/// This is NOT live compass-based deviation detection.
+/// This drives both the arrow color and the instruction banner's status strip.
 OnTrackStatus instructionIconToStatus(String icon) {
   switch (icon) {
     case 'straight':
@@ -117,27 +161,32 @@ OnTrackStatus instructionIconToStatus(String icon) {
   }
 }
 
-/// Computes the AR overlay state from the current navigation state.
+/// Computes the complete AR overlay state from the current navigation state.
 ///
-/// This is a pure function — no compass, no map coordinates.
-/// The arrow direction comes entirely from what the instruction says.
+/// This is a **pure function** — no compass, no map coordinates, no side effects.
+/// The arrow direction comes entirely from the instruction icon semantics.
+///
+/// Also performs a forward-scan through [navState.pathRooms] to find the next
+/// non-hallway room name (used as the upcoming landmark in the instruction banner).
 ArNavigationState computeArState(NavigationState navState) {
   if (!navState.isNavigating || navState.instructions.isEmpty) {
     return const ArNavigationState(hasData: false);
   }
 
+  // Resolve the current instruction (clamped to valid range)
   final idx = navState.currentInstructionIndex.clamp(
     0,
     navState.instructions.length - 1,
   );
   final instruction = navState.instructions[idx];
 
+  // Map the instruction icon to an arrow bearing and status category
   final bearing = instructionIconToBearing(instruction.icon);
   final status = instructionIconToStatus(instruction.icon);
 
-  // Find next landmark (first non-hallway room ahead of this instruction's
-  // room position). Uses roomIndex so the lookup is accurate even when
-  // instruction count differs from path room count.
+  // Forward-scan path rooms to find the next non-hallway room (landmark).
+  // Uses the instruction's roomIndex for accurate position lookup, since
+  // instruction count may differ from path room count due to merged steps.
   String? landmark;
   if (instruction.icon != 'finish' && navState.pathRooms.isNotEmpty) {
     final searchStart = (instruction.roomIndex + 1).clamp(

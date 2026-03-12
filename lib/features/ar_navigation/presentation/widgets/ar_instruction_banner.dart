@@ -1,3 +1,23 @@
+// =============================================================================
+// ar_instruction_banner.dart
+//
+// A frosted-glass instruction panel displayed at the bottom of the AR
+// navigation screen. It shows the user:
+//
+//   - On-track status strip (green/yellow/red with icon and label)
+//   - Current instruction icon + text message
+//   - Distance to the next waypoint and upcoming landmark name
+//   - Progress bar showing completion percentage
+//   - Step counter, walk distance, and prev/next navigation controls
+//
+// The banner uses the same instruction-based AR state computation as the
+// 3D arrow (via [computeArState]), ensuring visual consistency between
+// the arrow direction/color and the banner's on-track indicator.
+//
+// Styling follows the "Deep Void" dark theme with electric cyan accents
+// and a backdrop blur for readability over the live camera feed.
+// =============================================================================
+
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,22 +40,30 @@ const Color _paperWhite = Color(0xFFE2E8F0);
 class ArInstructionBanner extends ConsumerWidget {
   const ArInstructionBanner({super.key});
 
+  /// Builds the banner widget. Returns [SizedBox.shrink] when navigation
+  /// is inactive or there are no instructions, so it gracefully disappears.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the navigation state reactively — banner updates on every
+    // instruction change, step advance, or distance update
     final navState = ref.watch(navigationProvider);
 
     if (!navState.isNavigating || navState.instructions.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    // Use the same instruction-based AR state computation as the arrow
+    // Compute the instruction-based AR state to get on-track status and
+    // next landmark — consistent with the 3D arrow overlay logic
     final arState = computeArState(navState);
 
+    // Safely clamp the instruction index within bounds
     final instruction =
         navState.instructions[navState.currentInstructionIndex.clamp(
           0,
           navState.instructions.length - 1,
         )];
+
+    // Track first/last step to enable/disable prev/next buttons
     final isFirst = navState.currentInstructionIndex == 0;
     final isLast =
         navState.currentInstructionIndex >= navState.instructions.length - 1;
@@ -59,11 +87,11 @@ class ArInstructionBanner extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // On-track indicator strip
+                // Color-coded status strip at the top (green/yellow/red)
                 _buildOnTrackStrip(arState.onTrackStatus),
                 const SizedBox(height: 10),
 
-                // Main instruction row
+                // Main instruction row: icon + message + distance + landmark
                 Row(
                   children: [
                     _buildStepIcon(instruction.icon),
@@ -127,12 +155,13 @@ class ArInstructionBanner extends ConsumerWidget {
 
                 const SizedBox(height: 10),
 
-                // Progress bar
+                // Linear progress bar showing journey completion percentage
                 _buildProgressBar(navState),
 
                 const SizedBox(height: 10),
 
-                // Step counter + walk distance + prev/next
+                // Bottom row: step counter + walk distance (left),
+                // prev/next step buttons (right)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -199,6 +228,8 @@ class ArInstructionBanner extends ConsumerWidget {
     );
   }
 
+  /// Builds the progress bar showing what percentage of the route is complete.
+  /// Color changes to green when progress reaches 100%.
   Widget _buildProgressBar(NavigationState navState) {
     final progress = navState.instructions.isEmpty
         ? 0.0
@@ -235,6 +266,13 @@ class ArInstructionBanner extends ConsumerWidget {
     );
   }
 
+  /// Builds the on-track status strip — a small colored chip at the top
+  /// of the banner indicating whether the user is headed the right way.
+  ///
+  /// Status mapping:
+  ///   - [OnTrackStatus.onTrack]    → Green  "Ahead"
+  ///   - [OnTrackStatus.slightTurn] → Yellow "Turn Ahead"
+  ///   - [OnTrackStatus.offTrack]   → Red    "Turn Around"
   Widget _buildOnTrackStrip(OnTrackStatus status) {
     Color color;
     String text;
@@ -282,6 +320,8 @@ class ArInstructionBanner extends ConsumerWidget {
     );
   }
 
+  /// Builds the step icon — a rounded square with a Material icon
+  /// matching the instruction type (turn, stairs, elevator, etc.).
   Widget _buildStepIcon(String iconName) {
     IconData iconData;
     switch (iconName) {
@@ -337,6 +377,8 @@ class ArInstructionBanner extends ConsumerWidget {
     );
   }
 
+  /// Builds a small prev/next navigation button. Disabled state dims
+  /// the button and removes the tap handler.
   Widget _buildNavButton({
     required IconData icon,
     required bool enabled,
